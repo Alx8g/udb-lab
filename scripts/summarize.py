@@ -1,0 +1,75 @@
+"""Print before/after speedups from records.json."""
+
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+PAIRS = [
+    ("factorized", "naive_pairs", "factorized_sums"),
+    ("factorized", "hashjoin_then_pairs", "incremental_insert_a"),
+    ("answer_cells", "brute_scan_pareto", "cell_lookup_pareto"),
+    ("answer_cells", "brute_scan_random", "cell_lookup_random"),
+    ("answer_cells", "brute_scan_near_tie", "cell_lookup_near_tie"),
+    ("executable_regions", "materialized_bulk_add", "compact_bulk_add"),
+    ("executable_regions", "materialized_point_lookup_4k", "compact_point_lookup_4k"),
+    ("progressive", "full_scan_clustered", "bucket_avx2_clustered"),
+    ("progressive", "full_scan_spread", "bucket_avx2_spread"),
+    ("certificate", "merge_disjoint_range", "bound_certificate_disjoint"),
+    ("certificate", "merge_sparse", "gallop_sparse"),
+    ("certificate", "merge_overlap", "gallop_overlap"),
+    ("redundancy", "sum_from_a_and_b", "sum_from_coded_c"),
+    ("engine", "row_scan_predicate", "col_scan_avx2"),
+    ("engine", "lookup_4k_independent_bsearch", "lookup_4k_direct_id"),
+    ("joint", "brute_materialized_scan", "joint_cells_over_bases"),
+    ("joint", "brute_mixed_bulk_and_exceptions", "joint_mixed_bulk_and_exceptions"),
+    ("correlation", "full_columns_tight", "model_prune_tight"),
+    ("correlation", "full_columns_none", "model_prune_none"),
+    ("shared_state", "private_counts", "shared_index_counts"),
+]
+
+
+def load(path: Path) -> list[dict]:
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def pick(recs: list[dict], exp: str, variant: str) -> list[dict]:
+    return [r for r in recs if r["experiment"] == exp and r["variant"] == variant]
+
+
+def fmt(ns: float) -> str:
+    if ns >= 1e9:
+        return f"{ns/1e9:.3f}s"
+    if ns >= 1e6:
+        return f"{ns/1e6:.3f}ms"
+    if ns >= 1e3:
+        return f"{ns/1e3:.3f}µs"
+    return f"{ns:.0f}ns"
+
+
+def main() -> None:
+    path = Path(sys.argv[1]) if len(sys.argv) > 1 else Path(".working/results/full/records.json")
+    recs = load(path)
+    print(f"{'experiment':<22} {'before':<28} {'after':<28} {'n':>10} {'before_t':>10} {'after_t':>10} {'speedup':>10}")
+    for exp, before, after in PAIRS:
+        bs = pick(recs, exp, before)
+        as_ = pick(recs, exp, after)
+        if not bs or not as_:
+            continue
+        # pair by n when possible
+        by_n = {}
+        for r in as_:
+            by_n.setdefault(r["n"], r)
+        for b in bs:
+            a = by_n.get(b["n"]) or as_[0]
+            if b["median_ns"] <= 0 or a["median_ns"] <= 0:
+                continue
+            sp = b["median_ns"] / a["median_ns"]
+            print(
+                f"{exp:<22} {before:<28} {after:<28} {b['n']:>10} {fmt(b['median_ns']):>10} {fmt(a['median_ns']):>10} {sp:>9.1f}x"
+            )
+
+
+if __name__ == "__main__":
+    main()

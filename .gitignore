@@ -1,0 +1,8 @@
+/target
+/.working
+/.venv
+/__pycache__
+*.pdb
+*.exe
+.DS_Store
+Thumbs.db
