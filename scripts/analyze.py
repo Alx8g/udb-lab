@@ -8,7 +8,7 @@ from collections import defaultdict
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-RESULTS = ROOT / ".working" / "results"
+RESULTS = ROOT / "results"
 
 
 def load_records(kind: str) -> list[dict]:

@@ -15,6 +15,8 @@ This repo is a kernel lab, not a database. Each experiment isolates one
 mechanism, compares it against the strongest simple alternative on the same
 machine, and includes a case that should lose. Correctness is exact.
 
+Public repo: https://github.com/Alx8g/udb-lab
+
 ## Hardware for the numbers below
 
 - 12th Gen Intel Core i9-12900H, 14 cores / 20 threads
@@ -23,8 +25,17 @@ machine, and includes a case that should lose. Correctness is exact.
 - rustc 1.96.0, `--release`, thin LTO
 - 190 records, 120.2 s full run
 
-Raw JSON: `.working/results/full/records.json`
-Write-up: `.working/results/full/findings.md`
+## Docs and data
+
+| What | Where |
+|---|---|
+| Findings (what leaped, what died) | [docs/findings.md](docs/findings.md) |
+| Thoughts after measuring | [docs/thoughts.md](docs/thoughts.md) |
+| Issues encountered along the way | [docs/issues.md](docs/issues.md) |
+| Measurement protocol | [docs/protocol.md](docs/protocol.md) |
+| Full run JSON | [results/full/records.json](results/full/records.json) |
+| Full run CSV | [results/full/records.csv](results/full/records.csv) |
+| Quick run JSON | [results/quick/records.json](results/quick/records.json) |
 
 ## Run
 
@@ -33,7 +44,7 @@ cargo test --release
 cargo run --release -- --quick
 cargo run --release
 cargo run --release -- --only factorized
-python scripts/summarize.py .working/results/full/records.json
+python scripts/summarize.py results/full/records.json
 ```
 
 ## What leaped (full run)

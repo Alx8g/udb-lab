@@ -51,7 +51,7 @@ def fmt(ns: float) -> str:
 
 
 def main() -> None:
-    path = Path(sys.argv[1]) if len(sys.argv) > 1 else Path(".working/results/full/records.json")
+    path = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("results/full/records.json")
     recs = load(path)
     print(f"{'experiment':<22} {'before':<28} {'after':<28} {'n':>10} {'before_t':>10} {'after_t':>10} {'speedup':>10}")
     for exp, before, after in PAIRS:

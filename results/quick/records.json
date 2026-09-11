@@ -1,0 +1,2668 @@
+[
+  {
+    "experiment": "factorized",
+    "variant": "naive_pairs",
+    "n": 200,
+    "params": {
+      "groups": 1,
+      "pairs": 40000,
+      "per": 200
+    },
+    "median_ns": 15400,
+    "p99_ns": 16200,
+    "min_ns": 14400,
+    "mean_ns": 15375.0,
+    "iters": 8,
+    "ops": 40000,
+    "bytes_touched": 640000,
+    "extra": {
+      "result": 27395000
+    },
+    "notes": "materializes every matching pair"
+  },
+  {
+    "experiment": "factorized",
+    "variant": "hashjoin_then_pairs",
+    "n": 200,
+    "params": {
+      "groups": 1,
+      "per": 200
+    },
+    "median_ns": 15400,
+    "p99_ns": 15400,
+    "min_ns": 15200,
+    "mean_ns": 15375.0,
+    "iters": 8,
+    "ops": 40000,
+    "bytes_touched": 640000,
+    "extra": {
+      "result": 27395000
+    },
+    "notes": "join matching does not remove the product expansion"
+  },
+  {
+    "experiment": "factorized",
+    "variant": "factorized_sums",
+    "n": 200,
+    "params": {
+      "groups": 1,
+      "pairs_avoided": 40000,
+      "per": 200
+    },
+    "median_ns": 100,
+    "p99_ns": 200,
+    "min_ns": 100,
+    "mean_ns": 141.66666666666666,
+    "iters": 12,
+    "ops": 400,
+    "bytes_touched": 3200,
+    "extra": {
+      "result": 27395000
+    },
+    "notes": "sum(A)*sum(B) per group; pairs never exist"
+  },
+  {
+    "experiment": "factorized",
+    "variant": "incremental_insert_a",
+    "n": 200,
+    "params": {
+      "groups": 1,
+      "per": 200
+    },
+    "median_ns": 0,
+    "p99_ns": 100,
+    "min_ns": 0,
+    "mean_ns": 40.0,
+    "iters": 20,
+    "ops": 1,
+    "bytes_touched": 32,
+    "extra": {
+      "result": 27433353
+    },
+    "notes": "insert x into A is O(1) per group: sum_a += x"
+  },
+  {
+    "experiment": "factorized",
+    "variant": "naive_pairs",
+    "n": 800,
+    "params": {
+      "groups": 1,
+      "pairs": 640000,
+      "per": 800
+    },
+    "median_ns": 245700,
+    "p99_ns": 248300,
+    "min_ns": 244300,
+    "mean_ns": 245375.0,
+    "iters": 8,
+    "ops": 640000,
+    "bytes_touched": 10240000,
+    "extra": {
+      "result": 408362940
+    },
+    "notes": "materializes every matching pair"
+  },
+  {
+    "experiment": "factorized",
+    "variant": "hashjoin_then_pairs",
+    "n": 800,
+    "params": {
+      "groups": 1,
+      "per": 800
+    },
+    "median_ns": 244000,
+    "p99_ns": 248700,
+    "min_ns": 243800,
+    "mean_ns": 244550.0,
+    "iters": 8,
+    "ops": 640000,
+    "bytes_touched": 10240000,
+    "extra": {
+      "result": 408362940
+    },
+    "notes": "join matching does not remove the product expansion"
+  },
+  {
+    "experiment": "factorized",
+    "variant": "factorized_sums",
+    "n": 800,
+    "params": {
+      "groups": 1,
+      "pairs_avoided": 640000,
+      "per": 800
+    },
+    "median_ns": 500,
+    "p99_ns": 500,
+    "min_ns": 400,
+    "mean_ns": 475.0,
+    "iters": 12,
+    "ops": 1600,
+    "bytes_touched": 12800,
+    "extra": {
+      "result": 408362940
+    },
+    "notes": "sum(A)*sum(B) per group; pairs never exist"
+  },
+  {
+    "experiment": "factorized",
+    "variant": "incremental_insert_a",
+    "n": 800,
+    "params": {
+      "groups": 1,
+      "per": 800
+    },
+    "median_ns": 0,
+    "p99_ns": 100,
+    "min_ns": 0,
+    "mean_ns": 35.0,
+    "iters": 20,
+    "ops": 1,
+    "bytes_touched": 32,
+    "extra": {
+      "result": 408504270
+    },
+    "notes": "insert x into A is O(1) per group: sum_a += x"
+  },
+  {
+    "experiment": "factorized",
+    "variant": "naive_pairs",
+    "n": 2000,
+    "params": {
+      "groups": 1,
+      "pairs": 4000000,
+      "per": 2000
+    },
+    "median_ns": 1423100,
+    "p99_ns": 1713600,
+    "min_ns": 1322100,
+    "mean_ns": 1462862.5,
+    "iters": 8,
+    "ops": 4000000,
+    "bytes_touched": 64000000,
+    "extra": {
+      "result": 2606504987
+    },
+    "notes": "materializes every matching pair"
+  },
+  {
+    "experiment": "factorized",
+    "variant": "hashjoin_then_pairs",
+    "n": 2000,
+    "params": {
+      "groups": 1,
+      "per": 2000
+    },
+    "median_ns": 1817700,
+    "p99_ns": 2101300,
+    "min_ns": 1734200,
+    "mean_ns": 1833825.0,
+    "iters": 8,
+    "ops": 4000000,
+    "bytes_touched": 64000000,
+    "extra": {
+      "result": 2606504987
+    },
+    "notes": "join matching does not remove the product expansion"
+  },
+  {
+    "experiment": "factorized",
+    "variant": "factorized_sums",
+    "n": 2000,
+    "params": {
+      "groups": 1,
+      "pairs_avoided": 4000000,
+      "per": 2000
+    },
+    "median_ns": 1300,
+    "p99_ns": 1300,
+    "min_ns": 1300,
+    "mean_ns": 1300.0,
+    "iters": 12,
+    "ops": 4000,
+    "bytes_touched": 32000,
+    "extra": {
+      "result": 2606504987
+    },
+    "notes": "sum(A)*sum(B) per group; pairs never exist"
+  },
+  {
+    "experiment": "factorized",
+    "variant": "incremental_insert_a",
+    "n": 2000,
+    "params": {
+      "groups": 1,
+      "per": 2000
+    },
+    "median_ns": 0,
+    "p99_ns": 100,
+    "min_ns": 0,
+    "mean_ns": 30.0,
+    "iters": 20,
+    "ops": 1,
+    "bytes_touched": 32,
+    "extra": {
+      "result": 2606862904
+    },
+    "notes": "insert x into A is O(1) per group: sum_a += x"
+  },
+  {
+    "experiment": "factorized",
+    "variant": "inseparable_negative_control",
+    "n": 400,
+    "params": {
+      "pairs": 160000
+    },
+    "median_ns": 217700,
+    "p99_ns": 217800,
+    "min_ns": 217600,
+    "mean_ns": 217700.0,
+    "iters": 6,
+    "ops": 160000,
+    "bytes_touched": 3840000,
+    "extra": {
+      "result": 23831602330
+    },
+    "notes": "XOR coupling prevents factorization; expansion is required"
+  },
+  {
+    "experiment": "answer_cells",
+    "variant": "brute_scan_pareto",
+    "n": 5000,
+    "params": {
+      "cells": 2,
+      "queries": 2000
+    },
+    "median_ns": 5797800,
+    "p99_ns": 6006600,
+    "min_ns": 5535300,
+    "mean_ns": 5769900.0,
+    "iters": 6,
+    "ops": 10000000,
+    "bytes_touched": 160000000,
+    "extra": {
+      "xor": 63
+    },
+    "notes": "full scan per parameterized ranking"
+  },
+  {
+    "experiment": "answer_cells",
+    "variant": "cell_lookup_pareto",
+    "n": 5000,
+    "params": {
+      "cells": 2,
+      "queries": 2000
+    },
+    "median_ns": 3900,
+    "p99_ns": 10100,
+    "min_ns": 2900,
+    "mean_ns": 4740.0,
+    "iters": 10,
+    "ops": 2000,
+    "bytes_touched": 64000,
+    "extra": {
+      "cells": 2,
+      "xor": 63
+    },
+    "notes": "O(log cells) exact winner; no data scan"
+  },
+  {
+    "experiment": "answer_cells",
+    "variant": "mixed_small_drift_pareto",
+    "n": 5000,
+    "params": {
+      "cells": 2,
+      "mag": 0.002,
+      "queries": 2000,
+      "update_frac": 0.05
+    },
+    "median_ns": 19700,
+    "p99_ns": 23100,
+    "min_ns": 18400,
+    "mean_ns": 20050.0,
+    "iters": 4,
+    "ops": 2000,
+    "bytes_touched": 0,
+    "extra": {
+      "hit_rate": 1.0,
+      "hits": 2000,
+      "misses": 0,
+      "rebuilds": 0,
+      "xor": 63
+    },
+    "notes": "certificate reused until drift consumes the gap"
+  },
+  {
+    "experiment": "answer_cells",
+    "variant": "mixed_large_drift_pareto",
+    "n": 5000,
+    "params": {
+      "cells": 2,
+      "mag": 3.0,
+      "queries": 2000,
+      "update_frac": 0.05
+    },
+    "median_ns": 57627600,
+    "p99_ns": 62525300,
+    "min_ns": 50534600,
+    "mean_ns": 56091950.0,
+    "iters": 4,
+    "ops": 2000,
+    "bytes_touched": 0,
+    "extra": {
+      "hit_rate": 0.95,
+      "hits": 1900,
+      "misses": 100,
+      "rebuilds": 100,
+      "xor": 62
+    },
+    "notes": "certificate reused until drift consumes the gap"
+  },
+  {
+    "experiment": "answer_cells",
+    "variant": "brute_scan_random",
+    "n": 5000,
+    "params": {
+      "cells": 8,
+      "queries": 2000
+    },
+    "median_ns": 5994700,
+    "p99_ns": 6152600,
+    "min_ns": 5848300,
+    "mean_ns": 5958716.666666667,
+    "iters": 6,
+    "ops": 10000000,
+    "bytes_touched": 160000000,
+    "extra": {
+      "xor": 800
+    },
+    "notes": "full scan per parameterized ranking"
+  },
+  {
+    "experiment": "answer_cells",
+    "variant": "cell_lookup_random",
+    "n": 5000,
+    "params": {
+      "cells": 8,
+      "queries": 2000
+    },
+    "median_ns": 4100,
+    "p99_ns": 12300,
+    "min_ns": 3800,
+    "mean_ns": 5490.0,
+    "iters": 10,
+    "ops": 2000,
+    "bytes_touched": 64000,
+    "extra": {
+      "cells": 8,
+      "xor": 800
+    },
+    "notes": "O(log cells) exact winner; no data scan"
+  },
+  {
+    "experiment": "answer_cells",
+    "variant": "mixed_small_drift_random",
+    "n": 5000,
+    "params": {
+      "cells": 8,
+      "mag": 0.002,
+      "queries": 2000,
+      "update_frac": 0.05
+    },
+    "median_ns": 14543600,
+    "p99_ns": 15161300,
+    "min_ns": 11864800,
+    "mean_ns": 13359100.0,
+    "iters": 4,
+    "ops": 2000,
+    "bytes_touched": 0,
+    "extra": {
+      "hit_rate": 0.9885,
+      "hits": 1977,
+      "misses": 23,
+      "rebuilds": 23,
+      "xor": 800
+    },
+    "notes": "certificate reused until drift consumes the gap"
+  },
+  {
+    "experiment": "answer_cells",
+    "variant": "mixed_large_drift_random",
+    "n": 5000,
+    "params": {
+      "cells": 8,
+      "mag": 3.0,
+      "queries": 2000,
+      "update_frac": 0.05
+    },
+    "median_ns": 59674200,
+    "p99_ns": 64104200,
+    "min_ns": 53499000,
+    "mean_ns": 58954975.0,
+    "iters": 4,
+    "ops": 2000,
+    "bytes_touched": 0,
+    "extra": {
+      "hit_rate": 0.95,
+      "hits": 1900,
+      "misses": 100,
+      "rebuilds": 100,
+      "xor": 800
+    },
+    "notes": "certificate reused until drift consumes the gap"
+  },
+  {
+    "experiment": "answer_cells",
+    "variant": "brute_scan_near_tie",
+    "n": 5000,
+    "params": {
+      "cells": 8,
+      "queries": 2000
+    },
+    "median_ns": 5811900,
+    "p99_ns": 6874600,
+    "min_ns": 5262900,
+    "mean_ns": 5764050.0,
+    "iters": 6,
+    "ops": 10000000,
+    "bytes_touched": 160000000,
+    "extra": {
+      "xor": 800
+    },
+    "notes": "full scan per parameterized ranking"
+  },
+  {
+    "experiment": "answer_cells",
+    "variant": "cell_lookup_near_tie",
+    "n": 5000,
+    "params": {
+      "cells": 8,
+      "queries": 2000
+    },
+    "median_ns": 4400,
+    "p99_ns": 13600,
+    "min_ns": 4300,
+    "mean_ns": 5910.0,
+    "iters": 10,
+    "ops": 2000,
+    "bytes_touched": 64000,
+    "extra": {
+      "cells": 8,
+      "xor": 800
+    },
+    "notes": "O(log cells) exact winner; no data scan"
+  },
+  {
+    "experiment": "answer_cells",
+    "variant": "mixed_small_drift_near_tie",
+    "n": 5000,
+    "params": {
+      "cells": 8,
+      "mag": 0.002,
+      "queries": 2000,
+      "update_frac": 0.05
+    },
+    "median_ns": 58806500,
+    "p99_ns": 60245400,
+    "min_ns": 56088900,
+    "mean_ns": 58222175.0,
+    "iters": 4,
+    "ops": 2000,
+    "bytes_touched": 0,
+    "extra": {
+      "hit_rate": 0.95,
+      "hits": 1900,
+      "misses": 100,
+      "rebuilds": 100,
+      "xor": 800
+    },
+    "notes": "certificate reused until drift consumes the gap"
+  },
+  {
+    "experiment": "answer_cells",
+    "variant": "mixed_large_drift_near_tie",
+    "n": 5000,
+    "params": {
+      "cells": 8,
+      "mag": 3.0,
+      "queries": 2000,
+      "update_frac": 0.05
+    },
+    "median_ns": 60665800,
+    "p99_ns": 63121300,
+    "min_ns": 57665700,
+    "mean_ns": 60476100.0,
+    "iters": 4,
+    "ops": 2000,
+    "bytes_touched": 0,
+    "extra": {
+      "hit_rate": 0.95,
+      "hits": 1900,
+      "misses": 100,
+      "rebuilds": 100,
+      "xor": 800
+    },
+    "notes": "certificate reused until drift consumes the gap"
+  },
+  {
+    "experiment": "executable_regions",
+    "variant": "materialized_bulk_add",
+    "n": 10000,
+    "params": {
+      "k": 100
+    },
+    "median_ns": 3000,
+    "p99_ns": 3100,
+    "min_ns": 3000,
+    "mean_ns": 3020.0,
+    "iters": 5,
+    "ops": 10000,
+    "bytes_touched": 80000,
+    "extra": {
+      "sum": 25255872
+    },
+    "notes": "N scalar writes per bulk operation"
+  },
+  {
+    "experiment": "executable_regions",
+    "variant": "compact_bulk_add",
+    "n": 10000,
+    "params": {
+      "k": 100
+    },
+    "median_ns": 0,
+    "p99_ns": 100,
+    "min_ns": 0,
+    "mean_ns": 36.666666666666664,
+    "iters": 30,
+    "ops": 1,
+    "bytes_touched": 8,
+    "extra": {
+      "sum": 25255872
+    },
+    "notes": "one adjustment increment; N writes never happen"
+  },
+  {
+    "experiment": "executable_regions",
+    "variant": "compact_point_lookup_4k",
+    "n": 10000,
+    "params": {
+      "lookups": 4000
+    },
+    "median_ns": 3600,
+    "p99_ns": 5000,
+    "min_ns": 3500,
+    "mean_ns": 3758.3333333333335,
+    "iters": 12,
+    "ops": 4000,
+    "bytes_touched": 96000,
+    "extra": {
+      "sum": 9899140
+    },
+    "notes": "evaluate base+adj-birth+exc per lookup"
+  },
+  {
+    "experiment": "executable_regions",
+    "variant": "materialized_point_lookup_4k",
+    "n": 10000,
+    "params": {
+      "lookups": 4000
+    },
+    "median_ns": 1400,
+    "p99_ns": 1500,
+    "min_ns": 1300,
+    "mean_ns": 1383.3333333333333,
+    "iters": 12,
+    "ops": 4000,
+    "bytes_touched": 32000,
+    "extra": {
+      "sum": 9899140
+    },
+    "notes": "direct load of current scalar"
+  },
+  {
+    "experiment": "executable_regions",
+    "variant": "compact_filter_scan",
+    "n": 10000,
+    "params": {
+      "adj": 100,
+      "threshold": 2500
+    },
+    "median_ns": 5000,
+    "p99_ns": 5000,
+    "min_ns": 5000,
+    "mean_ns": 5000.0,
+    "iters": 8,
+    "ops": 10000,
+    "bytes_touched": 80000,
+    "extra": {
+      "count": 5289
+    },
+    "notes": "bulk adj is free; filter still touches every base unless an index exists"
+  },
+  {
+    "experiment": "executable_regions",
+    "variant": "materialized_bulk_add",
+    "n": 200000,
+    "params": {
+      "k": 100
+    },
+    "median_ns": 134600,
+    "p99_ns": 191500,
+    "min_ns": 81700,
+    "mean_ns": 131860.0,
+    "iters": 5,
+    "ops": 200000,
+    "bytes_touched": 1600000,
+    "extra": {
+      "sum": 505699541
+    },
+    "notes": "N scalar writes per bulk operation"
+  },
+  {
+    "experiment": "executable_regions",
+    "variant": "compact_bulk_add",
+    "n": 200000,
+    "params": {
+      "k": 100
+    },
+    "median_ns": 0,
+    "p99_ns": 100,
+    "min_ns": 0,
+    "mean_ns": 33.333333333333336,
+    "iters": 30,
+    "ops": 1,
+    "bytes_touched": 8,
+    "extra": {
+      "sum": 505699541
+    },
+    "notes": "one adjustment increment; N writes never happen"
+  },
+  {
+    "experiment": "executable_regions",
+    "variant": "compact_point_lookup_4k",
+    "n": 200000,
+    "params": {
+      "lookups": 4000
+    },
+    "median_ns": 4600,
+    "p99_ns": 4900,
+    "min_ns": 4300,
+    "mean_ns": 4558.333333333333,
+    "iters": 12,
+    "ops": 4000,
+    "bytes_touched": 96000,
+    "extra": {
+      "sum": 9980536
+    },
+    "notes": "evaluate base+adj-birth+exc per lookup"
+  },
+  {
+    "experiment": "executable_regions",
+    "variant": "materialized_point_lookup_4k",
+    "n": 200000,
+    "params": {
+      "lookups": 4000
+    },
+    "median_ns": 1800,
+    "p99_ns": 1900,
+    "min_ns": 1700,
+    "mean_ns": 1791.6666666666667,
+    "iters": 12,
+    "ops": 4000,
+    "bytes_touched": 32000,
+    "extra": {
+      "sum": 9980536
+    },
+    "notes": "direct load of current scalar"
+  },
+  {
+    "experiment": "executable_regions",
+    "variant": "compact_filter_scan",
+    "n": 200000,
+    "params": {
+      "adj": 100,
+      "threshold": 2500
+    },
+    "median_ns": 96200,
+    "p99_ns": 97500,
+    "min_ns": 93700,
+    "mean_ns": 95762.5,
+    "iters": 8,
+    "ops": 200000,
+    "bytes_touched": 1600000,
+    "extra": {
+      "count": 105251
+    },
+    "notes": "bulk adj is free; filter still touches every base unless an index exists"
+  },
+  {
+    "experiment": "executable_regions",
+    "variant": "exception_density_sum",
+    "n": 50000,
+    "params": {
+      "density": 0.0,
+      "exceptions": 0,
+      "map_bytes_est": 0
+    },
+    "median_ns": 0,
+    "p99_ns": 100,
+    "min_ns": 0,
+    "mean_ns": 20.0,
+    "iters": 10,
+    "ops": 1,
+    "bytes_touched": 32,
+    "extra": {
+      "sum": 50000000
+    },
+    "notes": "compact form wins while exceptions stay sparse"
+  },
+  {
+    "experiment": "executable_regions",
+    "variant": "exception_density_sum",
+    "n": 50000,
+    "params": {
+      "density": 0.01,
+      "exceptions": 500,
+      "map_bytes_est": 12000
+    },
+    "median_ns": 0,
+    "p99_ns": 100,
+    "min_ns": 0,
+    "mean_ns": 30.0,
+    "iters": 10,
+    "ops": 1,
+    "bytes_touched": 12032,
+    "extra": {
+      "sum": 50002000
+    },
+    "notes": "compact form wins while exceptions stay sparse"
+  },
+  {
+    "experiment": "executable_regions",
+    "variant": "exception_density_sum",
+    "n": 50000,
+    "params": {
+      "density": 0.1,
+      "exceptions": 5000,
+      "map_bytes_est": 120000
+    },
+    "median_ns": 0,
+    "p99_ns": 100,
+    "min_ns": 0,
+    "mean_ns": 30.0,
+    "iters": 10,
+    "ops": 1,
+    "bytes_touched": 120032,
+    "extra": {
+      "sum": 50020000
+    },
+    "notes": "compact form wins while exceptions stay sparse"
+  },
+  {
+    "experiment": "executable_regions",
+    "variant": "exception_density_sum",
+    "n": 50000,
+    "params": {
+      "density": 1.0,
+      "exceptions": 50000,
+      "map_bytes_est": 1200000
+    },
+    "median_ns": 0,
+    "p99_ns": 100,
+    "min_ns": 0,
+    "mean_ns": 30.0,
+    "iters": 10,
+    "ops": 1,
+    "bytes_touched": 1200032,
+    "extra": {
+      "sum": 50200000
+    },
+    "notes": "compact form wins while exceptions stay sparse"
+  },
+  {
+    "experiment": "progressive",
+    "variant": "full_scan_clustered",
+    "n": 1000000,
+    "params": {
+      "selectivity": 0.999983,
+      "t": 1000000
+    },
+    "median_ns": 211600,
+    "p99_ns": 261800,
+    "min_ns": 182000,
+    "mean_ns": 208750.0,
+    "iters": 6,
+    "ops": 1000000,
+    "bytes_touched": 4000000,
+    "extra": {
+      "count": 999983
+    },
+    "notes": "decode every u32"
+  },
+  {
+    "experiment": "progressive",
+    "variant": "bucket_scalar_clustered",
+    "n": 1000000,
+    "params": {
+      "selectivity": 0.999983,
+      "t": 1000000
+    },
+    "median_ns": 761700,
+    "p99_ns": 867300,
+    "min_ns": 704600,
+    "mean_ns": 769216.6666666666,
+    "iters": 6,
+    "ops": 1000000,
+    "bytes_touched": 2000000,
+    "extra": {
+      "count": 999983
+    },
+    "notes": "16-bit bounds first; residual on boundary bucket only"
+  },
+  {
+    "experiment": "progressive",
+    "variant": "bucket_avx2_clustered",
+    "n": 1000000,
+    "params": {
+      "selectivity": 0.999983,
+      "t": 1000000
+    },
+    "median_ns": 1758700,
+    "p99_ns": 2044700,
+    "min_ns": 1718800,
+    "mean_ns": 1795716.6666666667,
+    "iters": 6,
+    "ops": 1000000,
+    "bytes_touched": 2000000,
+    "extra": {
+      "count": 999983
+    },
+    "notes": "representation + vectorized remaining work"
+  },
+  {
+    "experiment": "progressive",
+    "variant": "full_scan_clustered",
+    "n": 1000000,
+    "params": {
+      "selectivity": 0.799728,
+      "t": 1010000
+    },
+    "median_ns": 188800,
+    "p99_ns": 200500,
+    "min_ns": 182300,
+    "mean_ns": 188533.33333333334,
+    "iters": 6,
+    "ops": 1000000,
+    "bytes_touched": 4000000,
+    "extra": {
+      "count": 799728
+    },
+    "notes": "decode every u32"
+  },
+  {
+    "experiment": "progressive",
+    "variant": "bucket_scalar_clustered",
+    "n": 1000000,
+    "params": {
+      "selectivity": 0.799728,
+      "t": 1010000
+    },
+    "median_ns": 879000,
+    "p99_ns": 1096700,
+    "min_ns": 691300,
+    "mean_ns": 887016.6666666666,
+    "iters": 6,
+    "ops": 1000000,
+    "bytes_touched": 2000000,
+    "extra": {
+      "count": 799728
+    },
+    "notes": "16-bit bounds first; residual on boundary bucket only"
+  },
+  {
+    "experiment": "progressive",
+    "variant": "bucket_avx2_clustered",
+    "n": 1000000,
+    "params": {
+      "selectivity": 0.799728,
+      "t": 1010000
+    },
+    "median_ns": 1739600,
+    "p99_ns": 2058900,
+    "min_ns": 1619500,
+    "mean_ns": 1759966.6666666667,
+    "iters": 6,
+    "ops": 1000000,
+    "bytes_touched": 2000000,
+    "extra": {
+      "count": 799728
+    },
+    "notes": "representation + vectorized remaining work"
+  },
+  {
+    "experiment": "progressive",
+    "variant": "full_scan_clustered",
+    "n": 1000000,
+    "params": {
+      "selectivity": 0.49987,
+      "t": 1025000
+    },
+    "median_ns": 167400,
+    "p99_ns": 167500,
+    "min_ns": 167200,
+    "mean_ns": 167350.0,
+    "iters": 6,
+    "ops": 1000000,
+    "bytes_touched": 4000000,
+    "extra": {
+      "count": 499870
+    },
+    "notes": "decode every u32"
+  },
+  {
+    "experiment": "progressive",
+    "variant": "bucket_scalar_clustered",
+    "n": 1000000,
+    "params": {
+      "selectivity": 0.49987,
+      "t": 1025000
+    },
+    "median_ns": 763200,
+    "p99_ns": 781400,
+    "min_ns": 678600,
+    "mean_ns": 734416.6666666666,
+    "iters": 6,
+    "ops": 1000000,
+    "bytes_touched": 2000000,
+    "extra": {
+      "count": 499870
+    },
+    "notes": "16-bit bounds first; residual on boundary bucket only"
+  },
+  {
+    "experiment": "progressive",
+    "variant": "bucket_avx2_clustered",
+    "n": 1000000,
+    "params": {
+      "selectivity": 0.49987,
+      "t": 1025000
+    },
+    "median_ns": 1569300,
+    "p99_ns": 1659300,
+    "min_ns": 1559000,
+    "mean_ns": 1582216.6666666667,
+    "iters": 6,
+    "ops": 1000000,
+    "bytes_touched": 2000000,
+    "extra": {
+      "count": 499870
+    },
+    "notes": "representation + vectorized remaining work"
+  },
+  {
+    "experiment": "progressive",
+    "variant": "full_scan_clustered",
+    "n": 1000000,
+    "params": {
+      "selectivity": 0.0,
+      "t": 2000000
+    },
+    "median_ns": 228100,
+    "p99_ns": 253000,
+    "min_ns": 209200,
+    "mean_ns": 225916.66666666666,
+    "iters": 6,
+    "ops": 1000000,
+    "bytes_touched": 4000000,
+    "extra": {
+      "count": 0
+    },
+    "notes": "decode every u32"
+  },
+  {
+    "experiment": "progressive",
+    "variant": "bucket_scalar_clustered",
+    "n": 1000000,
+    "params": {
+      "selectivity": 0.0,
+      "t": 2000000
+    },
+    "median_ns": 218600,
+    "p99_ns": 219600,
+    "min_ns": 207100,
+    "mean_ns": 214566.66666666666,
+    "iters": 6,
+    "ops": 1000000,
+    "bytes_touched": 2000000,
+    "extra": {
+      "count": 0
+    },
+    "notes": "16-bit bounds first; residual on boundary bucket only"
+  },
+  {
+    "experiment": "progressive",
+    "variant": "bucket_avx2_clustered",
+    "n": 1000000,
+    "params": {
+      "selectivity": 0.0,
+      "t": 2000000
+    },
+    "median_ns": 988500,
+    "p99_ns": 1029300,
+    "min_ns": 977500,
+    "mean_ns": 992283.3333333334,
+    "iters": 6,
+    "ops": 1000000,
+    "bytes_touched": 2000000,
+    "extra": {
+      "count": 0
+    },
+    "notes": "representation + vectorized remaining work"
+  },
+  {
+    "experiment": "progressive",
+    "variant": "argmin_full_clustered",
+    "n": 1000000,
+    "params": {},
+    "median_ns": 551000,
+    "p99_ns": 575900,
+    "min_ns": 538300,
+    "mean_ns": 554566.6666666666,
+    "iters": 6,
+    "ops": 1000000,
+    "bytes_touched": 4000000,
+    "extra": {
+      "i": 1438
+    },
+    "notes": "full value scan"
+  },
+  {
+    "experiment": "progressive",
+    "variant": "argmin_bounds_clustered",
+    "n": 1000000,
+    "params": {},
+    "median_ns": 850600,
+    "p99_ns": 864400,
+    "min_ns": 727900,
+    "mean_ns": 811933.3333333334,
+    "iters": 6,
+    "ops": 1000000,
+    "bytes_touched": 2000000,
+    "extra": {
+      "i": 1438
+    },
+    "notes": "skip buckets whose min cannot beat current best"
+  },
+  {
+    "experiment": "progressive",
+    "variant": "full_scan_spread",
+    "n": 1000000,
+    "params": {
+      "selectivity": 0.999996,
+      "t": 1000
+    },
+    "median_ns": 199100,
+    "p99_ns": 205700,
+    "min_ns": 181800,
+    "mean_ns": 192216.66666666666,
+    "iters": 6,
+    "ops": 1000000,
+    "bytes_touched": 4000000,
+    "extra": {
+      "count": 999996
+    },
+    "notes": "decode every u32"
+  },
+  {
+    "experiment": "progressive",
+    "variant": "bucket_scalar_spread",
+    "n": 1000000,
+    "params": {
+      "selectivity": 0.999996,
+      "t": 1000
+    },
+    "median_ns": 353200,
+    "p99_ns": 445700,
+    "min_ns": 334500,
+    "mean_ns": 369366.6666666667,
+    "iters": 6,
+    "ops": 1000000,
+    "bytes_touched": 2000000,
+    "extra": {
+      "count": 999996
+    },
+    "notes": "16-bit bounds first; residual on boundary bucket only"
+  },
+  {
+    "experiment": "progressive",
+    "variant": "bucket_avx2_spread",
+    "n": 1000000,
+    "params": {
+      "selectivity": 0.999996,
+      "t": 1000
+    },
+    "median_ns": 1193300,
+    "p99_ns": 1289400,
+    "min_ns": 1172900,
+    "mean_ns": 1206266.6666666667,
+    "iters": 6,
+    "ops": 1000000,
+    "bytes_touched": 2000000,
+    "extra": {
+      "count": 999996
+    },
+    "notes": "representation + vectorized remaining work"
+  },
+  {
+    "experiment": "progressive",
+    "variant": "full_scan_spread",
+    "n": 1000000,
+    "params": {
+      "selectivity": 0.996359,
+      "t": 1000000
+    },
+    "median_ns": 181900,
+    "p99_ns": 186000,
+    "min_ns": 181700,
+    "mean_ns": 182516.66666666666,
+    "iters": 6,
+    "ops": 1000000,
+    "bytes_touched": 4000000,
+    "extra": {
+      "count": 996359
+    },
+    "notes": "decode every u32"
+  },
+  {
+    "experiment": "progressive",
+    "variant": "bucket_scalar_spread",
+    "n": 1000000,
+    "params": {
+      "selectivity": 0.996359,
+      "t": 1000000
+    },
+    "median_ns": 362900,
+    "p99_ns": 394600,
+    "min_ns": 353900,
+    "mean_ns": 366750.0,
+    "iters": 6,
+    "ops": 1000000,
+    "bytes_touched": 2000000,
+    "extra": {
+      "count": 996359
+    },
+    "notes": "16-bit bounds first; residual on boundary bucket only"
+  },
+  {
+    "experiment": "progressive",
+    "variant": "bucket_avx2_spread",
+    "n": 1000000,
+    "params": {
+      "selectivity": 0.996359,
+      "t": 1000000
+    },
+    "median_ns": 1104000,
+    "p99_ns": 1477900,
+    "min_ns": 1005000,
+    "mean_ns": 1165516.6666666667,
+    "iters": 6,
+    "ops": 1000000,
+    "bytes_touched": 2000000,
+    "extra": {
+      "count": 996359
+    },
+    "notes": "representation + vectorized remaining work"
+  },
+  {
+    "experiment": "progressive",
+    "variant": "full_scan_spread",
+    "n": 1000000,
+    "params": {
+      "selectivity": 0.813841,
+      "t": 50000000
+    },
+    "median_ns": 172000,
+    "p99_ns": 194400,
+    "min_ns": 167300,
+    "mean_ns": 174966.66666666666,
+    "iters": 6,
+    "ops": 1000000,
+    "bytes_touched": 4000000,
+    "extra": {
+      "count": 813841
+    },
+    "notes": "decode every u32"
+  },
+  {
+    "experiment": "progressive",
+    "variant": "bucket_scalar_spread",
+    "n": 1000000,
+    "params": {
+      "selectivity": 0.813841,
+      "t": 50000000
+    },
+    "median_ns": 1657800,
+    "p99_ns": 2193700,
+    "min_ns": 1360500,
+    "mean_ns": 1669033.3333333333,
+    "iters": 6,
+    "ops": 1000000,
+    "bytes_touched": 2000000,
+    "extra": {
+      "count": 813841
+    },
+    "notes": "16-bit bounds first; residual on boundary bucket only"
+  },
+  {
+    "experiment": "progressive",
+    "variant": "bucket_avx2_spread",
+    "n": 1000000,
+    "params": {
+      "selectivity": 0.813841,
+      "t": 50000000
+    },
+    "median_ns": 1038400,
+    "p99_ns": 1084000,
+    "min_ns": 989600,
+    "mean_ns": 1032383.3333333334,
+    "iters": 6,
+    "ops": 1000000,
+    "bytes_touched": 2000000,
+    "extra": {
+      "count": 813841
+    },
+    "notes": "representation + vectorized remaining work"
+  },
+  {
+    "experiment": "progressive",
+    "variant": "full_scan_spread",
+    "n": 1000000,
+    "params": {
+      "selectivity": 0.25481,
+      "t": 200000000
+    },
+    "median_ns": 167300,
+    "p99_ns": 168400,
+    "min_ns": 167100,
+    "mean_ns": 167433.33333333334,
+    "iters": 6,
+    "ops": 1000000,
+    "bytes_touched": 4000000,
+    "extra": {
+      "count": 254810
+    },
+    "notes": "decode every u32"
+  },
+  {
+    "experiment": "progressive",
+    "variant": "bucket_scalar_spread",
+    "n": 1000000,
+    "params": {
+      "selectivity": 0.25481,
+      "t": 200000000
+    },
+    "median_ns": 2089000,
+    "p99_ns": 2144300,
+    "min_ns": 1732500,
+    "mean_ns": 1980566.6666666667,
+    "iters": 6,
+    "ops": 1000000,
+    "bytes_touched": 2000000,
+    "extra": {
+      "count": 254810
+    },
+    "notes": "16-bit bounds first; residual on boundary bucket only"
+  },
+  {
+    "experiment": "progressive",
+    "variant": "bucket_avx2_spread",
+    "n": 1000000,
+    "params": {
+      "selectivity": 0.25481,
+      "t": 200000000
+    },
+    "median_ns": 1178700,
+    "p99_ns": 1201900,
+    "min_ns": 1004500,
+    "mean_ns": 1111133.3333333333,
+    "iters": 6,
+    "ops": 1000000,
+    "bytes_touched": 2000000,
+    "extra": {
+      "count": 254810
+    },
+    "notes": "representation + vectorized remaining work"
+  },
+  {
+    "experiment": "progressive",
+    "variant": "argmin_full_spread",
+    "n": 1000000,
+    "params": {},
+    "median_ns": 547000,
+    "p99_ns": 570700,
+    "min_ns": 539700,
+    "mean_ns": 547583.3333333334,
+    "iters": 6,
+    "ops": 1000000,
+    "bytes_touched": 4000000,
+    "extra": {
+      "i": 394611
+    },
+    "notes": "full value scan"
+  },
+  {
+    "experiment": "progressive",
+    "variant": "argmin_bounds_spread",
+    "n": 1000000,
+    "params": {},
+    "median_ns": 305300,
+    "p99_ns": 399900,
+    "min_ns": 304500,
+    "mean_ns": 321466.6666666667,
+    "iters": 6,
+    "ops": 1000000,
+    "bytes_touched": 2000000,
+    "extra": {
+      "i": 394611
+    },
+    "notes": "skip buckets whose min cannot beat current best"
+  },
+  {
+    "experiment": "certificate",
+    "variant": "merge_overlap",
+    "n": 200000,
+    "params": {
+      "out": 62070
+    },
+    "median_ns": 1724800,
+    "p99_ns": 2081000,
+    "min_ns": 1486000,
+    "mean_ns": 1728666.6666666667,
+    "iters": 6,
+    "ops": 314910,
+    "bytes_touched": 2519280,
+    "extra": {
+      "out": 62070
+    },
+    "notes": "must inspect both inputs; certificate ≈ input"
+  },
+  {
+    "experiment": "certificate",
+    "variant": "gallop_overlap",
+    "n": 200000,
+    "params": {
+      "out": 62070
+    },
+    "median_ns": 1453200,
+    "p99_ns": 1684200,
+    "min_ns": 1344100,
+    "mean_ns": 1471000.0,
+    "iters": 6,
+    "ops": 157427,
+    "bytes_touched": 2518832,
+    "extra": {
+      "out": 62070
+    },
+    "notes": "galloping loses when output is dense"
+  },
+  {
+    "experiment": "certificate",
+    "variant": "merge_sparse",
+    "n": 200000,
+    "params": {
+      "out": 19,
+      "small": 19
+    },
+    "median_ns": 180200,
+    "p99_ns": 257000,
+    "min_ns": 176500,
+    "mean_ns": 189762.5,
+    "iters": 8,
+    "ops": 187881,
+    "bytes_touched": 1503048,
+    "extra": {
+      "out": 19
+    },
+    "notes": "merge still walks the large side"
+  },
+  {
+    "experiment": "certificate",
+    "variant": "gallop_sparse",
+    "n": 200000,
+    "params": {
+      "out": 19,
+      "small": 19
+    },
+    "median_ns": 600,
+    "p99_ns": 700,
+    "min_ns": 600,
+    "mean_ns": 633.3333333333334,
+    "iters": 12,
+    "ops": 19,
+    "bytes_touched": 1216,
+    "extra": {
+      "out": 19
+    },
+    "notes": "work tracks small side + log jumps"
+  },
+  {
+    "experiment": "certificate",
+    "variant": "merge_disjoint_range",
+    "n": 200000,
+    "params": {
+      "out": 0
+    },
+    "median_ns": 343300,
+    "p99_ns": 370300,
+    "min_ns": 198800,
+    "mean_ns": 285800.0,
+    "iters": 6,
+    "ops": 400000,
+    "bytes_touched": 3200000,
+    "extra": {
+      "out": 0
+    },
+    "notes": "empty result still walks until one side ends"
+  },
+  {
+    "experiment": "certificate",
+    "variant": "bound_certificate_disjoint",
+    "n": 200000,
+    "params": {
+      "out": 1
+    },
+    "median_ns": 0,
+    "p99_ns": 100,
+    "min_ns": 0,
+    "mean_ns": 30.0,
+    "iters": 40,
+    "ops": 2,
+    "bytes_touched": 16,
+    "extra": {
+      "disjoint": true
+    },
+    "notes": "two extrema prove empty intersection"
+  },
+  {
+    "experiment": "certificate",
+    "variant": "merge_interleaved_empty",
+    "n": 200000,
+    "params": {
+      "out": 0
+    },
+    "median_ns": 336600,
+    "p99_ns": 339900,
+    "min_ns": 331000,
+    "mean_ns": 335500.0,
+    "iters": 5,
+    "ops": 400000,
+    "bytes_touched": 3200000,
+    "extra": {
+      "bound_lies": false,
+      "out": 0
+    },
+    "notes": "empty result, but bounds overlap; merge is the certificate"
+  },
+  {
+    "experiment": "wcoj",
+    "variant": "leapfrog_two_cliques_20",
+    "n": 40,
+    "params": {
+      "edges": 380,
+      "triangles": 2280
+    },
+    "median_ns": 6900,
+    "p99_ns": 14600,
+    "min_ns": 6800,
+    "mean_ns": 8660.0,
+    "iters": 5,
+    "ops": 380,
+    "bytes_touched": 6080,
+    "extra": {
+      "triangles": 2280
+    },
+    "notes": "intersect neighbor lists; AGM-style"
+  },
+  {
+    "experiment": "wcoj",
+    "variant": "binary_expand_two_cliques_20",
+    "n": 40,
+    "params": {
+      "edges": 380,
+      "triangles": 2280,
+      "two_hop": 14440
+    },
+    "median_ns": 29700,
+    "p99_ns": 30500,
+    "min_ns": 27900,
+    "mean_ns": 29366.666666666668,
+    "iters": 3,
+    "ops": 14440,
+    "bytes_touched": 173280,
+    "extra": {
+      "intermediates": 2280,
+      "triangles": 2280
+    },
+    "notes": "R⋈S materializes two-hop pairs then probes T"
+  },
+  {
+    "experiment": "wcoj",
+    "variant": "leapfrog_er_80_p0.05",
+    "n": 80,
+    "params": {
+      "edges": 139,
+      "triangles": 5
+    },
+    "median_ns": 2000,
+    "p99_ns": 7500,
+    "min_ns": 1300,
+    "mean_ns": 3200.0,
+    "iters": 5,
+    "ops": 139,
+    "bytes_touched": 2224,
+    "extra": {
+      "triangles": 5
+    },
+    "notes": "intersect neighbor lists; AGM-style"
+  },
+  {
+    "experiment": "wcoj",
+    "variant": "binary_expand_er_80_p0.05",
+    "n": 80,
+    "params": {
+      "edges": 139,
+      "triangles": 5,
+      "two_hop": 1252
+    },
+    "median_ns": 7600,
+    "p99_ns": 8600,
+    "min_ns": 7500,
+    "mean_ns": 7900.0,
+    "iters": 3,
+    "ops": 1252,
+    "bytes_touched": 15024,
+    "extra": {
+      "intermediates": 144,
+      "triangles": 5
+    },
+    "notes": "R⋈S materializes two-hop pairs then probes T"
+  },
+  {
+    "experiment": "wcoj",
+    "variant": "leapfrog_bipartite_80",
+    "n": 160,
+    "params": {
+      "edges": 6439,
+      "triangles": 3120
+    },
+    "median_ns": 501300,
+    "p99_ns": 538000,
+    "min_ns": 476900,
+    "mean_ns": 509380.0,
+    "iters": 5,
+    "ops": 6439,
+    "bytes_touched": 103024,
+    "extra": {
+      "triangles": 3120
+    },
+    "notes": "intersect neighbor lists; AGM-style"
+  },
+  {
+    "experiment": "wcoj",
+    "variant": "binary_expand_bipartite_80",
+    "n": 160,
+    "params": {
+      "edges": 6439,
+      "triangles": 3120,
+      "two_hop": 1036624
+    },
+    "median_ns": 384800,
+    "p99_ns": 387500,
+    "min_ns": 383900,
+    "mean_ns": 385400.0,
+    "iters": 3,
+    "ops": 1036624,
+    "bytes_touched": 12439488,
+    "extra": {
+      "intermediates": 3129,
+      "triangles": 3120
+    },
+    "notes": "R⋈S materializes two-hop pairs then probes T"
+  },
+  {
+    "experiment": "coordination",
+    "variant": "global_cas",
+    "n": 50000,
+    "params": {
+      "left": 0,
+      "ok": 50000,
+      "per": 20000,
+      "soldout": 110000,
+      "threads": 8
+    },
+    "median_ns": 3678300,
+    "p99_ns": 4080300,
+    "min_ns": 1397700,
+    "mean_ns": 2867075.0,
+    "iters": 4,
+    "ops": 160000,
+    "bytes_touched": 2560000,
+    "extra": {
+      "left": 0,
+      "ok": 50000,
+      "soldout": 110000
+    },
+    "notes": "every reserve contends on one counter"
+  },
+  {
+    "experiment": "coordination",
+    "variant": "quota_restock_1",
+    "n": 50000,
+    "params": {
+      "left": 0,
+      "ok": 50000,
+      "per": 20000,
+      "restock": 1,
+      "soldout": 110000,
+      "stranded_or_false_soldout": 0,
+      "threads": 8
+    },
+    "median_ns": 6815000,
+    "p99_ns": 7227000,
+    "min_ns": 5301700,
+    "mean_ns": 6371600.0,
+    "iters": 4,
+    "ops": 160000,
+    "bytes_touched": 0,
+    "extra": {
+      "left": 0,
+      "ok": 50000,
+      "soldout": 110000
+    },
+    "notes": "local rights until restock; leftover quota can strand units"
+  },
+  {
+    "experiment": "coordination",
+    "variant": "quota_restock_16",
+    "n": 50000,
+    "params": {
+      "left": 0,
+      "ok": 50000,
+      "per": 20000,
+      "restock": 16,
+      "soldout": 110000,
+      "stranded_or_false_soldout": 0,
+      "threads": 8
+    },
+    "median_ns": 6628200,
+    "p99_ns": 6705600,
+    "min_ns": 5581500,
+    "mean_ns": 6298575.0,
+    "iters": 4,
+    "ops": 160000,
+    "bytes_touched": 0,
+    "extra": {
+      "left": 0,
+      "ok": 50000,
+      "soldout": 110000
+    },
+    "notes": "local rights until restock; leftover quota can strand units"
+  },
+  {
+    "experiment": "coordination",
+    "variant": "quota_restock_256",
+    "n": 50000,
+    "params": {
+      "left": 0,
+      "ok": 50000,
+      "per": 20000,
+      "restock": 256,
+      "soldout": 110000,
+      "stranded_or_false_soldout": 0,
+      "threads": 8
+    },
+    "median_ns": 7037500,
+    "p99_ns": 7267800,
+    "min_ns": 5648900,
+    "mean_ns": 6559550.0,
+    "iters": 4,
+    "ops": 160000,
+    "bytes_touched": 0,
+    "extra": {
+      "left": 0,
+      "ok": 50000,
+      "soldout": 110000
+    },
+    "notes": "local rights until restock; leftover quota can strand units"
+  },
+  {
+    "experiment": "coordination",
+    "variant": "quota_restock_4096",
+    "n": 50000,
+    "params": {
+      "left": 0,
+      "ok": 50000,
+      "per": 20000,
+      "restock": 4096,
+      "soldout": 110000,
+      "stranded_or_false_soldout": 0,
+      "threads": 8
+    },
+    "median_ns": 6983000,
+    "p99_ns": 7050800,
+    "min_ns": 5822400,
+    "mean_ns": 6546200.0,
+    "iters": 4,
+    "ops": 160000,
+    "bytes_touched": 0,
+    "extra": {
+      "left": 0,
+      "ok": 50000,
+      "soldout": 110000
+    },
+    "notes": "local rights until restock; leftover quota can strand units"
+  },
+  {
+    "experiment": "redundancy",
+    "variant": "sum_from_a_and_b",
+    "n": 500000,
+    "params": {},
+    "median_ns": 273400,
+    "p99_ns": 300500,
+    "min_ns": 265900,
+    "mean_ns": 275333.3333333333,
+    "iters": 6,
+    "ops": 1000000,
+    "bytes_touched": 8000000,
+    "extra": {
+      "sum": 103537629
+    },
+    "notes": "read both source blocks"
+  },
+  {
+    "experiment": "redundancy",
+    "variant": "sum_from_coded_c",
+    "n": 500000,
+    "params": {},
+    "median_ns": 1365400,
+    "p99_ns": 2184500,
+    "min_ns": 681700,
+    "mean_ns": 1386133.3333333333,
+    "iters": 6,
+    "ops": 500000,
+    "bytes_touched": 8000000,
+    "extra": {
+      "sum": 103537629
+    },
+    "notes": "parity block is the elementwise sum"
+  },
+  {
+    "experiment": "redundancy",
+    "variant": "filter_sum_from_sources",
+    "n": 500000,
+    "params": {
+      "t": 0
+    },
+    "median_ns": 379400,
+    "p99_ns": 385400,
+    "min_ns": 379100,
+    "mean_ns": 381066.6666666667,
+    "iters": 6,
+    "ops": 1000000,
+    "bytes_touched": 8000000,
+    "extra": {
+      "sum": 166435205873
+    },
+    "notes": "predicate on A+B still needs both sources without C"
+  },
+  {
+    "experiment": "redundancy",
+    "variant": "filter_sum_from_coded_c",
+    "n": 500000,
+    "params": {
+      "t": 0
+    },
+    "median_ns": 206700,
+    "p99_ns": 214400,
+    "min_ns": 206500,
+    "mean_ns": 208833.33333333334,
+    "iters": 6,
+    "ops": 500000,
+    "bytes_touched": 8000000,
+    "extra": {
+      "sum": 166435205873
+    },
+    "notes": "same predicate against the recovery block"
+  },
+  {
+    "experiment": "redundancy",
+    "variant": "filter_a_only_negative_control",
+    "n": 500000,
+    "params": {},
+    "median_ns": 231200,
+    "p99_ns": 361100,
+    "min_ns": 181500,
+    "mean_ns": 257950.0,
+    "iters": 6,
+    "ops": 500000,
+    "bytes_touched": 4000000,
+    "extra": {
+      "count": 249778
+    },
+    "notes": "C = A+B does not answer predicates on A; coded queryability is operator-specific"
+  },
+  {
+    "experiment": "redundancy",
+    "variant": "recover_a_from_b_and_c",
+    "n": 500000,
+    "params": {},
+    "median_ns": 0,
+    "p99_ns": 100,
+    "min_ns": 0,
+    "mean_ns": 25.0,
+    "iters": 4,
+    "ops": 500000,
+    "bytes_touched": 12000000,
+    "extra": {
+      "len": 500000
+    },
+    "notes": "erasure repair cost of the same extra block"
+  },
+  {
+    "experiment": "pgm",
+    "variant": "binary_linear",
+    "n": 200000,
+    "params": {
+      "queries": 20000
+    },
+    "median_ns": 568500,
+    "p99_ns": 581900,
+    "min_ns": 555600,
+    "mean_ns": 565516.6666666666,
+    "iters": 6,
+    "ops": 20000,
+    "bytes_touched": 1280000,
+    "extra": {
+      "xor": 250224
+    },
+    "notes": "classic sorted-array binary search"
+  },
+  {
+    "experiment": "pgm",
+    "variant": "pgm_linear",
+    "n": 200000,
+    "params": {
+      "queries": 20000,
+      "segments": 1
+    },
+    "median_ns": 188500,
+    "p99_ns": 236600,
+    "min_ns": 187400,
+    "mean_ns": 197166.66666666666,
+    "iters": 6,
+    "ops": 20000,
+    "bytes_touched": 960000,
+    "extra": {
+      "bytes_model": 32,
+      "segments": 1,
+      "xor": 250224
+    },
+    "notes": "linear CDF model + bounded correction window"
+  },
+  {
+    "experiment": "pgm",
+    "variant": "hash_linear",
+    "n": 200000,
+    "params": {
+      "map_len": 200000,
+      "queries": 20000
+    },
+    "median_ns": 285400,
+    "p99_ns": 317800,
+    "min_ns": 228100,
+    "mean_ns": 273416.6666666667,
+    "iters": 6,
+    "ops": 20000,
+    "bytes_touched": 1280000,
+    "extra": {
+      "xor": 250224
+    },
+    "notes": "HashMap specialist: extra memory, O(1) expected"
+  },
+  {
+    "experiment": "pgm",
+    "variant": "binary_gaps",
+    "n": 200000,
+    "params": {
+      "queries": 20000
+    },
+    "median_ns": 543200,
+    "p99_ns": 600400,
+    "min_ns": 528300,
+    "mean_ns": 547916.6666666666,
+    "iters": 6,
+    "ops": 20000,
+    "bytes_touched": 1280000,
+    "extra": {
+      "xor": 152771
+    },
+    "notes": "classic sorted-array binary search"
+  },
+  {
+    "experiment": "pgm",
+    "variant": "pgm_gaps",
+    "n": 200000,
+    "params": {
+      "queries": 20000,
+      "segments": 1
+    },
+    "median_ns": 462900,
+    "p99_ns": 622600,
+    "min_ns": 453800,
+    "mean_ns": 492033.3333333333,
+    "iters": 6,
+    "ops": 20000,
+    "bytes_touched": 960000,
+    "extra": {
+      "bytes_model": 32,
+      "segments": 1,
+      "xor": 152771
+    },
+    "notes": "linear CDF model + bounded correction window"
+  },
+  {
+    "experiment": "pgm",
+    "variant": "hash_gaps",
+    "n": 200000,
+    "params": {
+      "map_len": 200000,
+      "queries": 20000
+    },
+    "median_ns": 226100,
+    "p99_ns": 236400,
+    "min_ns": 210800,
+    "mean_ns": 222116.66666666666,
+    "iters": 6,
+    "ops": 20000,
+    "bytes_touched": 1280000,
+    "extra": {
+      "xor": 152771
+    },
+    "notes": "HashMap specialist: extra memory, O(1) expected"
+  },
+  {
+    "experiment": "pgm",
+    "variant": "binary_clusters",
+    "n": 200000,
+    "params": {
+      "queries": 20000
+    },
+    "median_ns": 523900,
+    "p99_ns": 528000,
+    "min_ns": 521300,
+    "mean_ns": 524250.0,
+    "iters": 6,
+    "ops": 20000,
+    "bytes_touched": 1280000,
+    "extra": {
+      "xor": 63130
+    },
+    "notes": "classic sorted-array binary search"
+  },
+  {
+    "experiment": "pgm",
+    "variant": "pgm_clusters",
+    "n": 200000,
+    "params": {
+      "queries": 20000,
+      "segments": 1
+    },
+    "median_ns": 734000,
+    "p99_ns": 870800,
+    "min_ns": 643400,
+    "mean_ns": 724883.3333333334,
+    "iters": 6,
+    "ops": 20000,
+    "bytes_touched": 960000,
+    "extra": {
+      "bytes_model": 32,
+      "segments": 1,
+      "xor": 63130
+    },
+    "notes": "linear CDF model + bounded correction window"
+  },
+  {
+    "experiment": "pgm",
+    "variant": "hash_clusters",
+    "n": 200000,
+    "params": {
+      "map_len": 200000,
+      "queries": 20000
+    },
+    "median_ns": 242400,
+    "p99_ns": 255700,
+    "min_ns": 212500,
+    "mean_ns": 233883.33333333334,
+    "iters": 6,
+    "ops": 20000,
+    "bytes_touched": 1280000,
+    "extra": {
+      "xor": 63130
+    },
+    "notes": "HashMap specialist: extra memory, O(1) expected"
+  },
+  {
+    "experiment": "engine",
+    "variant": "row_scan_predicate",
+    "n": 1000000,
+    "params": {
+      "count": 748060,
+      "min_price": 2500
+    },
+    "median_ns": 2852100,
+    "p99_ns": 4478100,
+    "min_ns": 2606200,
+    "mean_ns": 3159840.0,
+    "iters": 5,
+    "ops": 1000000,
+    "bytes_touched": 24000000,
+    "extra": {
+      "count": 748060,
+      "sum": 4674206889
+    },
+    "notes": "AoS: filter+project touches full rows"
+  },
+  {
+    "experiment": "engine",
+    "variant": "col_scan_scalar",
+    "n": 1000000,
+    "params": {
+      "count": 748060,
+      "min_price": 2500
+    },
+    "median_ns": 2511300,
+    "p99_ns": 3067700,
+    "min_ns": 2470900,
+    "mean_ns": 2684600.0,
+    "iters": 5,
+    "ops": 1000000,
+    "bytes_touched": 8000000,
+    "extra": {
+      "count": 748060,
+      "sum": 4674206889
+    },
+    "notes": "SoA: only the two referenced columns"
+  },
+  {
+    "experiment": "engine",
+    "variant": "col_scan_avx2",
+    "n": 1000000,
+    "params": {
+      "count": 748060,
+      "min_price": 2500
+    },
+    "median_ns": 3954900,
+    "p99_ns": 4793600,
+    "min_ns": 3648300,
+    "mean_ns": 4121080.0,
+    "iters": 5,
+    "ops": 1000000,
+    "bytes_touched": 8000000,
+    "extra": {
+      "count": 748060,
+      "sum": 4674206889
+    },
+    "notes": "same columns, vectorized remaining work"
+  },
+  {
+    "experiment": "engine",
+    "variant": "lookup_4k_independent_bsearch",
+    "n": 1000000,
+    "params": {
+      "k": 4000
+    },
+    "median_ns": 185400,
+    "p99_ns": 193400,
+    "min_ns": 180500,
+    "mean_ns": 185270.0,
+    "iters": 10,
+    "ops": 4000,
+    "bytes_touched": 256000,
+    "extra": {
+      "xor": 686366
+    },
+    "notes": "4,000 separate binary searches"
+  },
+  {
+    "experiment": "engine",
+    "variant": "lookup_4k_sorted_merge",
+    "n": 1000000,
+    "params": {
+      "k": 4000
+    },
+    "median_ns": 269400,
+    "p99_ns": 347900,
+    "min_ns": 253900,
+    "mean_ns": 276020.0,
+    "iters": 10,
+    "ops": 4000,
+    "bytes_touched": 0,
+    "extra": {
+      "xor": 506146
+    },
+    "notes": "sort keys, one forward scan of the id column"
+  },
+  {
+    "experiment": "engine",
+    "variant": "lookup_4k_direct_id",
+    "n": 1000000,
+    "params": {
+      "k": 4000
+    },
+    "median_ns": 1600,
+    "p99_ns": 1700,
+    "min_ns": 1600,
+    "mean_ns": 1625.0,
+    "iters": 16,
+    "ops": 4000,
+    "bytes_touched": 16000,
+    "extra": {
+      "sum": 33482579738
+    },
+    "notes": "dense primary key: 4,000 direct loads"
+  },
+  {
+    "experiment": "engine",
+    "variant": "payload_bound",
+    "n": 4000,
+    "params": {
+      "bytes_per_row": 256,
+      "ms_at_10gbit_ideal": 0.8191999999999999,
+      "ms_at_1gbit_ideal": 8.192,
+      "total_bytes": 1024000
+    },
+    "median_ns": 0,
+    "p99_ns": 0,
+    "min_ns": 0,
+    "mean_ns": 0.0,
+    "iters": 1,
+    "ops": 4000,
+    "bytes_touched": 1024000,
+    "extra": {},
+    "notes": "network payload lower bound; independent of engine speed"
+  },
+  {
+    "experiment": "engine",
+    "variant": "payload_bound",
+    "n": 4000,
+    "params": {
+      "bytes_per_row": 4096,
+      "ms_at_10gbit_ideal": 13.107199999999999,
+      "ms_at_1gbit_ideal": 131.072,
+      "total_bytes": 16384000
+    },
+    "median_ns": 0,
+    "p99_ns": 0,
+    "min_ns": 0,
+    "mean_ns": 0.0,
+    "iters": 1,
+    "ops": 4000,
+    "bytes_touched": 16384000,
+    "extra": {},
+    "notes": "network payload lower bound; independent of engine speed"
+  },
+  {
+    "experiment": "shared_state",
+    "variant": "private_counts",
+    "n": 50000,
+    "params": {
+      "queries": 8,
+      "retained_bytes": 81952
+    },
+    "median_ns": 0,
+    "p99_ns": 100,
+    "min_ns": 0,
+    "mean_ns": 30.0,
+    "iters": 10,
+    "ops": 8,
+    "bytes_touched": 81952,
+    "extra": {
+      "retained_bytes": 81952,
+      "sum": 10244
+    },
+    "notes": "each query stores its own match list"
+  },
+  {
+    "experiment": "shared_state",
+    "variant": "shared_index_counts",
+    "n": 50000,
+    "params": {
+      "index_bytes": 400000,
+      "queries": 8
+    },
+    "median_ns": 300,
+    "p99_ns": 500,
+    "min_ns": 300,
+    "mean_ns": 340.0,
+    "iters": 10,
+    "ops": 8,
+    "bytes_touched": 512,
+    "extra": {
+      "index_bytes": 400000,
+      "sum": 10243
+    },
+    "notes": "one sorted array serves every range"
+  },
+  {
+    "experiment": "shared_state",
+    "variant": "private_insert",
+    "n": 50000,
+    "params": {
+      "queries": 8
+    },
+    "median_ns": 100,
+    "p99_ns": 200,
+    "min_ns": 0,
+    "mean_ns": 62.5,
+    "iters": 8,
+    "ops": 8,
+    "bytes_touched": 64,
+    "extra": {
+      "sum": 10244
+    },
+    "notes": "update fan-out = number of queries"
+  },
+  {
+    "experiment": "shared_state",
+    "variant": "shared_insert",
+    "n": 50000,
+    "params": {
+      "queries": 8
+    },
+    "median_ns": 7500,
+    "p99_ns": 7500,
+    "min_ns": 6800,
+    "mean_ns": 7337.5,
+    "iters": 8,
+    "ops": 1,
+    "bytes_touched": 24,
+    "extra": {
+      "sum": 10243
+    },
+    "notes": "one insert into the shared array; queries stay cheap. Vec insert is O(n)."
+  },
+  {
+    "experiment": "shared_state",
+    "variant": "private_counts",
+    "n": 50000,
+    "params": {
+      "queries": 64,
+      "retained_bytes": 633496
+    },
+    "median_ns": 100,
+    "p99_ns": 200,
+    "min_ns": 0,
+    "mean_ns": 60.0,
+    "iters": 10,
+    "ops": 64,
+    "bytes_touched": 633496,
+    "extra": {
+      "retained_bytes": 633496,
+      "sum": 79187
+    },
+    "notes": "each query stores its own match list"
+  },
+  {
+    "experiment": "shared_state",
+    "variant": "shared_index_counts",
+    "n": 50000,
+    "params": {
+      "index_bytes": 400000,
+      "queries": 64
+    },
+    "median_ns": 2700,
+    "p99_ns": 3700,
+    "min_ns": 2700,
+    "mean_ns": 2890.0,
+    "iters": 10,
+    "ops": 64,
+    "bytes_touched": 4096,
+    "extra": {
+      "index_bytes": 400000,
+      "sum": 79184
+    },
+    "notes": "one sorted array serves every range"
+  },
+  {
+    "experiment": "shared_state",
+    "variant": "private_insert",
+    "n": 50000,
+    "params": {
+      "queries": 64
+    },
+    "median_ns": 100,
+    "p99_ns": 900,
+    "min_ns": 100,
+    "mean_ns": 262.5,
+    "iters": 8,
+    "ops": 64,
+    "bytes_touched": 512,
+    "extra": {
+      "sum": 79190
+    },
+    "notes": "update fan-out = number of queries"
+  },
+  {
+    "experiment": "shared_state",
+    "variant": "shared_insert",
+    "n": 50000,
+    "params": {
+      "queries": 64
+    },
+    "median_ns": 9700,
+    "p99_ns": 9800,
+    "min_ns": 9100,
+    "mean_ns": 9625.0,
+    "iters": 8,
+    "ops": 1,
+    "bytes_touched": 24,
+    "extra": {
+      "sum": 79187
+    },
+    "notes": "one insert into the shared array; queries stay cheap. Vec insert is O(n)."
+  },
+  {
+    "experiment": "joint",
+    "variant": "brute_materialized_scan",
+    "n": 8000,
+    "params": {
+      "queries": 3000
+    },
+    "median_ns": 28751300,
+    "p99_ns": 33696000,
+    "min_ns": 27080100,
+    "mean_ns": 29513980.0,
+    "iters": 5,
+    "ops": 24000000,
+    "bytes_touched": 384000000,
+    "extra": {
+      "xor": 47
+    },
+    "notes": "evaluate every product for every weight"
+  },
+  {
+    "experiment": "joint",
+    "variant": "joint_cells_over_bases",
+    "n": 8000,
+    "params": {
+      "cells": 2,
+      "queries": 3000
+    },
+    "median_ns": 16600,
+    "p99_ns": 18300,
+    "min_ns": 14900,
+    "mean_ns": 16410.0,
+    "iters": 10,
+    "ops": 3000,
+    "bytes_touched": 96000,
+    "extra": {
+      "cells": 2,
+      "xor": 47
+    },
+    "notes": "envelope on bases; adj is invisible to ranking"
+  },
+  {
+    "experiment": "joint",
+    "variant": "joint_mixed_bulk_and_exceptions",
+    "n": 8000,
+    "params": {
+      "bulk_every": 20,
+      "exc_every": 400,
+      "queries": 3000
+    },
+    "median_ns": 6673900,
+    "p99_ns": 7618000,
+    "min_ns": 6416100,
+    "mean_ns": 6812700.0,
+    "iters": 4,
+    "ops": 3000,
+    "bytes_touched": 0,
+    "extra": {
+      "xor": 46
+    },
+    "notes": "bulk ops free for ranking; exception forces envelope rebuild"
+  },
+  {
+    "experiment": "joint",
+    "variant": "brute_mixed_bulk_and_exceptions",
+    "n": 8000,
+    "params": {
+      "queries": 3000
+    },
+    "median_ns": 32701400,
+    "p99_ns": 45439100,
+    "min_ns": 32337800,
+    "mean_ns": 36826100.0,
+    "iters": 3,
+    "ops": 24000000,
+    "bytes_touched": 384000000,
+    "extra": {
+      "xor": 46
+    },
+    "notes": "same mixed mutations, no certificate"
+  },
+  {
+    "experiment": "joint",
+    "variant": "rebuild_on_irregular_updates",
+    "n": 8000,
+    "params": {
+      "queries": 3000
+    },
+    "median_ns": 43294300,
+    "p99_ns": 43606600,
+    "min_ns": 42672900,
+    "mean_ns": 43191266.666666664,
+    "iters": 3,
+    "ops": 3000,
+    "bytes_touched": 0,
+    "extra": {
+      "xor": 46
+    },
+    "notes": "irregular per-row changes deny the bulk-adj identity; rebuild cost shows up"
+  },
+  {
+    "experiment": "correlation",
+    "variant": "full_columns_tight",
+    "n": 400000,
+    "params": {
+      "noise": 0.05,
+      "resid_span": 0.050098628774961185,
+      "selectivity": 0.333065,
+      "t": 40.0
+    },
+    "median_ns": 49900,
+    "p99_ns": 52400,
+    "min_ns": 49400,
+    "mean_ns": 50250.0,
+    "iters": 6,
+    "ops": 400000,
+    "bytes_touched": 6400000,
+    "extra": {
+      "count": 133226,
+      "resid_span": 0.050098628774961185
+    },
+    "notes": "scan stored delivery"
+  },
+  {
+    "experiment": "correlation",
+    "variant": "model_prune_tight",
+    "n": 400000,
+    "params": {
+      "noise": 0.05,
+      "resid_span": 0.050098628774961185,
+      "selectivity": 0.333065,
+      "t": 40.0
+    },
+    "median_ns": 1461200,
+    "p99_ns": 1570900,
+    "min_ns": 1287500,
+    "mean_ns": 1436833.3333333333,
+    "iters": 6,
+    "ops": 400000,
+    "bytes_touched": 3200000,
+    "extra": {
+      "count": 133226
+    },
+    "notes": "global residual envelope; decode only the uncertain band"
+  },
+  {
+    "experiment": "correlation",
+    "variant": "decode_all_tight",
+    "n": 400000,
+    "params": {
+      "noise": 0.05,
+      "t": 40.0
+    },
+    "median_ns": 96800,
+    "p99_ns": 174000,
+    "min_ns": 85800,
+    "mean_ns": 104800.0,
+    "iters": 6,
+    "ops": 400000,
+    "bytes_touched": 6400000,
+    "extra": {
+      "count": 133226
+    },
+    "notes": "lossless but reconstructs every delivery; storage win, scan not cheaper"
+  },
+  {
+    "experiment": "correlation",
+    "variant": "full_columns_moderate",
+    "n": 400000,
+    "params": {
+      "noise": 4.0,
+      "resid_span": 4.0078903018892476,
+      "selectivity": 0.3005125,
+      "t": 40.0
+    },
+    "median_ns": 57500,
+    "p99_ns": 58200,
+    "min_ns": 56600,
+    "mean_ns": 57300.0,
+    "iters": 6,
+    "ops": 400000,
+    "bytes_touched": 6400000,
+    "extra": {
+      "count": 120205,
+      "resid_span": 4.0078903018892476
+    },
+    "notes": "scan stored delivery"
+  },
+  {
+    "experiment": "correlation",
+    "variant": "model_prune_moderate",
+    "n": 400000,
+    "params": {
+      "noise": 4.0,
+      "resid_span": 4.0078903018892476,
+      "selectivity": 0.3005125,
+      "t": 40.0
+    },
+    "median_ns": 1701200,
+    "p99_ns": 1866900,
+    "min_ns": 1498900,
+    "mean_ns": 1658733.3333333333,
+    "iters": 6,
+    "ops": 400000,
+    "bytes_touched": 3200000,
+    "extra": {
+      "count": 120205
+    },
+    "notes": "global residual envelope; decode only the uncertain band"
+  },
+  {
+    "experiment": "correlation",
+    "variant": "decode_all_moderate",
+    "n": 400000,
+    "params": {
+      "noise": 4.0,
+      "t": 40.0
+    },
+    "median_ns": 143700,
+    "p99_ns": 171800,
+    "min_ns": 121600,
+    "mean_ns": 144716.66666666666,
+    "iters": 6,
+    "ops": 400000,
+    "bytes_touched": 6400000,
+    "extra": {
+      "count": 120205
+    },
+    "notes": "lossless but reconstructs every delivery; storage win, scan not cheaper"
+  },
+  {
+    "experiment": "correlation",
+    "variant": "full_columns_none",
+    "n": 400000,
+    "params": {
+      "noise": 80.0,
+      "resid_span": 139.86559226734616,
+      "selectivity": 0.0414375,
+      "t": 40.0
+    },
+    "median_ns": 74800,
+    "p99_ns": 116400,
+    "min_ns": 56700,
+    "mean_ns": 77333.33333333333,
+    "iters": 6,
+    "ops": 400000,
+    "bytes_touched": 6400000,
+    "extra": {
+      "count": 16575,
+      "resid_span": 139.86559226734616
+    },
+    "notes": "scan stored delivery"
+  },
+  {
+    "experiment": "correlation",
+    "variant": "model_prune_none",
+    "n": 400000,
+    "params": {
+      "noise": 80.0,
+      "resid_span": 139.86559226734616,
+      "selectivity": 0.0414375,
+      "t": 40.0
+    },
+    "median_ns": 433200,
+    "p99_ns": 452500,
+    "min_ns": 405800,
+    "mean_ns": 427866.6666666667,
+    "iters": 6,
+    "ops": 400000,
+    "bytes_touched": 3200000,
+    "extra": {
+      "count": 16575
+    },
+    "notes": "global residual envelope; decode only the uncertain band"
+  },
+  {
+    "experiment": "correlation",
+    "variant": "decode_all_none",
+    "n": 400000,
+    "params": {
+      "noise": 80.0,
+      "t": 40.0
+    },
+    "median_ns": 86900,
+    "p99_ns": 97100,
+    "min_ns": 86700,
+    "mean_ns": 89400.0,
+    "iters": 6,
+    "ops": 400000,
+    "bytes_touched": 6400000,
+    "extra": {
+      "count": 16575
+    },
+    "notes": "lossless but reconstructs every delivery; storage win, scan not cheaper"
+  }
+]

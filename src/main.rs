@@ -86,9 +86,9 @@ fn main() {
     run("correlation", correlation::run);
 
     let out_dir = if quick {
-        ".working/results/quick"
+        "results/quick"
     } else {
-        ".working/results/full"
+        "results/full"
     };
     fs::create_dir_all(out_dir).expect("results dir");
     let path = format!("{out_dir}/records.json");
