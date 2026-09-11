@@ -39,14 +39,22 @@ overflows. Correctness on 5k rows did not catch it. Widened to i64
 lanes via `cvtepu32_epi64`. That widening is also why the SIMD scan
 lost to scalar: the "faster remaining work" paid for the conversion.
 
+**f64 ranking with 1e-9 score tolerance was not exact winner identity.**
+Joint and answer-cell checks accepted a different index when scores
+were within 1e-9. That is not the same as a specified tie-break.
+Prices and deliveries are now integer millunits. Score is
+`k*price + (W-k)*delivery` with `W=10000`. Ties keep the smaller
+index. Correctness no longer has an epsilon.
+
 ## Measurement bugs that would have produced fake speedups
 
 **Timer reported 0 ns** for O(1) bodies (`compact_bulk_add`,
 `incremental_insert_a`, `bound_certificate_disjoint`). Windows
 `Instant` granularity hid the cost. `time_ns` now repeats until a
-sample is at least 1 µs, then divides. Some results still print 0
-because the divided sample rounds down. Treat those as "below timer
-resolution," not zero work.
+sample is at least 1 µs, then divides in floating nanoseconds. Results
+under 1 µs set `below_timer_resolution`. `summarize.py` refuses to
+print a speedup for those pairs. They support "constant-sized work,"
+not a million-fold latency ratio.
 
 **`summarize.py` paired the first `full_scan_clustered` with the first
 `block_bounds_clustered` regardless of threshold.** Four thresholds
@@ -62,13 +70,13 @@ iteration.
 **`batch_merge` sorted keys inside the timed path.** Compared a lookup
 plus a sort against binary search. Sort moved out of the timer. After
 the fix, merge-walk of a 20M id column is *slower* than 4k independent
-bsearches (17.4 ms vs 1.27 ms), which is the honest result: you still
+bsearches (20.0 ms vs 1.60 ms), which is the honest result: you still
 walk the large array.
 
 **Shared-state insert timed `Vec` rebuild from scratch** in an early
 draft. That measured allocation, not the incremental insert. Current
-numbers time `Vec::insert` (O(n), 1.0 ms at 500k), which is still a
-bad shared arrangement, and now honestly so.
+numbers time `Vec::insert` (O(n)), which is still a bad shared
+arrangement, and now honestly so.
 
 **Executable-region `sum` scanned `birth_adj` every time** in the first
 draft, so the compact form was not O(1). Maintained `birth_sum`.
@@ -77,7 +85,38 @@ draft, so the compact form was not O(1). Maintained `birth_sum`.
 intermediates after a `u < v < w` filter, so the textbook explosion
 never appeared on bipartite graphs and WCOJ looked worse. That is a
 real finding about the comparison plan, and also a hole: we still owe
-a baseline that materializes R⋈S fully.
+a baseline that materializes R join S fully.
+
+**Mixed joint brute paid for the competitor's envelope.** Both mixed
+variants constructed `Catalog` and called `set_exception()`, which
+rebuilds the ranking hull. The brute path then scanned and ignored
+that hull. The reported 3.9x included index maintenance the baseline
+does not need. Brute mixed now uses `BruteCatalog` with no cells.
+After the fix: 2.492 s vs 299 ms (8.3x).
+
+**4k lookup paths did not compute the same result.** Direct summed a
+`u32` payload. Binary search XORed ids. Merge advanced past a match,
+so a second request for key 10 was skipped. Correctness only used
+unique keys. Every path now XORs the same payload; missing keys
+contribute 0; duplicate requests stay on the match. 20M: bsearch
+1.60 ms, merge 20.0 ms, direct 12.1 µs, identical XOR.
+
+**Interior cell gap was sampled at the boundary.** After switching to
+integer weights, `min_gap` used `k_lo+1`, which sits on a hull
+breakpoint and is ~0. Mixed pareto "small drift" then rebuilt 600
+times and looked like 1.5 s. Interior mid/quartile samples restored
+hit_rate=1.0 and 240 µs for that case. Near-ties still rebuild
+everything, which is the real kill.
+
+**`--only NAME` overwrote `results/full/records.json`.** A ranking-only
+rerun replaced 217 records with 3. `--only` now writes
+`records.NAME.json`. Restore from git or a snapshot if this happens
+again.
+
+**Stream timers cloned the whole table inside the sample.** Residue and
+prefix first drafts copied 1M-2M rows, and Fenwick construction, on
+every iteration. `time_ns_setup` now excludes setup. Build is a
+separate record.
 
 ## Implementation issues that were not bugs, just friction
 
@@ -107,13 +146,17 @@ summarize script. Findings were written in ASCII.
 
 **Quota kernel used a Mutex per shard.** That serialized the "local"
 path and lost to a single CAS. Thread-local `Shard` without the mutex
-is the version in the full run (1.48×, not 10×). The mutex version
+is the version in the full run (1.48x, not 10x). The mutex version
 would have been a fake loss.
 
 **Answer-cell mixed large-drift rebuilds dominate.** 600 envelope
-rebuilds on 20k products took ~2 s, worse than brute. Easy to report
+rebuilds on 20k products took ~1.5 s, worse than brute. Easy to report
 only the static lookup. The protocol requires charging invalidation.
-We did, and the mechanism failed that test on near-ties.
+We did, and the mechanism failed that test on near-ties (23.8 s).
+
+**Treehouse pool started empty on this repo.** `treehouse init` then
+`treehouse get --lease` produced `~\.treehouse\dbs-5593e8\1\dbs`.
+Work landed on `feat/theory-round1-kernels` there.
 
 ## What was out of scope and would mislead if ignored
 
@@ -121,6 +164,8 @@ We did, and the mechanism failed that test on near-ties.
 - No network, so coordination does not pay the hop it exists to avoid.
 - All timed data in RAM. The 20 ms / 4k-id example is not an I/O result.
 - No SQL parser, optimizer, or concurrency control beyond the quota CAS.
+- Residue is compared with scalar recomputation, not with an equivalent
+  hand-maintained histogram.
 - Negative controls that *should* lose did lose. If a future run makes
   them win, the kernel is wrong or the control is no longer negative.
 
@@ -133,4 +178,4 @@ python scripts/summarize.py results/full/records.json
 ```
 
 Hardware for checked-in JSON: Intel Core i9-12900H, 32 GB, Windows 11,
-rustc 1.96.0. 190 records, 120.2 s wall.
+rustc 1.96.0. 217 records, 445.4 s wall.

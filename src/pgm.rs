@@ -91,10 +91,7 @@ impl Pgm {
         let pred = pred.round().clamp(0.0, (self.keys.len() - 1) as f64) as usize;
         let lo = pred.saturating_sub(seg.err + 2);
         let hi = (pred + seg.err + 2).min(self.keys.len() - 1);
-        self.keys[lo..=hi]
-            .binary_search(&key)
-            .ok()
-            .map(|i| lo + i)
+        self.keys[lo..=hi].binary_search(&key).ok().map(|i| lo + i)
     }
 }
 
@@ -179,7 +176,7 @@ pub fn run(quick: bool) -> Vec<Record> {
         }
         let map: HashMap<u64, usize> = keys.iter().enumerate().map(|(i, &k)| (k, i)).collect();
 
-        let (val, times) = time_ns(2, 6, || {
+        let (val, times, reps) = time_ns(2, 6, || {
             let mut h = 0u64;
             for &q in &queries {
                 if let Some(i) = binary_get(&keys, q) {
@@ -194,6 +191,7 @@ pub fn run(quick: bool) -> Vec<Record> {
             n as u64,
             json!({"queries": qn}),
             times,
+            reps,
             qn as u64,
             qn as u64 * 64,
             json!({"xor": val}),
@@ -201,7 +199,7 @@ pub fn run(quick: bool) -> Vec<Record> {
         ));
 
         let segs = pgm.segs.len();
-        let (val, times) = time_ns(2, 6, || {
+        let (val, times, reps) = time_ns(2, 6, || {
             let mut h = 0u64;
             for &q in &queries {
                 if let Some(i) = pgm.get(q) {
@@ -216,13 +214,14 @@ pub fn run(quick: bool) -> Vec<Record> {
             n as u64,
             json!({"queries": qn, "segments": segs}),
             times,
+            reps,
             qn as u64,
             qn as u64 * 48,
             json!({"xor": val, "segments": segs, "bytes_model": segs * 32}),
             "linear CDF model + bounded correction window",
         ));
 
-        let (val, times) = time_ns(2, 6, || {
+        let (val, times, reps) = time_ns(2, 6, || {
             let mut h = 0u64;
             for &q in &queries {
                 if let Some(&i) = map.get(&q) {
@@ -237,6 +236,7 @@ pub fn run(quick: bool) -> Vec<Record> {
             n as u64,
             json!({"queries": qn, "map_len": map.len()}),
             times,
+            reps,
             qn as u64,
             qn as u64 * 64,
             json!({"xor": val}),

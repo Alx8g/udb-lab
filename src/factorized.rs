@@ -147,9 +147,7 @@ pub fn correctness() -> Result<(), String> {
             }
         }
     }
-    eprintln!(
-        "factorized correctness: {states} states, {mutations} mutations, 0 mismatches"
-    );
+    eprintln!("factorized correctness: {states} states, {mutations} mutations, 0 mismatches");
     Ok(())
 }
 
@@ -178,9 +176,8 @@ pub fn run(quick: bool) -> Vec<Record> {
         let fact_ops = groups as u64 * per as u64 * 2;
 
         if pair_ops <= 80_000_000 {
-            let (val, times) = time_ns(2, 8, || {
-                data.iter().map(naive_pair_sum).sum::<i128>()
-            });
+            let (val, times, reps) =
+                time_ns(2, 8, || data.iter().map(naive_pair_sum).sum::<i128>());
             let _ = val;
             out.push(record(
                 "factorized",
@@ -188,21 +185,22 @@ pub fn run(quick: bool) -> Vec<Record> {
                 n,
                 json!({"groups": groups, "per": per, "pairs": pair_ops}),
                 times,
+                reps,
                 pair_ops,
                 pair_ops * 16,
                 json!({"result": val}),
                 "materializes every matching pair",
             ));
 
-            let (val2, times) = time_ns(2, 8, || {
-                data.iter().map(hashjoin_style_sum).sum::<i128>()
-            });
+            let (val2, times, reps) =
+                time_ns(2, 8, || data.iter().map(hashjoin_style_sum).sum::<i128>());
             out.push(record(
                 "factorized",
                 "hashjoin_then_pairs",
                 n,
                 json!({"groups": groups, "per": per}),
                 times,
+                reps,
                 pair_ops,
                 pair_ops * 16,
                 json!({"result": val2}),
@@ -210,15 +208,14 @@ pub fn run(quick: bool) -> Vec<Record> {
             ));
         }
 
-        let (val, times) = time_ns(3, 12, || {
-            data.iter().map(factorized_sum).sum::<i128>()
-        });
+        let (val, times, reps) = time_ns(3, 12, || data.iter().map(factorized_sum).sum::<i128>());
         out.push(record(
             "factorized",
             "factorized_sums",
             n,
             json!({"groups": groups, "per": per, "pairs_avoided": pair_ops}),
             times,
+            reps,
             fact_ops.max(1),
             n * 8 * 2,
             json!({"result": val}),
@@ -226,7 +223,7 @@ pub fn run(quick: bool) -> Vec<Record> {
         ));
 
         let mut maint: Vec<Maintained> = data.iter().map(Maintained::from_group).collect();
-        let (val, times) = time_ns(4, 20, || {
+        let (val, times, reps) = time_ns(4, 20, || {
             let mut acc = 0i128;
             for m in &mut maint {
                 m.insert_a(7);
@@ -240,6 +237,7 @@ pub fn run(quick: bool) -> Vec<Record> {
             n,
             json!({"groups": groups, "per": per}),
             times,
+            reps,
             groups as u64,
             groups as u64 * 32,
             json!({"result": val}),
@@ -250,13 +248,14 @@ pub fn run(quick: bool) -> Vec<Record> {
     // Negative control: inseparable aggregate, small n only.
     let g = gen_groups(1, if quick { 400 } else { 1_500 }, 3);
     let pair_ops = (g[0].a.len() * g[0].b.len()) as u64;
-    let (val, times) = time_ns(2, 6, || inseparable_pair_sum(&g[0]));
+    let (val, times, reps) = time_ns(2, 6, || inseparable_pair_sum(&g[0]));
     out.push(record(
         "factorized",
         "inseparable_negative_control",
         g[0].a.len() as u64,
         json!({"pairs": pair_ops}),
         times,
+        reps,
         pair_ops,
         pair_ops * 24,
         json!({"result": val}),

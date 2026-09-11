@@ -1,7 +1,8 @@
 //! Answer cells: reuse an exact winner across a region of query weights
 //! and a bounded envelope of data changes.
 //!
-//! score(w) = w*price + (1-w)*delivery, lower is better.
+//! score(k) = k*price + (W-k)*delivery, lower is better, then smaller index.
+//! Prices and deliveries are integer millunits. Query weight is k/W.
 //! Lower envelope of lines over w in [0,1] partitions weight space into
 //! cells with a constant winner. A cell remains valid while every product's
 //! L∞ drift is less than half the minimum gap on that cell.
@@ -10,81 +11,117 @@ use crate::stats::{record, time_ns, Record};
 use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
 use serde_json::json;
+use std::cmp::Ordering;
+
+pub const W_DEN: i64 = 10_000;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Product {
+    pub price: i64,
+    pub delivery: i64,
+}
 
 #[derive(Clone, Copy, Debug)]
-pub struct Product {
-    pub price: f64,
-    pub delivery: f64,
+pub struct Frac {
+    pub n: i128,
+    pub d: i128,
+}
+
+impl Frac {
+    pub fn new(n: i128, d: i128) -> Self {
+        if d < 0 {
+            Self { n: -n, d: -d }
+        } else {
+            Self { n, d }
+        }
+    }
+
+    pub fn cmp(self, other: Self) -> Ordering {
+        (self.n * other.d).cmp(&(other.n * self.d))
+    }
+
+    pub fn le_query(self, k: i64, wden: i64) -> bool {
+        self.n * wden as i128 <= k as i128 * self.d
+    }
+
+    pub fn ge_query(self, k: i64, wden: i64) -> bool {
+        self.n * wden as i128 >= k as i128 * self.d
+    }
 }
 
 #[derive(Clone, Copy, Debug)]
 pub struct Cell {
-    pub w_lo: f64,
-    pub w_hi: f64,
+    pub w_lo: Frac,
+    pub w_hi: Frac,
     pub winner: usize,
-    pub min_gap: f64,
+    pub min_gap: i128,
 }
 
-fn score(p: Product, w: f64) -> f64 {
-    w * p.price + (1.0 - w) * p.delivery
+pub fn score_k(p: Product, k: i64) -> i128 {
+    k as i128 * p.price as i128 + (W_DEN - k) as i128 * p.delivery as i128
 }
 
-fn brute_winner(ps: &[Product], w: f64) -> (usize, f64) {
+pub fn brute_winner(ps: &[Product], k: i64) -> (usize, i128) {
     let mut best_i = 0usize;
-    let mut best = f64::INFINITY;
-    let mut second = f64::INFINITY;
+    let mut best = i128::MAX;
+    let mut second = i128::MAX;
     for (i, &p) in ps.iter().enumerate() {
-        let s = score(p, w);
-        if s < best {
-            second = best;
+        let s = score_k(p, k);
+        if s < best || (s == best && i < best_i) {
+            if s != best {
+                second = best;
+            }
             best = s;
             best_i = i;
         } else if s < second {
             second = s;
         }
     }
-    (best_i, second - best)
+    (best_i, second.saturating_sub(best))
+}
+
+fn intercept(p: Product) -> i64 {
+    p.delivery
+}
+
+fn slope(p: Product) -> i64 {
+    p.price - p.delivery
+}
+
+fn meet(ps: &[Product], i: usize, j: usize) -> Frac {
+    let num = intercept(ps[i]) as i128 - intercept(ps[j]) as i128;
+    let den = slope(ps[j]) as i128 - slope(ps[i]) as i128;
+    Frac::new(num, den)
 }
 
 /// Lower envelope of lines `delivery + w*(price-delivery)` on [0,1].
-/// The pointwise min of linear functions is concave, so successive slopes
-/// decrease. Sort high slope first (winner at small w).
+/// Ties: equal scores keep the smaller index.
 pub fn envelope(ps: &[Product]) -> Vec<Cell> {
     if ps.is_empty() {
         return Vec::new();
     }
-    let intercept = |i: usize| ps[i].delivery;
-    let slope = |i: usize| ps[i].price - ps[i].delivery;
     let mut idx: Vec<usize> = (0..ps.len()).collect();
     idx.sort_by(|&i, &j| {
-        slope(j)
-            .partial_cmp(&slope(i))
-            .unwrap()
-            .then_with(|| intercept(i).partial_cmp(&intercept(j)).unwrap())
+        slope(ps[j])
+            .cmp(&slope(ps[i]))
+            .then_with(|| intercept(ps[i]).cmp(&intercept(ps[j])))
             .then_with(|| i.cmp(&j))
     });
     let mut uniq: Vec<usize> = Vec::new();
     for i in idx {
         if let Some(&last) = uniq.last() {
-            if (slope(i) - slope(last)).abs() < 1e-15 {
+            if slope(ps[i]) == slope(ps[last]) {
                 continue;
             }
         }
         uniq.push(i);
     }
-    let meet = |i: usize, j: usize| -> f64 {
-        let ds = slope(j) - slope(i);
-        if ds.abs() < 1e-18 {
-            return f64::INFINITY;
-        }
-        (intercept(i) - intercept(j)) / ds
-    };
     let mut hull: Vec<usize> = Vec::new();
     for i in uniq {
         while hull.len() >= 2 {
             let a = hull[hull.len() - 2];
             let b = hull[hull.len() - 1];
-            if meet(a, b) >= meet(b, i) {
+            if meet(ps, a, b).cmp(meet(ps, b, i)) != Ordering::Less {
                 hull.pop();
             } else {
                 break;
@@ -92,69 +129,147 @@ pub fn envelope(ps: &[Product]) -> Vec<Cell> {
         }
         hull.push(i);
     }
-    while hull.len() >= 2 && meet(hull[0], hull[1]) <= 0.0 {
+    let zero = Frac::new(0, 1);
+    let one = Frac::new(1, 1);
+    while hull.len() >= 2 && meet(ps, hull[0], hull[1]).cmp(zero) != Ordering::Greater {
         hull.remove(0);
     }
-    while hull.len() >= 2 && meet(hull[hull.len() - 2], hull[hull.len() - 1]) >= 1.0 {
+    while hull.len() >= 2
+        && meet(ps, hull[hull.len() - 2], hull[hull.len() - 1]).cmp(one) != Ordering::Less
+    {
         hull.pop();
     }
-    // Clip to [0,1] and drop segments that miss the interval.
     let mut cells = Vec::new();
     for k in 0..hull.len() {
         let i = hull[k];
         let lo = if k == 0 {
-            f64::NEG_INFINITY
+            zero
         } else {
-            meet(hull[k - 1], i)
+            meet(ps, hull[k - 1], i)
         };
         let hi = if k + 1 == hull.len() {
-            f64::INFINITY
+            one
         } else {
-            meet(i, hull[k + 1])
+            meet(ps, i, hull[k + 1])
         };
-        let w_lo = lo.max(0.0);
-        let w_hi = hi.min(1.0);
-        if w_hi <= w_lo + 1e-15 {
+        if hi.cmp(lo) != Ordering::Greater {
             continue;
         }
-        // Endpoints have gap 0 by construction (adjacent winners meet).
-        // Interior gap is the certificate: sample mid and two interior points.
-        let mid = 0.5 * (w_lo + w_hi);
-        let a = w_lo + 0.25 * (w_hi - w_lo);
-        let b = w_lo + 0.75 * (w_hi - w_lo);
-        let g = brute_winner(ps, mid)
-            .1
-            .min(brute_winner(ps, a).1)
-            .min(brute_winner(ps, b).1);
+        let (k_lo, k_hi) = integer_span(lo, hi);
+        // Endpoints have gap 0 by construction. Certificate uses interior points.
+        let g = if k_hi > k_lo + 2 {
+            let span = k_hi - k_lo;
+            let mid = k_lo + span / 2;
+            let a = k_lo + span / 4;
+            let b = k_lo + (3 * span) / 4;
+            brute_winner(ps, mid)
+                .1
+                .min(brute_winner(ps, a).1)
+                .min(brute_winner(ps, b).1)
+        } else {
+            0
+        };
         cells.push(Cell {
-            w_lo,
-            w_hi,
+            w_lo: lo,
+            w_hi: hi,
             winner: i,
             min_gap: g,
         });
     }
     if !cells.is_empty() {
-        cells[0].w_lo = 0.0;
+        cells[0].w_lo = zero;
         let last = cells.len() - 1;
-        cells[last].w_hi = 1.0;
+        cells[last].w_hi = one;
     }
     cells
 }
 
-pub fn lookup_cell(cells: &[Cell], w: f64) -> Option<Cell> {
+fn integer_span(lo: Frac, hi: Frac) -> (i64, i64) {
+    let k_lo = div_ceil(lo.n * W_DEN as i128, lo.d).clamp(0, W_DEN as i128) as i64;
+    let k_hi = (hi.n * W_DEN as i128 / hi.d).clamp(0, W_DEN as i128) as i64;
+    (k_lo, k_hi)
+}
+
+fn div_ceil(n: i128, d: i128) -> i128 {
+    if n >= 0 {
+        (n + d - 1) / d
+    } else {
+        n / d
+    }
+}
+
+fn strictly_before_hi(cell: Cell, k: i64, last: bool) -> bool {
+    if last {
+        cell.w_hi.ge_query(k, W_DEN)
+    } else {
+        cell.w_hi.n * W_DEN as i128 > k as i128 * cell.w_hi.d
+    }
+}
+
+pub fn lookup_cell(cells: &[Cell], k: i64) -> Option<(usize, Cell)> {
+    if cells.is_empty() {
+        return None;
+    }
     let mut lo = 0usize;
     let mut hi = cells.len();
     while lo < hi {
         let mid = (lo + hi) / 2;
-        if w < cells[mid].w_lo {
+        let last = mid + 1 == cells.len();
+        if !cells[mid].w_lo.le_query(k, W_DEN) {
             hi = mid;
-        } else if w > cells[mid].w_hi {
+        } else if !strictly_before_hi(cells[mid], k, last) {
             lo = mid + 1;
         } else {
-            return Some(cells[mid]);
+            return Some((mid, cells[mid]));
         }
     }
     None
+}
+
+fn better(ps: &[Product], k: i64, i: usize, j: usize) -> usize {
+    let si = score_k(ps[i], k);
+    let sj = score_k(ps[j], k);
+    if (sj, j) < (si, i) {
+        j
+    } else {
+        i
+    }
+}
+
+pub fn cell_winner(cells: &[Cell], ps: &[Product], k: i64) -> usize {
+    let Some((idx, c)) = lookup_cell(cells, k) else {
+        return brute_winner(ps, k).0;
+    };
+    let mut win = c.winner;
+    if idx > 0 {
+        let prev = cells[idx - 1];
+        if prev.w_hi.n * W_DEN as i128 == k as i128 * prev.w_hi.d {
+            win = better(ps, k, win, prev.winner);
+        }
+    }
+    if idx + 1 < cells.len() {
+        let nxt = cells[idx + 1];
+        if nxt.w_lo.n * W_DEN as i128 == k as i128 * nxt.w_lo.d {
+            win = better(ps, k, win, nxt.winner);
+        }
+    }
+    // At w=0 / w=1 many dominated products can share the intercept.
+    if k == 0 {
+        let d = ps[win].delivery;
+        for (i, p) in ps.iter().enumerate() {
+            if p.delivery < d || (p.delivery == d && i < win) {
+                win = i;
+            }
+        }
+    } else if k == W_DEN {
+        let pr = ps[win].price;
+        for (i, p) in ps.iter().enumerate() {
+            if p.price < pr || (p.price == pr && i < win) {
+                win = i;
+            }
+        }
+    }
+    win
 }
 
 #[derive(Clone)]
@@ -162,7 +277,7 @@ pub struct AnswerStore {
     pub certified: Vec<Product>,
     pub current: Vec<Product>,
     pub cells: Vec<Cell>,
-    pub max_drift: f64,
+    pub max_drift: i64,
     pub rebuilds: u64,
     pub cell_hits: u64,
     pub cell_misses: u64,
@@ -175,14 +290,14 @@ impl AnswerStore {
             certified: ps.clone(),
             current: ps,
             cells,
-            max_drift: 0.0,
+            max_drift: 0,
             rebuilds: 0,
             cell_hits: 0,
             cell_misses: 0,
         }
     }
 
-    fn drift_of(cert: Product, cur: Product) -> f64 {
+    fn drift_of(cert: Product, cur: Product) -> i64 {
         (cur.price - cert.price)
             .abs()
             .max((cur.delivery - cert.delivery).abs())
@@ -197,28 +312,26 @@ impl AnswerStore {
     }
 
     fn valid_for(&self, cell: Cell) -> bool {
-        // Each score can move by at most drift; relative gap shrinks by <= 2*drift.
-        2.0 * self.max_drift + 1e-12 < cell.min_gap
+        // Each score moves by at most W_DEN * drift; relative gap shrinks by <= 2 W_DEN drift.
+        (2 * self.max_drift as i128) * W_DEN as i128 + 1 < cell.min_gap
     }
 
-    pub fn query(&mut self, w: f64) -> usize {
-        if let Some(cell) = lookup_cell(&self.cells, w) {
+    pub fn query(&mut self, k: i64) -> usize {
+        if let Some((_, cell)) = lookup_cell(&self.cells, k) {
             if self.valid_for(cell) {
                 self.cell_hits += 1;
-                return cell.winner;
+                return cell_winner(&self.cells, &self.current, k);
             }
         }
         self.cell_misses += 1;
         self.rebuild();
-        lookup_cell(&self.cells, w)
-            .map(|c| c.winner)
-            .unwrap_or_else(|| brute_winner(&self.current, w).0)
+        cell_winner(&self.cells, &self.current, k)
     }
 
     fn rebuild(&mut self) {
         self.certified = self.current.clone();
         self.cells = envelope(&self.current);
-        self.max_drift = 0.0;
+        self.max_drift = 0;
         self.rebuilds += 1;
     }
 
@@ -227,7 +340,7 @@ impl AnswerStore {
         self.current.copy_from_slice(ps);
         self.cells.clear();
         self.cells.extend_from_slice(cells);
-        self.max_drift = 0.0;
+        self.max_drift = 0;
         self.rebuilds = 0;
         self.cell_hits = 0;
         self.cell_misses = 0;
@@ -238,35 +351,35 @@ fn gen_products(n: usize, seed: u64, mode: &str) -> Vec<Product> {
     let mut rng = SmallRng::seed_from_u64(seed);
     match mode {
         "pareto" => {
-            // A few on the front, many dominated. Envelope stays small.
             let front = (n / 40).clamp(8, 64);
+            let den = (front as i64 - 1).max(1);
             let mut ps = Vec::with_capacity(n);
             for i in 0..front {
-                let t = i as f64 / (front as f64 - 1.0).max(1.0);
+                let t = i as i64;
                 ps.push(Product {
-                    price: 1.0 + 18.0 * t,
-                    delivery: 19.0 - 18.0 * t,
+                    price: 1000 + 18000 * t / den,
+                    delivery: 19000 - 18000 * t / den,
                 });
             }
             while ps.len() < n {
-                let t = rng.gen::<f64>();
+                let t = rng.gen_range(0..1001);
                 ps.push(Product {
-                    price: 3.0 + 18.0 * t + rng.gen::<f64>() * 6.0,
-                    delivery: 3.0 + 18.0 * (1.0 - t) + rng.gen::<f64>() * 6.0,
+                    price: 3000 + 18 * t + rng.gen_range(0..6001),
+                    delivery: 3000 + 18 * (1000 - t) + rng.gen_range(0..6001),
                 });
             }
             ps
         }
         "near_tie" => (0..n)
             .map(|_| Product {
-                price: 10.0 + rng.gen::<f64>() * 0.05,
-                delivery: 10.0 + rng.gen::<f64>() * 0.05,
+                price: 10000 + rng.gen_range(0..50),
+                delivery: 10000 + rng.gen_range(0..50),
             })
             .collect(),
         _ => (0..n)
             .map(|_| Product {
-                price: rng.gen::<f64>() * 20.0,
-                delivery: rng.gen::<f64>() * 20.0,
+                price: rng.gen_range(0..20001),
+                delivery: rng.gen_range(0..20001),
             })
             .collect(),
     }
@@ -276,40 +389,44 @@ pub fn correctness() -> Result<(), String> {
     for mode in ["pareto", "random", "near_tie"] {
         let ps = gen_products(200, 99, mode);
         let cells = envelope(&ps);
-        for k in 0..=200 {
-            let w = k as f64 / 200.0;
-            let brute = brute_winner(&ps, w).0;
-            let cell = lookup_cell(&cells, w).ok_or_else(|| {
-                format!("no cell for w={w} mode={mode} cells={}", cells.len())
-            })?;
-            if cell.winner != brute {
-                // Near-ties may swap due to numeric endpoints; allow equal scores.
-                let s_cell = score(ps[cell.winner], w);
-                let s_brute = score(ps[brute], w);
-                if (s_cell - s_brute).abs() > 1e-9 {
-                    return Err(format!(
-                        "winner mismatch mode={mode} w={w} cell={} brute={}",
-                        cell.winner, brute
-                    ));
-                }
+        if mode == "pareto" && cells.iter().any(|c| c.min_gap <= 0) {
+            return Err("pareto envelope min_gap must be interior-positive".into());
+        }
+        for k in 0..=W_DEN {
+            if k % 50 != 0 && mode != "near_tie" {
+                continue;
+            }
+            if mode == "near_tie" && k % 200 != 0 {
+                continue;
+            }
+            let brute = brute_winner(&ps, k).0;
+            let got = cell_winner(&cells, &ps, k);
+            if got != brute {
+                let s_cell = score_k(ps[got], k);
+                let s_brute = score_k(ps[brute], k);
+                return Err(format!(
+                    "winner mismatch mode={mode} k={k} cell={got} brute={brute} sc={s_cell} sb={s_brute}"
+                ));
             }
         }
         let mut store = AnswerStore::new(ps.clone());
         for i in 0..ps.len() {
             let mut p = ps[i];
-            p.price += 0.0001;
+            p.price += 1;
             store.update(i, p);
         }
-        let w = 0.37;
-        let got = store.query(w);
-        let expect = brute_winner(&store.current, w).0;
-        let s_got = score(store.current[got], w);
-        let s_exp = score(store.current[expect], w);
-        if (s_got - s_exp).abs() > 1e-9 {
-            return Err(format!("store mismatch mode={mode}"));
+        let k = 3700;
+        let got = store.query(k);
+        let expect = brute_winner(&store.current, k).0;
+        let s_got = score_k(store.current[got], k);
+        let s_exp = score_k(store.current[expect], k);
+        if got != expect {
+            return Err(format!(
+                "store mismatch mode={mode} got={got} expect={expect} sg={s_got} se={s_exp}"
+            ));
         }
     }
-    eprintln!("answer_cells correctness: envelope + drift certificates ok");
+    eprintln!("answer_cells correctness: integer millunit envelope + id tie-break");
     Ok(())
 }
 
@@ -322,19 +439,19 @@ pub fn run(quick: bool) -> Vec<Record> {
     for mode in ["pareto", "random", "near_tie"] {
         let ps = gen_products(n, 5, mode);
         let cells = envelope(&ps);
-        let mut ws = vec![0.0; queries];
-        for w in ws.iter_mut() {
-            *w = if mode == "pareto" {
-                0.45 + rng.gen::<f64>() * 0.1
+        let mut ks = vec![0i64; queries];
+        for k in ks.iter_mut() {
+            *k = if mode == "pareto" {
+                4500 + rng.gen_range(0..1001)
             } else {
-                rng.gen::<f64>()
+                rng.gen_range(0..=W_DEN)
             };
         }
 
-        let (val, times) = time_ns(2, 6, || {
+        let (val, times, reps) = time_ns(2, 6, || {
             let mut acc = 0usize;
-            for &w in &ws {
-                acc ^= brute_winner(&ps, w).0;
+            for &k in &ks {
+                acc ^= brute_winner(&ps, k).0;
             }
             acc
         });
@@ -342,20 +459,21 @@ pub fn run(quick: bool) -> Vec<Record> {
             "answer_cells",
             &format!("brute_scan_{mode}"),
             n as u64,
-            json!({"queries": queries, "cells": cells.len()}),
+            json!({"queries": queries, "cells": cells.len(), "w_den": W_DEN}),
             times,
+            reps,
             (n * queries) as u64,
             (n * queries * 16) as u64,
             json!({"xor": val}),
-            "full scan per parameterized ranking",
+            "full scan per parameterized ranking; integer millunits",
         ));
 
         let store = AnswerStore::new(ps.clone());
         let cells_clone = store.cells.clone();
-        let (val, times) = time_ns(3, 10, || {
+        let (val, times, reps) = time_ns(3, 10, || {
             let mut acc = 0usize;
-            for &w in &ws {
-                acc ^= lookup_cell(&cells_clone, w).map(|c| c.winner).unwrap_or(0);
+            for &k in &ks {
+                acc ^= cell_winner(&cells_clone, &ps, k);
             }
             acc
         });
@@ -363,41 +481,40 @@ pub fn run(quick: bool) -> Vec<Record> {
             "answer_cells",
             &format!("cell_lookup_{mode}"),
             n as u64,
-            json!({"queries": queries, "cells": cells_clone.len()}),
+            json!({"queries": queries, "cells": cells_clone.len(), "w_den": W_DEN}),
             times,
+            reps,
             queries as u64,
             (queries * 32) as u64,
             json!({"xor": val, "cells": cells_clone.len()}),
-            "O(log cells) exact winner; no data scan",
+            "O(log cells) exact winner; smaller-index ties",
         ));
 
-        // Mixed updates: small drift vs large invalidating updates.
-        for (label, mag, frac) in [
-            ("small_drift", 0.002, 0.05),
-            ("large_drift", 3.0, 0.05),
-        ] {
+        for (label, mag, frac) in [("small_drift", 2i64, 0.05), ("large_drift", 3000i64, 0.05)] {
             let cells0 = envelope(&ps);
             let mut store = AnswerStore::new(ps.clone());
             let mut local = ps.clone();
-            let (val, times) = time_ns(1, 4, || {
+            let (warmup, iters) = if mode == "near_tie" { (1, 1) } else { (1, 4) };
+            let (val, times, reps) = time_ns(warmup, iters, || {
                 store.reset_from(&ps, &cells0);
                 local.copy_from_slice(&ps);
                 let mut acc = 0usize;
-                for (q, &w) in ws.iter().enumerate() {
+                for (q, &k) in ks.iter().enumerate() {
                     if q % ((1.0 / frac) as usize).max(1) == 0 {
                         let i = q % n;
                         local[i].price += mag;
                         store.update(i, local[i]);
                     }
-                    acc ^= store.query(w);
+                    acc ^= store.query(k);
                 }
-                (acc, store.cell_hits, store.cell_misses, store.rebuilds, store.cells.len())
+                (
+                    acc,
+                    store.cell_hits,
+                    store.cell_misses,
+                    store.rebuilds,
+                    store.cells.len(),
+                )
             });
-            let hits = val.1;
-            let misses = val.2;
-            let rebuilds = val.3;
-            let cell_n = val.4;
-            let xor = val.0;
             out.push(record(
                 "answer_cells",
                 &format!("mixed_{label}_{mode}"),
@@ -406,17 +523,19 @@ pub fn run(quick: bool) -> Vec<Record> {
                     "queries": queries,
                     "update_frac": frac,
                     "mag": mag,
-                    "cells": cell_n
+                    "cells": val.4,
+                    "w_den": W_DEN
                 }),
                 times,
+                reps,
                 queries as u64,
                 0,
                 json!({
-                    "xor": xor,
-                    "hits": hits,
-                    "misses": misses,
-                    "rebuilds": rebuilds,
-                    "hit_rate": hits as f64 / (hits + misses).max(1) as f64
+                    "xor": val.0,
+                    "hits": val.1,
+                    "misses": val.2,
+                    "rebuilds": val.3,
+                    "hit_rate": val.1 as f64 / (val.1 + val.2).max(1) as f64
                 }),
                 "certificate reused until drift consumes the gap",
             ));

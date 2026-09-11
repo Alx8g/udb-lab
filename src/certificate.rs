@@ -93,7 +93,9 @@ pub fn correctness() -> Result<(), String> {
         let m = merge_intersect(&a, &b);
         let g = gallop_intersect(&a, &b);
         if m != g {
-            return Err(format!("intersect mismatch seed={seed} merge={m} gallop={g}"));
+            return Err(format!(
+                "intersect mismatch seed={seed} merge={m} gallop={g}"
+            ));
         }
         if bound_disjoint(&a, &b) && m != 0 {
             return Err("bound claimed disjoint but intersection nonempty".into());
@@ -115,25 +117,27 @@ pub fn run(quick: bool) -> Vec<Record> {
     // Case 1: heavily overlapping.
     let a = gen_sorted(n, (n as u64) * 2, 1);
     let b = gen_sorted(n, (n as u64) * 2, 2);
-    let (val, times) = time_ns(2, 6, || merge_intersect(&a, &b));
+    let (val, times, reps) = time_ns(2, 6, || merge_intersect(&a, &b));
     out.push(record(
         "certificate",
         "merge_overlap",
         n as u64,
         json!({"out": val}),
         times,
+        reps,
         (a.len() + b.len()) as u64,
         ((a.len() + b.len()) * 8) as u64,
         json!({"out": val}),
         "must inspect both inputs; certificate ≈ input",
     ));
-    let (val, times) = time_ns(2, 6, || gallop_intersect(&a, &b));
+    let (val, times, reps) = time_ns(2, 6, || gallop_intersect(&a, &b));
     out.push(record(
         "certificate",
         "gallop_overlap",
         n as u64,
         json!({"out": val}),
         times,
+        reps,
         a.len().min(b.len()) as u64,
         (a.len().min(b.len()) * 16) as u64,
         json!({"out": val}),
@@ -143,25 +147,27 @@ pub fn run(quick: bool) -> Vec<Record> {
     // Case 2: tiny overlap (skewed).
     let a = gen_sorted(n, n as u64 * 8, 3);
     let b: Vec<u64> = a.iter().step_by(10_000).copied().collect();
-    let (val, times) = time_ns(2, 8, || merge_intersect(&a, &b));
+    let (val, times, reps) = time_ns(2, 8, || merge_intersect(&a, &b));
     out.push(record(
         "certificate",
         "merge_sparse",
         n as u64,
         json!({"small": b.len(), "out": val}),
         times,
+        reps,
         (a.len() + b.len()) as u64,
         ((a.len() + b.len()) * 8) as u64,
         json!({"out": val}),
         "merge still walks the large side",
     ));
-    let (val, times) = time_ns(3, 12, || gallop_intersect(&a, &b));
+    let (val, times, reps) = time_ns(3, 12, || gallop_intersect(&a, &b));
     out.push(record(
         "certificate",
         "gallop_sparse",
         n as u64,
         json!({"small": b.len(), "out": val}),
         times,
+        reps,
         b.len() as u64,
         (b.len() * 64) as u64,
         json!({"out": val}),
@@ -171,25 +177,27 @@ pub fn run(quick: bool) -> Vec<Record> {
     // Case 3: disjoint by range. Bound certificate vs merge.
     let a: Vec<u64> = (0..n as u64).collect();
     let b: Vec<u64> = ((n as u64 + 10)..(2 * n as u64 + 10)).collect();
-    let (val, times) = time_ns(2, 6, || merge_intersect(&a, &b));
+    let (val, times, reps) = time_ns(2, 6, || merge_intersect(&a, &b));
     out.push(record(
         "certificate",
         "merge_disjoint_range",
         n as u64,
         json!({"out": val}),
         times,
+        reps,
         (a.len() + b.len()) as u64,
         ((a.len() + b.len()) * 8) as u64,
         json!({"out": val}),
         "empty result still walks until one side ends",
     ));
-    let (val, times) = time_ns(8, 40, || bound_disjoint(&a, &b) as usize);
+    let (val, times, reps) = time_ns(8, 40, || bound_disjoint(&a, &b) as usize);
     out.push(record(
         "certificate",
         "bound_certificate_disjoint",
         n as u64,
         json!({"out": val}),
         times,
+        reps,
         2,
         16,
         json!({"disjoint": val == 1}),
@@ -199,13 +207,14 @@ pub fn run(quick: bool) -> Vec<Record> {
     // Case 4: interleaved empty (no range certificate).
     let a: Vec<u64> = (0..n as u64).map(|x| x * 2).collect();
     let b: Vec<u64> = (0..n as u64).map(|x| x * 2 + 1).collect();
-    let (val, times) = time_ns(2, 5, || merge_intersect(&a, &b));
+    let (val, times, reps) = time_ns(2, 5, || merge_intersect(&a, &b));
     out.push(record(
         "certificate",
         "merge_interleaved_empty",
         n as u64,
         json!({"out": val}),
         times,
+        reps,
         (a.len() + b.len()) as u64,
         ((a.len() + b.len()) * 8) as u64,
         json!({"out": val, "bound_lies": bound_disjoint(&a, &b)}),

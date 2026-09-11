@@ -66,12 +66,16 @@ pub fn run(quick: bool) -> Vec<Record> {
     let mut out = Vec::new();
     let n = if quick { 500_000usize } else { 8_000_000usize };
     let mut rng = SmallRng::seed_from_u64(6);
-    let a: Vec<i64> = (0..n).map(|_| rng.gen_range(-1_000_000..1_000_000)).collect();
-    let b: Vec<i64> = (0..n).map(|_| rng.gen_range(-1_000_000..1_000_000)).collect();
+    let a: Vec<i64> = (0..n)
+        .map(|_| rng.gen_range(-1_000_000..1_000_000))
+        .collect();
+    let b: Vec<i64> = (0..n)
+        .map(|_| rng.gen_range(-1_000_000..1_000_000))
+        .collect();
     let c64: Vec<i64> = a.iter().zip(b.iter()).map(|(&x, &y)| x + y).collect();
     let blocks = Blocks::new(a.clone(), b.clone());
 
-    let (val, times) = time_ns(2, 6, || {
+    let (val, times, reps) = time_ns(2, 6, || {
         a.iter().sum::<i64>() as i128 + b.iter().sum::<i64>() as i128
     });
     out.push(record(
@@ -80,19 +84,21 @@ pub fn run(quick: bool) -> Vec<Record> {
         n as u64,
         json!({}),
         times,
+        reps,
         (2 * n) as u64,
         (2 * n * 8) as u64,
         json!({"sum": val}),
         "read both source blocks",
     ));
 
-    let (val, times) = time_ns(2, 6, || c64.iter().sum::<i64>());
+    let (val, times, reps) = time_ns(2, 6, || c64.iter().sum::<i64>());
     out.push(record(
         "redundancy",
         "sum_from_coded_c",
         n as u64,
         json!({}),
         times,
+        reps,
         n as u64,
         (n * 8) as u64,
         json!({"sum": val}),
@@ -100,7 +106,7 @@ pub fn run(quick: bool) -> Vec<Record> {
     ));
 
     let t = 0i64;
-    let (val, times) = time_ns(2, 6, || {
+    let (val, times, reps) = time_ns(2, 6, || {
         let mut s = 0i64;
         for i in 0..n {
             let v = a[i] + b[i];
@@ -116,12 +122,13 @@ pub fn run(quick: bool) -> Vec<Record> {
         n as u64,
         json!({"t": t}),
         times,
+        reps,
         (2 * n) as u64,
         (2 * n * 8) as u64,
         json!({"sum": val}),
         "predicate on A+B still needs both sources without C",
     ));
-    let (val, times) = time_ns(2, 6, || {
+    let (val, times, reps) = time_ns(2, 6, || {
         c64.iter().filter(|&&v| v > t).copied().sum::<i64>()
     });
     out.push(record(
@@ -130,27 +137,32 @@ pub fn run(quick: bool) -> Vec<Record> {
         n as u64,
         json!({"t": t}),
         times,
+        reps,
         n as u64,
         (n * 8) as u64,
         json!({"sum": val}),
         "same predicate against the recovery block",
     ));
 
-    let (val, times) = time_ns(2, 6, || a.iter().filter(|&&x| x > 0).count());
+    let (val, times, reps) = time_ns(2, 6, || a.iter().filter(|&&x| x > 0).count());
     out.push(record(
         "redundancy",
         "filter_a_only_negative_control",
         n as u64,
         json!({}),
         times,
+        reps,
         n as u64,
         (n * 8) as u64,
         json!({"count": val}),
         "C = A+B does not answer predicates on A; coded queryability is operator-specific",
     ));
 
-    let (val, times) = time_ns(1, 4, || {
-        blocks.recover_a().iter().fold(0i64, |s, &x| s.wrapping_add(x))
+    let (val, times, reps) = time_ns(1, 4, || {
+        blocks
+            .recover_a()
+            .iter()
+            .fold(0i64, |s, &x| s.wrapping_add(x))
     });
     out.push(record(
         "redundancy",
@@ -158,6 +170,7 @@ pub fn run(quick: bool) -> Vec<Record> {
         n as u64,
         json!({}),
         times,
+        reps,
         n as u64,
         (n * 24) as u64,
         json!({"checksum": val}),

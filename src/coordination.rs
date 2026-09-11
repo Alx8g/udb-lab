@@ -118,7 +118,11 @@ impl QuotaSystem {
         let mut left = stock;
         let mut shards = Vec::new();
         for i in 0..n_shards {
-            let give = if i + 1 == n_shards { left } else { per.min(left) };
+            let give = if i + 1 == n_shards {
+                left
+            } else {
+                per.min(left)
+            };
             left -= give;
             shards.push(Shard {
                 local: give,
@@ -146,7 +150,10 @@ pub fn correctness() -> Result<(), String> {
         }
     }
     if ok != STOCK || global.remaining() != 0 {
-        return Err(format!("global oversell ok={ok} left={}", global.remaining()));
+        return Err(format!(
+            "global oversell ok={ok} left={}",
+            global.remaining()
+        ));
     }
 
     let mut q = QuotaSystem::new(STOCK, 8, 16);
@@ -196,15 +203,14 @@ fn run_global(stock: i64, threads: usize, per_thread: usize) -> (u64, u64, i64) 
             });
         }
     });
-    (ok.load(Ordering::Relaxed), miss.load(Ordering::Relaxed), g.remaining())
+    (
+        ok.load(Ordering::Relaxed),
+        miss.load(Ordering::Relaxed),
+        g.remaining(),
+    )
 }
 
-fn run_quota(
-    stock: i64,
-    threads: usize,
-    per_thread: usize,
-    restock: i64,
-) -> (u64, u64, i64) {
+fn run_quota(stock: i64, threads: usize, per_thread: usize, restock: i64) -> (u64, u64, i64) {
     let mut q = QuotaSystem::new(stock, threads, restock);
     let ok = AtomicU64::new(0);
     let miss = AtomicU64::new(0);
@@ -244,13 +250,14 @@ pub fn run(quick: bool) -> Vec<Record> {
     let per = if quick { 20_000usize } else { 80_000usize };
     let attempts = (threads * per) as u64;
 
-    let (val, times) = time_ns(1, 4, || run_global(stock, threads, per));
+    let (val, times, reps) = time_ns(1, 4, || run_global(stock, threads, per));
     out.push(record(
         "coordination",
         "global_cas",
         stock as u64,
         json!({"threads": threads, "per": per, "ok": val.0, "soldout": val.1, "left": val.2}),
         times,
+        reps,
         attempts,
         attempts * 16,
         json!({"ok": val.0, "soldout": val.1, "left": val.2}),
@@ -258,7 +265,7 @@ pub fn run(quick: bool) -> Vec<Record> {
     ));
 
     for restock in [1i64, 16, 256, 4096] {
-        let (val, times) = time_ns(1, 4, || run_quota(stock, threads, per, restock));
+        let (val, times, reps) = time_ns(1, 4, || run_quota(stock, threads, per, restock));
         let false_soldout = stock as i64 - val.0 as i64 - val.2;
         out.push(record(
             "coordination",
@@ -274,6 +281,7 @@ pub fn run(quick: bool) -> Vec<Record> {
                 "stranded_or_false_soldout": false_soldout
             }),
             times,
+            reps,
             attempts,
             0,
             json!({"ok": val.0, "soldout": val.1, "left": val.2}),

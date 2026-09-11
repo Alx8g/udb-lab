@@ -16,6 +16,7 @@ Every leap had the same shape. The expensive object never needed to exist.
 - A bulk `+= K` on 20M prices is one integer.
 - An empty join of two sorted ranges is two extrema.
 - A clustered `value > T` is a handful of block min/max values.
+- A family of rounded affine totals is n, S, and 2q bins, not a rescan.
 
 The failures had the opposite shape. We still touched every record, then
 did extra work on top: a second array, a branch, a model, a lock.
@@ -35,44 +36,62 @@ of bases. A uniform bulk adjustment shifts every score by the same amount
 and cannot change the winner. Caching materialized prices would
 invalidate on every bulk write. Caching the envelope of bases does not.
 
-Static: 1.165 s to 83.7 µs. Mixed bulk plus rare exceptions: 1.551 s to
-398 ms. Irregular per-row jitter, where the identity is false: 2.85 s,
-worse than brute.
+Static: 2.445 s to 357 µs. Mixed bulk plus rare exceptions, after the
+brute path stopped paying for an envelope it never used: 2.492 s to 299 ms
+(8.3x). Irregular per-row jitter, where the identity is false: 2.23 s.
 
-That is the architectural claim I would keep. Not "one engine with many
-indexes." A restricted algebra of constructions whose certificates are
-invariant under named classes of writes.
+The mixed number is the one I would keep investigating. 8.3x including
+rebuilds is a real combined-object win, not 13,917x of a static lookup.
 
 ## Exactness is non-negotiable and cheap when the identity is real
 
-Every kernel was checked against an independent reconstruction. The
-fast paths did not cheat. When the identity was false, the numbers
-said so in the open: near-tied answer cells rebuilt so often they lost
-to brute; shuffled correlation columns did not prune; interleaved empty
-joins could not use range bounds.
+Ranking now uses integer millunits and smaller-index ties. Residue uses
+Euclidean remainder and ties-to-even against a scalar oracle. 4k lookup
+paths XOR the same payload, including duplicate keys. When the identity
+was false, the numbers said so: near-tied answer cells rebuilt 12,000
+times and lost; shuffled prefix blocks did not prune; dim-32 certificates
+rejected 47 of 50 still-correct winners.
 
 I would not relax exactness to chase a headline. The leap is that the
 exact answer did not require the expanded object.
 
 ## The engine half is real, and smaller than the representation half
 
-4,000 known ids against 20M dense keys: 12.6 µs direct vs 1.27 ms binary
-search. Column layout beat row layout (59 vs 83 ms). AVX2 lost to scalar
-on this scan (78 vs 59 ms). HashMap beat a piecewise-linear index unless
-the keys were almost linear.
+4,000 known ids against 20M dense keys, identical payload XOR: 12.1 µs
+direct vs 1.60 ms binary search vs 20.0 ms merge-walk. Column layout beat
+row layout (69 vs 98 ms). AVX2 lost to scalar on this scan (87 vs 69 ms).
+Interleaving 32 independent pointer chains was 12.1x the serial batch
+with the same 4.19 million follows.
 
 So yes, remaining work still matters. Layout, covering keys, and not
-returning 16 MB over 1 Gbit/s matter. They are 1.4× to 100×. The
-representation identities are 10^3× to 10^7×. Do not confuse them.
+returning 16 MB over 1 Gbit/s matter. They are 1.1x to 132x. The
+representation identities are 10^2x to 10^4x on timed streams, and
+"below timer resolution" on a bulk adj. Do not confuse them.
 
-The 20 ms / 4,000 people example splits cleanly. In RAM the lookup is
+The 20 ms / 4,000 people example still splits. In RAM the lookup is
 easy. The payload is 8 ms at 1 Gbit/s for 256-byte rows and 131 ms for
 4 KiB rows. Fat results miss 20 ms no matter how good the engine is.
 Cold NVMe random I/O was not measured.
 
+## A specialist can beat a combined trick
+
+Prefix SUM on dense unique keys is the cleanest example from the theory
+package. Column layout already beat padded rows by 8x. Block summaries
+then skipped clustered keys. Fenwick still won the recurring stream
+(36 µs vs 723 µs column blocks clustered; 40 µs vs 295 ms shuffled
+blocks). Construction is 7-33 ms and must be charged. That is the
+compiler's job: admit the Fenwick-shaped state when the query family is
+prefix sums on dense keys, and refuse to sell block summaries as a
+general engine.
+
+Residue histograms have the same shape. Versus scalar recomputation they
+look like 8,230x. Versus a hand-maintained equivalent histogram they
+would look like 1x plus compiler overhead. The identity is still worth
+compiling. The control was honest and weak.
+
 ## Combining existing engines is not the leap
 
-Jasper's 20–41% on TiDB is a real HTAP result and a different question.
+Jasper's 20-41% on TiDB is a real HTAP result and a different question.
 It chooses partitions and column replicas inside an existing dual-format
 system. That is adaptation of today's work. The kernels that leaped
 removed the work.
@@ -87,7 +106,7 @@ maintenance more expensive than scanning.
 1. A restricted algebra with three objects: a construction (how values
    exist), a certificate (what can be skipped), and an operator (what
    still runs). Admit a triple only if it beats the specialist including
-   build and invalidation.
+   build and invalidation. Residue vs Fenwick vs envelope is the template.
 
 2. Physical grouping. Block bounds only won when values were clustered.
    The layout is part of the certificate.
@@ -98,15 +117,19 @@ maintenance more expensive than scanning.
 4. An insert-friendly shared arrangement. `Vec::insert` is not one.
 
 5. A binary join that actually emits the two-hop product, so WCOJ has a
-   fair explosion baseline. The current comparison plan already avoided
-   the explosion, which is itself a finding.
+   fair explosion baseline.
+
+6. A residue control that is itself a maintained histogram, not scalar
+   rounding. Until then, 8,230x is "vs the naive family," not vs the
+   best equivalent state.
 
 ## What I would not spend the next month on
 
 Per-row extra metadata as a scan accelerator. Automatic SIMD as a
 strategy. Local quotas as a substitute for a network hop we did not
 pay. Learned indexes as a default primary key. Answer cells on
-near-tied, high-churn rankings.
+near-tied, high-churn rankings. Selling block summaries as a replacement
+for a prefix index.
 
 Those are not empty ideas. They lost on this machine, against honest
 baselines, with exact answers. That is enough to demote them.

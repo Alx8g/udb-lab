@@ -2,8 +2,10 @@
 
 Machine: Intel Core i9-12900H, 14c/20t, 32 GB DDR4-3200, NVMe.
 Compiler: rustc 1.96.0, `--release`, thin LTO, codegen-units 1.
-Correctness: all 13 kernels exact against independent reconstruction.
-Run: `cargo run --release`, 190 records, 120.2 s wall.
+Correctness: all 17 kernels exact against independent reconstruction.
+Run: `cargo run --release`, 217 records, 445.4 s wall. Answer-cell mixed
+workloads were remeasured after an interior-gap fix and merged into the
+same JSON.
 
 This is not a database ranking. Isolated mechanisms, same process, same data.
 
@@ -12,96 +14,120 @@ The target is both halves, designed together: eliminate work that need not exist
 Raw data: [results/full/records.json](../results/full/records.json), [results/full/records.csv](../results/full/records.csv).
 Protocol: [protocol.md](protocol.md). Thoughts: [thoughts.md](thoughts.md). Issues: [issues.md](issues.md).
 
+Integer ranking uses millunits and weight `k/10000`, lower score then smaller index. Times below 1 µs are flagged `below_timer_resolution` and are not latency ratios.
+
 ## What actually leaps
 
 | Mechanism | Workload | Before | After | Speedup | Negative control |
 |---|---|---|---|---|---|
-| Factorized join-aggregate | 8,000 × 8,000 pairs | 26.9 ms naive pairs | 4.7 µs `sum(A)*sum(B)` | 5,724× | XOR-coupled aggregate still 2.7 ms |
-| Answer cells (static) | 20k products, 12k weights | 140–260 ms scan | 24–60 µs cell lookup | 2,300–11,000× | — |
-| Answer cells (small drift, pareto) | same + 5% tiny updates | 140 ms | 162 µs, hit_rate=1.0 | 861× | near-tie / large drift: 2.1 s, worse than brute |
-| Executable bulk update | 20M prices `+= 100` | 31.3 ms N writes | ~0 ns one adj | ~10^7× | point lookup 17 vs 19 µs (slightly slower); filter still 19.8 ms |
-| Block bounds (clustered) | 20M `value > T` | 8.3–10.5 ms full scan | 23–35 µs | 230–296× | spread, no prune: 11.2 vs 11.9 ms, no win |
-| Certificate empty join | 2M vs 2M disjoint ranges | 2.12 ms merge | two extrema, ~0 ns | ~10^6× | interleaved empty: merge 24.5 ms, bounds cannot help |
-| Galloping intersection | 2M vs 200 sparse | 1.70 ms merge | 8.1 µs gallop | 210× | dense overlap: 17.5 vs 15.1 ms, ~1.2× |
-| Joint catalog | 60k products, 15k rankings | 1.165 s brute | 83.7 µs cells over bases | 13,917× | irregular per-row jitter: 2.85 s rebuild |
-| Correlation block bounds | 8M sorted, tight noise | 7.38 ms column scan | 10.8 µs block min/max | 683× | shuffled: 4.45 vs 4.35 ms, no win |
-| Shared index vs rescan | 500k keys, 1024 ranges | 424 ms rescan | 130 µs shared | 3,267× | private lists 350 ns but duplicate RAM; Vec insert 1.0 ms |
-| 4k dense PK lookup | 20M ids | 1.27 ms 4k bsearch | 12.6 µs direct | 101× | merge-walk of id column 17.4 ms, worse |
+| Factorized join-aggregate | 8,000 x 8,000 pairs | 25.3 ms naive pairs | 4.5 µs `sum(A)*sum(B)` | 5,624x | XOR-coupled aggregate still 2.66 ms |
+| Answer cells (static) | 20k products, 12k weights | 295-626 ms scan | 126-228 µs cell lookup | 2,334-4,953x | - |
+| Answer cells (small drift, pareto) | same + 5% tiny updates | 295 ms | 240 µs, hit_rate=1.0, 0 rebuilds | 1,231x | near-tie: 23.8 s, 12,000 rebuilds |
+| Executable bulk update | 20M prices `+= 100` | 31.2 ms N writes | <1 µs one adj | below timer | point lookup 14 vs 17 µs; filter 20.5 ms |
+| Block bounds (clustered) | 20M `value > T` | 10.7-12.0 ms full scan | 26.1 µs | 411-460x | spread still prunes some blocks here (100-122x), not a kill |
+| Certificate empty join | 2M vs 2M disjoint ranges | 2.54 ms merge | two extrema, <1 µs | below timer | dense overlap: gallop 15.7 vs merge 17.4 ms |
+| Galloping intersection | 2M vs sparse | 1.90 ms merge | 8.3 µs gallop | 229x | dense overlap ~1.1x |
+| Joint catalog | 60k products, 15k rankings | 2.445 s brute | 357 µs cells over bases | 6,846x | irregular per-row jitter: 2.23 s rebuild |
+| Joint mixed (corrected baseline) | bulk every 20, exception every 400 | 2.492 s brute, no envelope | 299 ms joint | 8.3x | exceptions rebuild; identity still saves the bulk half |
+| Correlation block bounds | 8M sorted, tight noise | 3.80 ms column scan | 11.4 µs block min/max | 333x | shuffled: 5.06 vs 4.76 ms, no win |
+| Shared index vs rescan | 500k keys, 1024 ranges | 498 ms rescan | 525 ns shared | below timer on shared | private lists faster but duplicate RAM |
+| 4k dense PK lookup | 20M ids, same XOR payload | 1.60 ms 4k bsearch | 12.1 µs direct | 132x | merge-walk of id column 20.0 ms, worse |
+| Residue histogram q=100 | 1,048,576 values, 48 queries, 192 updates | 453 ms scalar round-even | 55 µs stream | 8,230x | unmaintained `x>T` still scans (0.50 ms) |
+| Residue histogram q=10,000 | same stream | 445 ms | 4.43 ms | 101x | O(q) query cost shows up |
+| Dependent-read interleave | 4,194,304 logical follows | 575 ms width 1 | 47.6 ms width 32 | 12.1x | width 64 is 48.0 ms, no further gain |
+| Fenwick prefix (clustered) | 2,097,152 dense keys, 48 prefix sums | 56.8 ms column scan | 36.2 µs Fenwick | 1,568x | shuffled blocks lose; Fenwick still 39.7 µs |
 
 ## What does not leap, and why
 
-**Per-row 16-bit progressive bounds lost.** Full u32 scan of 20M: 8–12 ms. Scalar bucket pass: 18–65 ms. AVX2 bucket pass: 14–38 ms. One extra array plus a branch per row is more work than a tight column scan. The research claim only holds when the bound describes a group, not a record. Block min/max (1024-row) is the version that wins, and only when physical layout clusters values.
+**Per-row 16-bit progressive bounds lost.** Full u32 scan of 20M is still cheaper than an extra array plus a branch. Group min/max is the version that wins.
 
-**AVX2 column scan lost to scalar.** Row 82.8 ms, scalar SoA 58.5 ms, AVX2 78.2 ms. Layout (AoS vs SoA) is the 1.4× engine win. The SIMD path paid for `cvtepu32_epi64` plus horizontal add and lost. Remaining-work redesign is real, but this particular kernel is not yet a specialist-beating scan.
+**AVX2 column scan lost to scalar.** Row 97.7 ms, scalar SoA 69.1 ms, AVX2 87.0 ms. Layout is the engine win. SIMD paid for widening and lost.
 
-**Learned index is not free, and hash still wins on messy keys.** 5M keys, 200k lookups: linear PGM 13.0 ms vs binary 51.5 ms vs hash 18.1 ms (PGM wins). Gaps: PGM 50.7, binary 56.8, hash 18.5. Clusters: PGM 35.3, binary 60.4, hash 18.5–19.6. Prediction may not decide existence (correctness held). It also does not beat a HashMap unless the CDF is almost linear.
+**Learned index is not free, and hash still wins on messy keys.** Same qualitative result as the previous run.
 
-**Local quotas are not a 10× transaction story on this box.** 16 threads, 400k stock, 1.28M attempts: global CAS 71.7 ms, quota 48.4 ms (1.48×). Restock size 1 vs 4096 did not matter. Oversell was zero. The expensive part of a real distributed reserve is the network hop this kernel never pays.
+**Local quotas are not a 10x transaction story on this box.**
 
-**Queryable redundancy is operator-specific.** Sum of A+B from C: 4.18 ms vs 10.3 ms from A and B (2.5×, one array vs two). Filter on A alone: C does not help (7.67 ms). Repair of A from B and C: 33.6 ms, so the extra block is not free.
+**Queryable redundancy is operator-specific.** Sum of A+B from C: 5.03 vs 11.0 ms (2.2x). Filter on A alone: C does not help.
 
-**WCOJ vs this binary plan is mixed.** Two cliques: leapfrog 3–4× faster. Dense bipartite: the binary plan with `u < v < w` only produced ~8k–20k intermediates, not the 6–31M two-hop estimate, and was faster (1.75 vs 4.14 ms at 150; 15.7 vs 18.3 ms at 250). A hash-join that actually emitted every two-hop pair would look different. This kernel did not reproduce the textbook explosion because the comparison plan already avoided it.
+**WCOJ vs this binary plan is mixed.** The comparison plan already avoided the textbook two-hop explosion.
 
-**Answer-cell maintenance can exceed the original query.** Pareto + large drift: 1.84 s vs 140 ms brute (600 envelope rebuilds). Near-ties: even 0.002 drift rebuilds on 5% of queries, 2.08 s. The certificate is only cheap while the gap survives. Near-tied rankings are the kill case named in the research note, and they killed it.
+**Answer-cell maintenance can exceed the original query.** Pareto + large drift: 1.47 s vs 295 ms brute (600 envelope rebuilds). Near-ties: 23.8-23.9 s, hit_rate=0, 12,000 rebuilds. The certificate is only cheap while the gap survives.
 
-**Shared state trades query time for update time.** Private match-list counts are O(1) and faster than a shared binary search. The shared array wins against rescan, and uses one copy of the keys. Inserting into a `Vec` is O(n) (1.0 ms at 500k). A real shared arrangement needs an insert-friendly structure.
+**Shared state trades query time for update time.** Private match-list counts remain faster than a shared binary search. Inserting into a `Vec` is still O(n).
+
+**Block summaries lose when keys are shuffled.** Clustered row scan 448 ms vs row blocks 281 µs. Shuffled row blocks 623 ms, worse than the 584 ms row scan. Column blocks shuffled 295 ms vs column scan 269 ms: extra metadata, no prune.
+
+**Fenwick is the specialist, and it wins the recurring stream.** Clustered Fenwick 36.2 µs vs column blocks 723 µs. Construction is 7.29 ms clustered and 32.8 ms shuffled, charged separately. A one-shot query does not pay that tax for free.
+
+**Ranking certificates get conservative in high dimension.** 4,096 candidates, residual 100, query L1 0.05 of 1e6. Ordinary vs simplex-tight certified / 50, actual unchanged / 50: dim 2 = 48/48, 49; dim 8 = 17/17, 38; dim 32 = 0/3, 31. Zero false certifications. Simplex helped only at dim 32 on this sample.
 
 ## Design-together result
 
-The joint catalog is the one experiment that composes two mechanisms on the same data:
+The joint catalog is the experiment that composes two mechanisms on the same data:
 
 - Prices are `base + group_adj + exception` (executable region).
-- Rankings are the lower envelope of bases (answer cells).
-- A uniform bulk adjustment shifts every score by the same amount and cannot change the winner.
+- Rankings are the lower envelope of bases (answer cells), integer millunits, smaller-index ties.
+- A uniform bulk adjustment shifts every score by `k*adj` and cannot change the winner.
 
-Static joint: 1.165 s to 83.7 µs (13,917×), 2 cells.
+Static joint: 2.445 s to 357 µs (6,846x), 2 cells.
 
-Mixed (bulk every 20 queries, exception every 400): 1.551 s to 398 ms (3.9×). Exceptions force envelope rebuild. The identity still saves the bulk half.
+Mixed, after the baseline stopped rebuilding the envelope it never used: 2.492 s to 299 ms (8.3x). Previously the brute path paid for `set_exception()` envelope rebuilds. The 8.3x is the number that survives that correction. Exceptions still force a rebuild. The identity still saves the bulk half.
 
-Irregular per-row price jitter: 2.85 s. Sharing the representation does not help when the identity is false. Rebuild cost shows up in the open.
+Irregular per-row price jitter: 2.23 s. Sharing the representation does not help when the identity is false.
 
-That is the architectural claim, measured: representation and certificate have to be the same object. Caching fully materialized prices would invalidate on every bulk adj. Caching the envelope of bases does not.
+## Theory-package kernels (this round)
+
+Residue, chase, prefix, and ranking certificates are the mechanisms from
+`database_theory_research_package.zip`, reimplemented in this lab and
+measured on the same machine as the rest of the suite.
+
+**Rounded affine family.** Count and sum are not enough: `[0,2]` and `[1,1]`
+share them, `round_even(x/2)` sums to 1 vs 0. A histogram modulo `2q` plus
+n and S answers every integer `(p,b)` at fixed q. Stream at q=100: 453 ms
+to 55 µs. Build is 6.87 ms, so construction-plus-stream is about 65x, not
+8,230x. At q=10,000 the histogram is 160 KB and the stream is 4.43 ms
+(101x vs scalar, 36x including build). Original values stay in RAM. An
+unmaintained `x>T` still scans.
+
+**Dependent reads.** 65,536 chains, depth 64, 128 MiB link array. Width 32
+is 12.1x the serial batch. No logical follow is removed. Width 64 does not
+help further (47.6 vs 48.0 ms).
+
+**Prefix SUM on dense unique keys.** Layout is the first cut (column vs
+row, 56.8 vs 448 ms clustered). Block summaries then skip clustered keys
+(row blocks 281 µs). Fenwick is 36.2 µs clustered and 39.7 µs shuffled.
+The theory paper's warning holds: an established prefix index beats the
+layout-plus-summary trick on this workload, and shuffled data kills the
+summary.
+
+**Certificates.** The three-product integer example certifies the middle
+winner across 15,625 residual states with zero false positives. Random
+coverage at dim 32 certifies 3/50 even with the simplex bound, while the
+winner actually stayed in 31/50. Failure to certify is not a wrong answer.
 
 ## 4,000 people / 20 ms
 
-In-process, dense primary key, 20M rows, 4,000 known ids: 12.6 µs median. Independent binary search: 1.27 ms. The engine half of the example is easy once the id is a direct load.
+In-process, dense primary key, 20M rows, 4,000 known ids, same XOR of a
+`u32` payload, missing=0, duplicate requests independent: 12.1 µs median.
+Independent binary search: 1.60 ms. Sorted merge of the id column: 20.0 ms.
 
 Network payload, independent of the engine:
 
-- 4,000 × 256 B = 1.024 MB → 8.19 ms ideal at 1 Gbit/s, 0.82 ms at 10 Gbit/s
-- 4,000 × 4,096 B = 16.4 MB → 131 ms at 1 Gbit/s, 13.1 ms at 10 Gbit/s
+- 4,000 x 256 B = 1.024 MB -> 8.19 ms ideal at 1 Gbit/s, 0.82 ms at 10 Gbit/s
+- 4,000 x 4,096 B = 16.4 MB -> 131 ms at 1 Gbit/s, 13.1 ms at 10 Gbit/s
 
-20 ms for fat rows over 1 Gbit/s is a link bound, not an engine bound. Returning only requested fields is mandatory. Cold 4K random I/O was not measured here (all in RAM).
+20 ms for fat rows over 1 Gbit/s is a link bound, not an engine bound.
+Cold 4K random I/O was not measured here (all in RAM).
 
-## Paper numbers we did not reproduce, used as context
+## Paper / package numbers, used as context
 
-- Jasper (TiDB, VLDB 2026 program): 20.43–40.59% lower workload completion time. Adaptation of existing dual-format storage, not a new unit of work.
-- Blitzcrank: 85% less TPC-C memory, 19% lower throughput. Compression is a RUM trade, not a free lunch.
-- Free Join: 2.94× geomean on JOB, single-thread in-memory. Our triangle kernel is smaller and mixed.
-- F-IVM: up to two orders of magnitude vs other IVM in the authors' setting. Our factorized kernel is the identity they exploit, at 10^3–10^4× on the expanded product.
+The accompanying theory package measured a virtualized Linux host, GCC
+14.2, pinned CPU. This lab is Windows, rustc, i9-12900H. Direction
+matched. Absolute times did not, and should not be multiplied together.
 
-## What the evidence supports as the research bet
+- Package residue q=100: 78.47x construction-plus-stream vs scalar. Here 65x.
+- Package chase width 32: 10.68x. Here 12.1x.
+- Package Fenwick clustered stream: 28 µs vs our 36 µs. Same specialist win.
+- Package certificate coverage dim 2/8/32 at eps=100, L1=0.05: 50/20/0 ordinary, 50/30/5 simplex. Here 48/17/0 and 48/17/3 over 50 trials.
 
-Keep:
-
-1. Compact exact constructions (factorized aggregates, executable bulk ops).
-2. Certificates whose size tracks the decision, not the table (envelope cells, range bounds, block min/max).
-3. Shared maintained state across parameterized queries.
-4. Joint identities: a representation that makes a certificate invariant under a class of writes.
-
-Drop or bound:
-
-1. Per-row extra metadata as a scan accelerator. It lost.
-2. Treating SIMD as automatically faster. Layout beat SIMD here.
-3. Assuming WCOJ always beats a filtered binary plan.
-4. Assuming local quotas revolutionize uncontended CAS.
-5. Answer cells on near-tied, high-churn rankings.
-
-## Next measurements that would change the bet
-
-1. Cold 4k lookup from NVMe: page grouping vs independent I/O. The 20 ms example is an I/O problem once RAM is gone.
-2. A binary join that does emit the two-hop product, so WCOJ has a fair explosion baseline.
-3. Answer-cell compiler for a larger operator set, with rebuild budget vs brute as an explicit planner choice.
-4. Insert-friendly shared arrangements (not `Vec::insert`).
-5. A scan kernel that beats scalar SoA on this CPU, or a documented reason it cannot.
-6. The synthesis loop: given a restricted algebra, search for (representation, certificate, operator) triples and keep only those that beat the specialist including construction.
+No production database, billion-row, distributed, or crash-recovery claim.
