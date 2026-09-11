@@ -6,3 +6,8 @@
 *.exe
 .DS_Store
 Thumbs.db
+/treehouse.toml
+results/full/records.*.json
+results/full/records.*.csv
+!results/full/records.json
+!results/full/records.csv

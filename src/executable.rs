@@ -116,11 +116,7 @@ pub fn correctness() -> Result<(), String> {
     m.prices[3] += 9;
     for i in 0..r.rows.len() {
         if r.price(i) != m.prices[i] {
-            return Err(format!(
-                "row {i} region={} mat={}",
-                r.price(i),
-                m.prices[i]
-            ));
+            return Err(format!("row {i} region={} mat={}", r.price(i), m.prices[i]));
         }
     }
     if r.sum() != m.sum() {
@@ -151,7 +147,7 @@ pub fn run(quick: bool) -> Vec<Record> {
         let bases: Vec<i64> = (0..n).map(|_| rng.gen_range(50..5_000)).collect();
 
         let mut mat = Materialized::new(&bases);
-        let (val, times) = time_ns(1, 5, || {
+        let (val, times, reps) = time_ns(1, 5, || {
             mat.bulk_add(100);
             mat.sum()
         });
@@ -161,6 +157,7 @@ pub fn run(quick: bool) -> Vec<Record> {
             n as u64,
             json!({"k": 100}),
             times,
+            reps,
             n as u64,
             (n * 8) as u64,
             json!({"sum": val}),
@@ -168,7 +165,7 @@ pub fn run(quick: bool) -> Vec<Record> {
         ));
 
         let mut region = Region::with_bases(&bases);
-        let (val, times) = time_ns(4, 30, || {
+        let (val, times, reps) = time_ns(4, 30, || {
             region.bulk_add_existing(100);
             region.adj
         });
@@ -178,6 +175,7 @@ pub fn run(quick: bool) -> Vec<Record> {
             n as u64,
             json!({"k": 100}),
             times,
+            reps,
             1,
             8,
             json!({"adj": val, "sum": region.sum()}),
@@ -187,7 +185,7 @@ pub fn run(quick: bool) -> Vec<Record> {
         // Point lookups
         let ids: Vec<usize> = (0..4_000).map(|_| rng.gen_range(0..n)).collect();
         let region = Region::with_bases(&bases);
-        let (val, times) = time_ns(3, 12, || {
+        let (val, times, reps) = time_ns(3, 12, || {
             let mut s = 0i64;
             for &i in &ids {
                 s += region.price(i);
@@ -200,6 +198,7 @@ pub fn run(quick: bool) -> Vec<Record> {
             n as u64,
             json!({"lookups": 4000}),
             times,
+            reps,
             4000,
             4000 * 24,
             json!({"sum": val}),
@@ -207,7 +206,7 @@ pub fn run(quick: bool) -> Vec<Record> {
         ));
 
         let mat = Materialized::new(&bases);
-        let (val, times) = time_ns(3, 12, || {
+        let (val, times, reps) = time_ns(3, 12, || {
             let mut s = 0i64;
             for &i in &ids {
                 s += mat.prices[i];
@@ -220,6 +219,7 @@ pub fn run(quick: bool) -> Vec<Record> {
             n as u64,
             json!({"lookups": 4000}),
             times,
+            reps,
             4000,
             4000 * 8,
             json!({"sum": val}),
@@ -230,7 +230,7 @@ pub fn run(quick: bool) -> Vec<Record> {
         // Engine pairing: SIMD-style scan of bases + broadcast adj.
         let t = 2500i64;
         let adj = 100i64;
-        let (val, times) = time_ns(2, 8, || {
+        let (val, times, reps) = time_ns(2, 8, || {
             let mut c = 0u64;
             for &b in &bases {
                 if b + adj > t {
@@ -245,6 +245,7 @@ pub fn run(quick: bool) -> Vec<Record> {
             n as u64,
             json!({"threshold": t, "adj": adj}),
             times,
+            reps,
             n as u64,
             (n * 8) as u64,
             json!({"count": val}),
@@ -262,15 +263,14 @@ pub fn run(quick: bool) -> Vec<Record> {
             region.set_exception(i, 3);
         }
         let map: HashMap<usize, i64> = (0..n_exc).map(|i| (i, 3i64)).collect();
-        let (val, times) = time_ns(3, 10, || {
-            region.sum() + map.len() as i64
-        });
+        let (val, times, reps) = time_ns(3, 10, || region.sum() + map.len() as i64);
         out.push(record(
             "executable_regions",
             "exception_density_sum",
             n as u64,
             json!({"density": density, "exceptions": n_exc, "map_bytes_est": map.len() * 24}),
             times,
+            reps,
             1,
             32 + (n_exc as u64 * 24),
             json!({"sum": val}),

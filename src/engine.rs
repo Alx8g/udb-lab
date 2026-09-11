@@ -123,18 +123,26 @@ unsafe fn scan_col_avx2_inner(price: &[u32], qty: &[u32], min_price: u32) -> (u6
     (count, sum)
 }
 
-fn gather_ids(ids: &[u64], keys: &[u64]) -> u64 {
+/// All 4k-lookup paths XOR the same payload for each requested key.
+/// Missing keys contribute 0. Duplicate requests are processed independently.
+/// Table ids are unique and sorted. Request keys may repeat or miss.
+fn payload_at(payload: &[u32], i: usize) -> u64 {
+    payload[i] as u64
+}
+
+fn gather_bsearch(ids: &[u64], payload: &[u32], keys: &[u64]) -> u64 {
     let mut s = 0u64;
     for &k in keys {
         if let Ok(i) = ids.binary_search(&k) {
-            s ^= ids[i];
+            s ^= payload_at(payload, i);
         }
     }
     s
 }
 
-/// Sorted 4000-key batch: merge-walk a sorted id column once.
-fn batch_merge(ids: &[u64], keys_sorted: &[u64]) -> u64 {
+/// Sorted request keys, one forward walk of the unique id column.
+/// Do not advance past a match: a second request for the same key must hit.
+fn batch_merge(ids: &[u64], payload: &[u32], keys_sorted: &[u64]) -> u64 {
     let mut i = 0usize;
     let mut s = 0u64;
     for &k in keys_sorted {
@@ -142,20 +150,18 @@ fn batch_merge(ids: &[u64], keys_sorted: &[u64]) -> u64 {
             i += 1;
         }
         if i < ids.len() && ids[i] == k {
-            s ^= ids[i];
-            i += 1;
+            s ^= payload_at(payload, i);
         }
     }
     s
 }
 
-/// Hash probe of 4000 keys into a dense id->row table (ids are 0..n).
 fn batch_direct(payload: &[u32], keys: &[u64]) -> u64 {
     let mut s = 0u64;
     let n = payload.len() as u64;
     for &k in keys {
         if k < n {
-            s += payload[k as usize] as u64;
+            s ^= payload[k as usize] as u64;
         }
     }
     s
@@ -172,59 +178,71 @@ pub fn correctness() -> Result<(), String> {
         return Err(format!("scan mismatch row={a:?} col={b:?} avx={c:?}"));
     }
     let ids: Vec<u64> = (0..5_000).collect();
-    let keys = vec![0, 10, 11, 4999, 9_999];
-    let g = gather_ids(&ids, &keys);
+    let payload: Vec<u32> = (0..5_000).map(|i| (i as u32).wrapping_mul(17)).collect();
+    let keys = vec![0, 10, 10, 11, 4999, 9_999];
+    let g = gather_bsearch(&ids, &payload, &keys);
     let mut sorted = keys.clone();
     sorted.sort_unstable();
-    let m = batch_merge(&ids, &sorted);
-    if g != m {
-        return Err("batch lookup mismatch".into());
+    let m = batch_merge(&ids, &payload, &sorted);
+    let d = batch_direct(&payload, &keys);
+    if g != d {
+        return Err(format!("bsearch {g} != direct {d}"));
     }
-    eprintln!("engine correctness: row/col/avx2 scans and batch lookup match");
+    if m != d {
+        return Err(format!("merge {m} != direct {d} on duplicate keys"));
+    }
+    eprintln!("engine correctness: row/col/avx2 scans; 4k paths XOR the same payload");
     Ok(())
 }
 
 pub fn run(quick: bool) -> Vec<Record> {
     let mut out = Vec::new();
-    let n = if quick { 1_000_000usize } else { 20_000_000usize };
+    let n = if quick {
+        1_000_000usize
+    } else {
+        20_000_000usize
+    };
     let rows = gen_rows(n, 7);
     let price: Vec<u32> = rows.iter().map(|r| r.price).collect();
     let qty: Vec<u32> = rows.iter().map(|r| r.qty).collect();
     let mut rng = SmallRng::seed_from_u64(21);
 
-    let (val, times) = time_ns(2, 5, || scan_row(&rows, 2500));
+    let (val, times, reps) = time_ns(2, 5, || scan_row(&rows, 2500));
     out.push(record(
         "engine",
         "row_scan_predicate",
         n as u64,
         json!({"min_price": 2500, "count": val.0}),
         times,
+        reps,
         n as u64,
         (n * std::mem::size_of::<Row>()) as u64,
         json!({"count": val.0, "sum": val.1}),
         "AoS: filter+project touches full rows",
     ));
 
-    let (val, times) = time_ns(2, 5, || scan_col(&price, &qty, 2500));
+    let (val, times, reps) = time_ns(2, 5, || scan_col(&price, &qty, 2500));
     out.push(record(
         "engine",
         "col_scan_scalar",
         n as u64,
         json!({"min_price": 2500, "count": val.0}),
         times,
+        reps,
         n as u64,
         (n * 8) as u64,
         json!({"count": val.0, "sum": val.1}),
         "SoA: only the two referenced columns",
     ));
 
-    let (val, times) = time_ns(2, 5, || scan_col_avx2(&price, &qty, 2500));
+    let (val, times, reps) = time_ns(2, 5, || scan_col_avx2(&price, &qty, 2500));
     out.push(record(
         "engine",
         "col_scan_avx2",
         n as u64,
         json!({"min_price": 2500, "count": val.0}),
         times,
+        reps,
         n as u64,
         (n * 8) as u64,
         json!({"count": val.0, "sum": val.1}),
@@ -232,57 +250,54 @@ pub fn run(quick: bool) -> Vec<Record> {
     ));
 
     // 4000-key batch, several n to show data-size independence of a covering index.
-    let ns: Vec<usize> = if quick {
-        vec![n]
-    } else {
-        vec![1_000_000, n]
-    };
+    let ns: Vec<usize> = if quick { vec![n] } else { vec![1_000_000, n] };
     for nn in ns {
         let ids_n: Vec<u64> = (0..nn as u64).collect();
         let payload: Vec<u32> = (0..nn).map(|i| (i as u32).wrapping_mul(17)).collect();
-        let keys: Vec<u64> = (0..4_000)
-            .map(|_| rng.gen_range(0..nn as u64))
-            .collect();
+        let keys: Vec<u64> = (0..4_000).map(|_| rng.gen_range(0..nn as u64)).collect();
 
-        let (val, times) = time_ns(3, 10, || gather_ids(&ids_n, &keys));
+        let (val, times, reps) = time_ns(3, 10, || gather_bsearch(&ids_n, &payload, &keys));
         out.push(record(
             "engine",
             "lookup_4k_independent_bsearch",
             nn as u64,
-            json!({"k": 4000}),
+            json!({"k": 4000, "output": "xor_payload"}),
             times,
+            reps,
             4000,
             4000 * 64,
-            json!({"xor": val}),
-            "4,000 separate binary searches",
+            json!({"xor_payload": val}),
+            "4,000 separate binary searches; XOR payload; missing=0; dups independent",
         ));
 
         let mut keys_sorted = keys.clone();
         keys_sorted.sort_unstable();
-        let (val, times) = time_ns(3, 10, || batch_merge(&ids_n, &keys_sorted));
+        let (val, times, reps) = time_ns(3, 10, || batch_merge(&ids_n, &payload, &keys_sorted));
         out.push(record(
             "engine",
             "lookup_4k_sorted_merge",
             nn as u64,
-            json!({"k": 4000}),
+            json!({"k": 4000, "output": "xor_payload"}),
             times,
+            reps,
             4000,
             0,
-            json!({"xor": val}),
-            "sort keys, one forward scan of the id column",
+            json!({"xor_payload": val}),
+            "sort keys, one forward scan; duplicate requests stay on the match",
         ));
 
-        let (val, times) = time_ns(4, 16, || batch_direct(&payload, &keys));
+        let (val, times, reps) = time_ns(4, 16, || batch_direct(&payload, &keys));
         out.push(record(
             "engine",
             "lookup_4k_direct_id",
             nn as u64,
-            json!({"k": 4000}),
+            json!({"k": 4000, "output": "xor_payload"}),
             times,
+            reps,
             4000,
             4000 * 4,
-            json!({"sum": val}),
-            "dense primary key: 4,000 direct loads",
+            json!({"xor_payload": val}),
+            "dense primary key: 4,000 direct payload loads, same XOR contract",
         ));
     }
 
@@ -301,7 +316,8 @@ pub fn run(quick: bool) -> Vec<Record> {
                 "ms_at_1gbit_ideal": t_1gbit_ms,
                 "ms_at_10gbit_ideal": t_10gbit_ms
             }),
-            vec![0],
+            vec![0.0],
+            1,
             4000,
             total,
             json!({}),

@@ -187,13 +187,14 @@ pub fn run(quick: bool) -> Vec<Record> {
     for (name, n, edges) in graphs {
         let adj = undirected_adj(n, &edges);
         let m: u64 = adj.iter().map(|v| v.len() as u64).sum::<u64>() / 2;
-        let (val, times) = time_ns(2, 5, || triangle_node_iter(&adj));
+        let (val, times, reps) = time_ns(2, 5, || triangle_node_iter(&adj));
         out.push(record(
             "wcoj",
             &format!("leapfrog_{name}"),
             n as u64,
             json!({"edges": m, "triangles": val}),
             times,
+            reps,
             m,
             m * 16,
             json!({"triangles": val}),
@@ -210,13 +211,14 @@ pub fn run(quick: bool) -> Vec<Record> {
             })
             .sum();
         if two_hop < 80_000_000 {
-            let (val, times) = time_ns(1, 3, || triangle_hash_pairs(&adj));
+            let (val, times, reps) = time_ns(1, 3, || triangle_hash_pairs(&adj));
             out.push(record(
                 "wcoj",
                 &format!("binary_expand_{name}"),
                 n as u64,
                 json!({"edges": m, "two_hop": two_hop, "triangles": val.0}),
                 times,
+                reps,
                 two_hop.max(1),
                 two_hop * 12,
                 json!({"triangles": val.0, "intermediates": val.1}),
@@ -228,7 +230,8 @@ pub fn run(quick: bool) -> Vec<Record> {
                 &format!("binary_expand_{name}_skipped"),
                 n as u64,
                 json!({"edges": m, "two_hop": two_hop}),
-                vec![0],
+                vec![0.0],
+                1,
                 two_hop,
                 two_hop * 12,
                 json!({"skipped": true}),

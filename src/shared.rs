@@ -20,7 +20,11 @@ impl PrivateQuery {
         Self {
             lo,
             hi,
-            matches: keys.iter().copied().filter(|&k| k >= lo && k < hi).collect(),
+            matches: keys
+                .iter()
+                .copied()
+                .filter(|&k| k >= lo && k < hi)
+                .collect(),
         }
     }
     fn count(&self) -> usize {
@@ -103,7 +107,7 @@ pub fn run(quick: bool) -> Vec<Record> {
             })
             .collect();
 
-        let (val, times) = time_ns(2, 6, || {
+        let (val, times, reps) = time_ns(2, 6, || {
             bounds
                 .iter()
                 .map(|&(lo, hi)| keys.iter().filter(|&&k| k >= lo && k < hi).count())
@@ -115,6 +119,7 @@ pub fn run(quick: bool) -> Vec<Record> {
             n as u64,
             json!({"queries": nq}),
             times,
+            reps,
             (n * nq) as u64,
             (n * nq * 8) as u64,
             json!({"sum": val}),
@@ -126,15 +131,14 @@ pub fn run(quick: bool) -> Vec<Record> {
             .map(|&(lo, hi)| PrivateQuery::from_keys(&keys, lo, hi))
             .collect();
         let bytes: u64 = privs.iter().map(|p| p.matches.len() as u64 * 8).sum();
-        let (val, times) = time_ns(3, 10, || {
-            privs.iter().map(|p| p.count()).sum::<usize>()
-        });
+        let (val, times, reps) = time_ns(3, 10, || privs.iter().map(|p| p.count()).sum::<usize>());
         out.push(record(
             "shared_state",
             "private_counts",
             n as u64,
             json!({"queries": nq, "retained_bytes": bytes}),
             times,
+            reps,
             nq as u64,
             bytes,
             json!({"sum": val, "retained_bytes": bytes}),
@@ -142,7 +146,7 @@ pub fn run(quick: bool) -> Vec<Record> {
         ));
 
         let shared = SharedIndex::new(keys.clone());
-        let (val, times) = time_ns(3, 10, || {
+        let (val, times, reps) = time_ns(3, 10, || {
             bounds
                 .iter()
                 .map(|&(lo, hi)| shared.count(lo, hi))
@@ -154,6 +158,7 @@ pub fn run(quick: bool) -> Vec<Record> {
             n as u64,
             json!({"queries": nq, "index_bytes": n * 8}),
             times,
+            reps,
             nq as u64,
             (nq * 64) as u64,
             json!({"sum": val, "index_bytes": n * 8}),
@@ -165,7 +170,7 @@ pub fn run(quick: bool) -> Vec<Record> {
             .iter()
             .map(|&(lo, hi)| PrivateQuery::from_keys(&keys, lo, hi))
             .collect();
-        let (val, times) = time_ns(2, 8, || {
+        let (val, times, reps) = time_ns(2, 8, || {
             for p in &mut ps {
                 p.on_insert(insert_k);
             }
@@ -183,6 +188,7 @@ pub fn run(quick: bool) -> Vec<Record> {
             n as u64,
             json!({"queries": nq}),
             times,
+            reps,
             nq as u64,
             nq as u64 * 8,
             json!({"sum": val}),
@@ -191,9 +197,12 @@ pub fn run(quick: bool) -> Vec<Record> {
 
         let mut sidx = SharedIndex::new(keys.clone());
         let insert_at = sidx.keys.binary_search(&insert_k).unwrap_or_else(|i| i);
-        let (val, times) = time_ns(2, 8, || {
+        let (val, times, reps) = time_ns(2, 8, || {
             sidx.insert(insert_k);
-            let s = bounds.iter().map(|&(lo, hi)| sidx.count(lo, hi)).sum::<usize>();
+            let s = bounds
+                .iter()
+                .map(|&(lo, hi)| sidx.count(lo, hi))
+                .sum::<usize>();
             sidx.keys.remove(insert_at);
             s
         });
@@ -203,6 +212,7 @@ pub fn run(quick: bool) -> Vec<Record> {
             n as u64,
             json!({"queries": nq}),
             times,
+            reps,
             1,
             24,
             json!({"sum": val}),

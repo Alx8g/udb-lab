@@ -214,7 +214,11 @@ pub fn correctness() -> Result<(), String> {
 
 pub fn run(quick: bool) -> Vec<Record> {
     let mut out = Vec::new();
-    let n = if quick { 1_000_000usize } else { 20_000_000usize };
+    let n = if quick {
+        1_000_000usize
+    } else {
+        20_000_000usize
+    };
     for clustered in [true, false] {
         let values = gen(n, 9, clustered);
         let hi: Vec<u16> = values.iter().map(|&v| split(v).0).collect();
@@ -230,46 +234,49 @@ pub fn run(quick: bool) -> Vec<Record> {
 
         for t in thresholds {
             let sel = filter_full(&values, t) as f64 / n as f64;
-            let (val, times) = time_ns(2, 6, || filter_full(&values, t));
+            let (val, times, reps) = time_ns(2, 6, || filter_full(&values, t));
             out.push(record(
                 "progressive",
                 &format!("full_scan_{label}"),
                 n as u64,
                 json!({"t": t, "selectivity": sel}),
                 times,
+                reps,
                 n as u64,
                 (n * 4) as u64,
                 json!({"count": val}),
                 "decode every u32",
             ));
 
-            let (val, times) = time_ns(2, 6, || filter_progressive(&hi, &lo, t));
+            let (val, times, reps) = time_ns(2, 6, || filter_progressive(&hi, &lo, t));
             out.push(record(
                 "progressive",
                 &format!("bucket_scalar_{label}"),
                 n as u64,
                 json!({"t": t, "selectivity": sel}),
                 times,
+                reps,
                 n as u64,
                 (n * 2) as u64,
                 json!({"count": val}),
                 "16-bit bounds first; residual on boundary bucket only",
             ));
 
-            let (val, times) = time_ns(2, 6, || filter_progressive_avx2(&hi, &lo, t));
+            let (val, times, reps) = time_ns(2, 6, || filter_progressive_avx2(&hi, &lo, t));
             out.push(record(
                 "progressive",
                 &format!("bucket_avx2_{label}"),
                 n as u64,
                 json!({"t": t, "selectivity": sel}),
                 times,
+                reps,
                 n as u64,
                 (n * 2) as u64,
                 json!({"count": val}),
                 "per-row 16-bit bounds; still one access per record",
             ));
 
-            let (val, times) = time_ns(2, 6, || filter_blocks(&values, &mins, &maxs, t));
+            let (val, times, reps) = time_ns(2, 6, || filter_blocks(&values, &mins, &maxs, t));
             let skipped = mins
                 .iter()
                 .zip(maxs.iter())
@@ -281,6 +288,7 @@ pub fn run(quick: bool) -> Vec<Record> {
                 n as u64,
                 json!({"t": t, "selectivity": sel, "blocks_pruned": skipped, "blocks": mins.len()}),
                 times,
+                reps,
                 n as u64,
                 ((mins.len() - skipped) * BLOCK * 4) as u64,
                 json!({"count": val, "blocks_pruned": skipped}),
@@ -288,25 +296,27 @@ pub fn run(quick: bool) -> Vec<Record> {
             ));
         }
 
-        let (val, times) = time_ns(2, 6, || argmin_full(&values));
+        let (val, times, reps) = time_ns(2, 6, || argmin_full(&values));
         out.push(record(
             "progressive",
             &format!("argmin_full_{label}"),
             n as u64,
             json!({}),
             times,
+            reps,
             n as u64,
             (n * 4) as u64,
             json!({"i": val}),
             "full value scan",
         ));
-        let (val, times) = time_ns(2, 6, || argmin_progressive(&hi, &lo));
+        let (val, times, reps) = time_ns(2, 6, || argmin_progressive(&hi, &lo));
         out.push(record(
             "progressive",
             &format!("argmin_bounds_{label}"),
             n as u64,
             json!({}),
             times,
+            reps,
             n as u64,
             (n * 2) as u64,
             json!({"i": val}),

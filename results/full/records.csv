@@ -1,191 +1,218 @@
-experiment,variant,n,median_ns,p99_ns,min_ns,mean_ns,iters,ops,bytes_touched,notes,params,extra
-factorized,naive_pairs,200,14400,15500,13200,14162.5,8,40000,640000,materializes every matching pair,"{""groups"":1,""pairs"":40000,""per"":200}","{""result"":27395000}"
-factorized,hashjoin_then_pairs,200,14400,15700,13400,14362.5,8,40000,640000,join matching does not remove the product expansion,"{""groups"":1,""per"":200}","{""result"":27395000}"
-factorized,factorized_sums,200,100,106,100,100.5,12,400,3200,sum(A)*sum(B) per group; pairs never exist,"{""groups"":1,""pairs_avoided"":40000,""per"":200}","{""result"":27395000}"
-factorized,incremental_insert_a,200,0,0,0,0.0,20,1,32,insert x into A is O(1) per group: sum_a += x,"{""groups"":1,""per"":200}","{""result"":865369697}"
-factorized,naive_pairs,800,216000,241100,211600,222462.5,8,640000,10240000,materializes every matching pair,"{""groups"":1,""pairs"":640000,""per"":800}","{""result"":408362940}"
-factorized,hashjoin_then_pairs,800,235400,244200,214700,232825.0,8,640000,10240000,join matching does not remove the product expansion,"{""groups"":1,""per"":800}","{""result"":408362940}"
-factorized,factorized_sums,800,425,425,400,420.8333333333333,12,1600,12800,sum(A)*sum(B) per group; pairs never exist,"{""groups"":1,""pairs_avoided"":640000,""per"":800}","{""result"":408362940}"
-factorized,incremental_insert_a,800,1,1,0,0.8,20,1,32,insert x into A is O(1) per group: sum_a += x,"{""groups"":1,""per"":800}","{""result"":3496282110}"
-factorized,naive_pairs,2000,1827700,1882500,1382200,1751850.0,8,4000000,64000000,materializes every matching pair,"{""groups"":1,""pairs"":4000000,""per"":2000}","{""result"":2606504987}"
-factorized,hashjoin_then_pairs,2000,1900300,2259000,1567000,1839462.5,8,4000000,64000000,join matching does not remove the product expansion,"{""groups"":1,""per"":2000}","{""result"":2606504987}"
-factorized,factorized_sums,2000,1000,3300,1000,1216.6666666666667,12,4000,32000,sum(A)*sum(B) per group; pairs never exist,"{""groups"":1,""pairs_avoided"":4000000,""per"":2000}","{""result"":2606504987}"
-factorized,incremental_insert_a,2000,0,1,0,0.2,20,1,32,insert x into A is O(1) per group: sum_a += x,"{""groups"":1,""per"":2000}","{""result"":10426633520}"
-factorized,naive_pairs,5000,10509300,13610400,9293700,10818862.5,8,25000000,400000000,materializes every matching pair,"{""groups"":1,""pairs"":25000000,""per"":5000}","{""result"":15870099084}"
-factorized,hashjoin_then_pairs,5000,9267800,11220600,8447100,9296250.0,8,25000000,400000000,join matching does not remove the product expansion,"{""groups"":1,""per"":5000}","{""result"":15870099084}"
-factorized,factorized_sums,5000,2300,2400,2300,2308.3333333333335,12,10000,80000,sum(A)*sum(B) per group; pairs never exist,"{""groups"":1,""pairs_avoided"":25000000,""per"":5000}","{""result"":15870099084}"
-factorized,incremental_insert_a,5000,0,0,0,0.0,20,1,32,insert x into A is O(1) per group: sum_a += x,"{""groups"":1,""per"":5000}","{""result"":34922514480}"
-factorized,naive_pairs,8000,26903400,28375100,24799800,26725062.5,8,64000000,1024000000,materializes every matching pair,"{""groups"":1,""pairs"":64000000,""per"":8000}","{""result"":40425089832}"
-factorized,hashjoin_then_pairs,8000,31752600,35450400,29868500,31929012.5,8,64000000,1024000000,join matching does not remove the product expansion,"{""groups"":1,""per"":8000}","{""result"":40425089832}"
-factorized,factorized_sums,8000,4700,4700,4600,4683.333333333333,12,16000,128000,sum(A)*sum(B) per group; pairs never exist,"{""groups"":1,""pairs_avoided"":64000000,""per"":8000}","{""result"":40425089832}"
-factorized,incremental_insert_a,8000,1,1,1,1.0,20,1,32,insert x into A is O(1) per group: sum_a += x,"{""groups"":1,""per"":8000}","{""result"":70992736641}"
-factorized,naive_pairs,16000,12551900,15119400,11062600,12763000.0,8,32000000,512000000,materializes every matching pair,"{""groups"":8,""pairs"":32000000,""per"":2000}","{""result"":20231850286}"
-factorized,hashjoin_then_pairs,16000,11983800,13838700,11369000,12173837.5,8,32000000,512000000,join matching does not remove the product expansion,"{""groups"":8,""per"":2000}","{""result"":20231850286}"
-factorized,factorized_sums,16000,9000,9100,8900,9000.0,12,32000,256000,sum(A)*sum(B) per group; pairs never exist,"{""groups"":8,""pairs_avoided"":32000000,""per"":2000}","{""result"":20231850286}"
-factorized,incremental_insert_a,16000,6,7,6,6.05,20,8,256,insert x into A is O(1) per group: sum_a += x,"{""groups"":8,""per"":2000}","{""result"":35667130706}"
-factorized,factorized_sums,50000,33200,73800,31400,37408.333333333336,12,100000,800000,sum(A)*sum(B) per group; pairs never exist,"{""groups"":1,""pairs_avoided"":2500000000,""per"":50000}","{""result"":1574666407314}"
-factorized,incremental_insert_a,50000,1,1,1,1.0,20,1,32,insert x into A is O(1) per group: sum_a += x,"{""groups"":1,""per"":50000}","{""result"":1766439952641}"
-factorized,factorized_sums,500000,318100,1105400,301700,455775.0,12,1000000,8000000,sum(A)*sum(B) per group; pairs never exist,"{""groups"":1,""pairs_avoided"":250000000000,""per"":500000}","{""result"":156210211900224}"
-factorized,incremental_insert_a,500000,1,1,1,1.0,20,1,32,insert x into A is O(1) per group: sum_a += x,"{""groups"":1,""per"":500000}","{""result"":158122731079536}"
-factorized,factorized_sums,5000000,4816200,8354600,4205800,5710433.333333333,12,10000000,80000000,sum(A)*sum(B) per group; pairs never exist,"{""groups"":1,""pairs_avoided"":25000000000000,""per"":5000000}","{""result"":15633275675105440}"
-factorized,incremental_insert_a,5000000,0,0,0,0.0,20,1,32,insert x into A is O(1) per group: sum_a += x,"{""groups"":1,""per"":5000000}","{""result"":15652393972228120}"
-factorized,inseparable_negative_control,1500,2708200,3238200,2628900,2775100.0,6,2250000,54000000,XOR coupling prevents factorization; expansion is required,"{""pairs"":2250000}","{""result"":1292608181426}"
-answer_cells,brute_scan_pareto,20000,139740100,142686700,125505400,136927033.33333334,6,240000000,3840000000,full scan per parameterized ranking,"{""cells"":2,""queries"":12000}","{""xor"":63}"
-answer_cells,cell_lookup_pareto,20000,60000,80100,55200,61100.0,10,12000,384000,O(log cells) exact winner; no data scan,"{""cells"":2,""queries"":12000}","{""cells"":2,""xor"":63}"
-answer_cells,mixed_small_drift_pareto,20000,162300,196400,153100,167900.0,4,12000,0,certificate reused until drift consumes the gap,"{""cells"":2,""mag"":0.002,""queries"":12000,""update_frac"":0.05}","{""hit_rate"":1.0,""hits"":12000,""misses"":0,""rebuilds"":0,""xor"":63}"
-answer_cells,mixed_large_drift_pareto,20000,1844203800,1856363300,1767443500,1821528825.0,4,12000,0,certificate reused until drift consumes the gap,"{""cells"":2,""mag"":3.0,""queries"":12000,""update_frac"":0.05}","{""hit_rate"":0.95,""hits"":11400,""misses"":600,""rebuilds"":600,""xor"":62}"
-answer_cells,brute_scan_random,20000,244453700,254764400,227640400,240052683.33333334,6,240000000,3840000000,full scan per parameterized ranking,"{""cells"":7,""queries"":12000}","{""xor"":7589}"
-answer_cells,cell_lookup_random,20000,26100,27000,23700,25410.0,10,12000,384000,O(log cells) exact winner; no data scan,"{""cells"":7,""queries"":12000}","{""cells"":7,""xor"":7589}"
-answer_cells,mixed_small_drift_random,20000,67042000,73052300,61031500,66913425.0,4,12000,0,certificate reused until drift consumes the gap,"{""cells"":7,""mag"":0.002,""queries"":12000,""update_frac"":0.05}","{""hit_rate"":0.9984166666666666,""hits"":11981,""misses"":19,""rebuilds"":19,""xor"":7589}"
-answer_cells,mixed_large_drift_random,20000,2086691300,2087859400,2048926600,2073385725.0,4,12000,0,certificate reused until drift consumes the gap,"{""cells"":7,""mag"":3.0,""queries"":12000,""update_frac"":0.05}","{""hit_rate"":0.95,""hits"":11400,""misses"":600,""rebuilds"":600,""xor"":7589}"
-answer_cells,brute_scan_near_tie,20000,260482300,267077500,241334100,256888650.0,6,240000000,3840000000,full scan per parameterized ranking,"{""cells"":7,""queries"":12000}","{""xor"":15671}"
-answer_cells,cell_lookup_near_tie,20000,23600,24700,23400,23740.0,10,12000,384000,O(log cells) exact winner; no data scan,"{""cells"":7,""queries"":12000}","{""cells"":7,""xor"":15671}"
-answer_cells,mixed_small_drift_near_tie,20000,2078087000,2301810100,2009372000,2114732275.0,4,12000,0,certificate reused until drift consumes the gap,"{""cells"":7,""mag"":0.002,""queries"":12000,""update_frac"":0.05}","{""hit_rate"":0.95,""hits"":11400,""misses"":600,""rebuilds"":600,""xor"":15671}"
-answer_cells,mixed_large_drift_near_tie,20000,2098110200,2127471500,2064794700,2094174900.0,4,12000,0,certificate reused until drift consumes the gap,"{""cells"":7,""mag"":3.0,""queries"":12000,""update_frac"":0.05}","{""hit_rate"":0.95,""hits"":11400,""misses"":600,""rebuilds"":600,""xor"":15671}"
-executable_regions,materialized_bulk_add,10000,3600,31700,3500,9220.0,5,10000,80000,N scalar writes per bulk operation,"{""k"":100}","{""sum"":32255872}"
-executable_regions,compact_bulk_add,10000,0,0,0,0.0,30,1,8,one adjustment increment; N writes never happen,"{""k"":100}","{""adj"":12834500,""sum"":128370255872}"
-executable_regions,compact_point_lookup_4k,10000,4600,4700,4600,4608.333333333333,12,4000,96000,evaluate base+adj-birth+exc per lookup,"{""lookups"":4000}","{""sum"":9899140}"
-executable_regions,materialized_point_lookup_4k,10000,2100,2200,2100,2116.6666666666665,12,4000,32000,direct load of current scalar,"{""lookups"":4000}","{""sum"":9899140}"
-executable_regions,compact_filter_scan,10000,5300,5400,5300,5325.0,8,10000,80000,bulk adj is free; filter still touches every base unless an index exists,"{""adj"":100,""threshold"":2500}","{""count"":5289}"
-executable_regions,materialized_bulk_add,200000,67600,76800,67200,69360.0,5,200000,1600000,N scalar writes per bulk operation,"{""k"":100}","{""sum"":645699541}"
-executable_regions,compact_bulk_add,200000,0,0,0,0.0,30,1,8,one adjustment increment; N writes never happen,"{""k"":100}","{""adj"":12834500,""sum"":2567405699541}"
-executable_regions,compact_point_lookup_4k,200000,5800,5800,5700,5783.333333333333,12,4000,96000,evaluate base+adj-birth+exc per lookup,"{""lookups"":4000}","{""sum"":9980536}"
-executable_regions,materialized_point_lookup_4k,200000,5800,7900,4600,5916.666666666667,12,4000,32000,direct load of current scalar,"{""lookups"":4000}","{""sum"":9980536}"
-executable_regions,compact_filter_scan,200000,106300,126700,104500,109137.5,8,200000,1600000,bulk adj is free; filter still touches every base unless an index exists,"{""adj"":100,""threshold"":2500}","{""count"":105251}"
-executable_regions,materialized_bulk_add,2000000,1954000,4966700,1796300,2875120.0,5,2000000,16000000,N scalar writes per bulk operation,"{""k"":100}","{""sum"":6450808726}"
-executable_regions,compact_bulk_add,2000000,0,0,0,0.0,30,1,8,one adjustment increment; N writes never happen,"{""k"":100}","{""adj"":12834500,""sum"":25674050808726}"
-executable_regions,compact_point_lookup_4k,2000000,10500,10700,10300,10475.0,12,4000,96000,evaluate base+adj-birth+exc per lookup,"{""lookups"":4000}","{""sum"":10030813}"
-executable_regions,materialized_point_lookup_4k,2000000,5700,6600,5500,5816.666666666667,12,4000,32000,direct load of current scalar,"{""lookups"":4000}","{""sum"":10030813}"
-executable_regions,compact_filter_scan,2000000,1433700,2447800,1068800,1416100.0,8,2000000,16000000,bulk adj is free; filter still touches every base unless an index exists,"{""adj"":100,""threshold"":2500}","{""count"":1050860}"
-executable_regions,materialized_bulk_add,20000000,31291000,36113900,28789200,31647480.0,5,20000000,160000000,N scalar writes per bulk operation,"{""k"":100}","{""sum"":64490876126}"
-executable_regions,compact_bulk_add,20000000,0,0,0,0.0,30,1,8,one adjustment increment; N writes never happen,"{""k"":100}","{""adj"":12834500,""sum"":256740490876126}"
-executable_regions,compact_point_lookup_4k,20000000,19200,22800,19000,19741.666666666668,12,4000,96000,evaluate base+adj-birth+exc per lookup,"{""lookups"":4000}","{""sum"":9967211}"
-executable_regions,materialized_point_lookup_4k,20000000,17000,20700,16600,17591.666666666668,12,4000,32000,direct load of current scalar,"{""lookups"":4000}","{""sum"":9967211}"
-executable_regions,compact_filter_scan,20000000,19815000,23255000,19497300,20278025.0,8,20000000,160000000,bulk adj is free; filter still touches every base unless an index exists,"{""adj"":100,""threshold"":2500}","{""count"":10502169}"
-executable_regions,exception_density_sum,500000,0,0,0,0.0,10,1,32,compact form wins while exceptions stay sparse,"{""density"":0.0,""exceptions"":0,""map_bytes_est"":0}","{""sum"":500000000}"
-executable_regions,exception_density_sum,500000,0,0,0,0.0,10,1,120032,compact form wins while exceptions stay sparse,"{""density"":0.01,""exceptions"":5000,""map_bytes_est"":120000}","{""sum"":500020000}"
-executable_regions,exception_density_sum,500000,0,0,0,0.0,10,1,1200032,compact form wins while exceptions stay sparse,"{""density"":0.1,""exceptions"":50000,""map_bytes_est"":1200000}","{""sum"":500200000}"
-executable_regions,exception_density_sum,500000,0,0,0,0.0,10,1,12000032,compact form wins while exceptions stay sparse,"{""density"":1.0,""exceptions"":500000,""map_bytes_est"":12000000}","{""sum"":502000000}"
-progressive,full_scan_clustered,20000000,9365500,10283500,7405200,8926900.0,6,20000000,80000000,decode every u32,"{""selectivity"":0.99998045,""t"":1000000}","{""count"":19999609}"
-progressive,bucket_scalar_clustered,20000000,20321700,24613800,18706400,20607166.666666668,6,20000000,40000000,16-bit bounds first; residual on boundary bucket only,"{""selectivity"":0.99998045,""t"":1000000}","{""count"":19999609}"
-progressive,bucket_avx2_clustered,20000000,35504800,36021600,34326900,35267366.666666664,6,20000000,40000000,per-row 16-bit bounds; still one access per record,"{""selectivity"":0.99998045,""t"":1000000}","{""count"":19999609}"
-progressive,block_bounds_clustered,20000000,35400,40000,33100,35650.0,6,20000000,4096,one min/max per 1024-row block; skip or accept whole blocks,"{""blocks"":19532,""blocks_pruned"":19531,""selectivity"":0.99998045,""t"":1000000}","{""blocks_pruned"":19531,""count"":19999609}"
-progressive,full_scan_clustered,20000000,8503600,10428700,7219900,8568116.666666666,6,20000000,80000000,decode every u32,"{""selectivity"":0.7998392,""t"":1010000}","{""count"":15996784}"
-progressive,bucket_scalar_clustered,20000000,21061600,21174900,18472500,20392166.666666668,6,20000000,40000000,16-bit bounds first; residual on boundary bucket only,"{""selectivity"":0.7998392,""t"":1010000}","{""count"":15996784}"
-progressive,bucket_avx2_clustered,20000000,34437200,36325900,33899700,34638850.0,6,20000000,40000000,per-row 16-bit bounds; still one access per record,"{""selectivity"":0.7998392,""t"":1010000}","{""count"":15996784}"
-progressive,block_bounds_clustered,20000000,25500,26500,25500,25683.333333333332,6,20000000,4096,one min/max per 1024-row block; skip or accept whole blocks,"{""blocks"":19532,""blocks_pruned"":19531,""selectivity"":0.7998392,""t"":1010000}","{""blocks_pruned"":19531,""count"":15996784}"
-progressive,full_scan_clustered,20000000,8252700,9448600,7856900,8426333.333333334,6,20000000,80000000,decode every u32,"{""selectivity"":0.4998881,""t"":1025000}","{""count"":9997762}"
-progressive,bucket_scalar_clustered,20000000,21530800,22276400,19305000,20917516.666666668,6,20000000,40000000,16-bit bounds first; residual on boundary bucket only,"{""selectivity"":0.4998881,""t"":1025000}","{""count"":9997762}"
-progressive,bucket_avx2_clustered,20000000,37921600,41902400,36278300,38306250.0,6,20000000,40000000,per-row 16-bit bounds; still one access per record,"{""selectivity"":0.4998881,""t"":1025000}","{""count"":9997762}"
-progressive,block_bounds_clustered,20000000,24500,24600,24400,24483.333333333332,6,20000000,4096,one min/max per 1024-row block; skip or accept whole blocks,"{""blocks"":19532,""blocks_pruned"":19531,""selectivity"":0.4998881,""t"":1025000}","{""blocks_pruned"":19531,""count"":9997762}"
-progressive,full_scan_clustered,20000000,10472600,11770000,8193800,9874883.333333334,6,20000000,80000000,decode every u32,"{""selectivity"":0.0,""t"":2000000}","{""count"":0}"
-progressive,bucket_scalar_clustered,20000000,14459300,15053000,12878300,14036766.666666666,6,20000000,40000000,16-bit bounds first; residual on boundary bucket only,"{""selectivity"":0.0,""t"":2000000}","{""count"":0}"
-progressive,bucket_avx2_clustered,20000000,13130000,14541300,10865100,12969333.333333334,6,20000000,40000000,per-row 16-bit bounds; still one access per record,"{""selectivity"":0.0,""t"":2000000}","{""count"":0}"
-progressive,block_bounds_clustered,20000000,22600,22700,22500,22566.666666666668,6,20000000,0,one min/max per 1024-row block; skip or accept whole blocks,"{""blocks"":19532,""blocks_pruned"":19532,""selectivity"":0.0,""t"":2000000}","{""blocks_pruned"":19532,""count"":0}"
-progressive,argmin_full_clustered,20000000,23329500,23904700,19712200,22527800.0,6,20000000,80000000,full value scan,{},"{""i"":0}"
-progressive,argmin_bounds_clustered,20000000,27439400,32625800,22884100,27153200.0,6,20000000,40000000,skip buckets whose min cannot beat current best,{},"{""i"":0}"
-progressive,full_scan_spread,20000000,10679200,12423100,7160900,10221083.333333334,6,20000000,80000000,decode every u32,"{""selectivity"":0.999996,""t"":1000}","{""count"":19999920}"
-progressive,bucket_scalar_spread,20000000,18718900,20480700,17391100,18968500.0,6,20000000,40000000,16-bit bounds first; residual on boundary bucket only,"{""selectivity"":0.999996,""t"":1000}","{""count"":19999920}"
-progressive,bucket_avx2_spread,20000000,13979600,14780900,12646100,13679333.333333334,6,20000000,40000000,per-row 16-bit bounds; still one access per record,"{""selectivity"":0.999996,""t"":1000}","{""count"":19999920}"
-progressive,block_bounds_spread,20000000,47700,47900,47600,47716.666666666664,6,20000000,327680,one min/max per 1024-row block; skip or accept whole blocks,"{""blocks"":19532,""blocks_pruned"":19452,""selectivity"":0.999996,""t"":1000}","{""blocks_pruned"":19452,""count"":19999920}"
-progressive,full_scan_spread,20000000,10268900,13381700,7451200,9869133.333333334,6,20000000,80000000,decode every u32,"{""selectivity"":0.9962839,""t"":1000000}","{""count"":19925678}"
-progressive,bucket_scalar_spread,20000000,18223900,19444400,17201900,18118466.666666668,6,20000000,40000000,16-bit bounds first; residual on boundary bucket only,"{""selectivity"":0.9962839,""t"":1000000}","{""count"":19925678}"
-progressive,bucket_avx2_spread,20000000,14245500,15723900,12109500,13679450.0,6,20000000,40000000,per-row 16-bit bounds; still one access per record,"{""selectivity"":0.9962839,""t"":1000000}","{""count"":19925678}"
-progressive,block_bounds_spread,20000000,10331400,13722900,6422600,9650416.666666666,6,20000000,78123008,one min/max per 1024-row block; skip or accept whole blocks,"{""blocks"":19532,""blocks_pruned"":459,""selectivity"":0.9962839,""t"":1000000}","{""blocks_pruned"":459,""count"":19925678}"
-progressive,full_scan_spread,20000000,11626500,13028600,6481000,10906800.0,6,20000000,80000000,decode every u32,"{""selectivity"":0.8136946,""t"":50000000}","{""count"":16273892}"
-progressive,bucket_scalar_spread,20000000,49877200,51136000,45451800,48626216.666666664,6,20000000,40000000,16-bit bounds first; residual on boundary bucket only,"{""selectivity"":0.8136946,""t"":50000000}","{""count"":16273892}"
-progressive,bucket_avx2_spread,20000000,14018700,15572000,12233800,14057633.333333334,6,20000000,40000000,per-row 16-bit bounds; still one access per record,"{""selectivity"":0.8136946,""t"":50000000}","{""count"":16273892}"
-progressive,block_bounds_spread,20000000,10597900,11160200,8356400,9949200.0,6,20000000,80003072,one min/max per 1024-row block; skip or accept whole blocks,"{""blocks"":19532,""blocks_pruned"":0,""selectivity"":0.8136946,""t"":50000000}","{""blocks_pruned"":0,""count"":16273892}"
-progressive,full_scan_spread,20000000,11901000,12452000,6599000,9723266.666666666,6,20000000,80000000,decode every u32,"{""selectivity"":0.25476795,""t"":200000000}","{""count"":5095359}"
-progressive,bucket_scalar_spread,20000000,65174600,70773100,59884300,64952883.333333336,6,20000000,40000000,16-bit bounds first; residual on boundary bucket only,"{""selectivity"":0.25476795,""t"":200000000}","{""count"":5095359}"
-progressive,bucket_avx2_spread,20000000,14519200,16553300,11236800,14057650.0,6,20000000,40000000,per-row 16-bit bounds; still one access per record,"{""selectivity"":0.25476795,""t"":200000000}","{""count"":5095359}"
-progressive,block_bounds_spread,20000000,11152600,11924900,6623600,9647150.0,6,20000000,80003072,one min/max per 1024-row block; skip or accept whole blocks,"{""blocks"":19532,""blocks_pruned"":0,""selectivity"":0.25476795,""t"":200000000}","{""blocks_pruned"":0,""count"":5095359}"
-progressive,argmin_full_spread,20000000,21942600,26504900,20653500,22256550.0,6,20000000,80000000,full value scan,{},"{""i"":17670535}"
-progressive,argmin_bounds_spread,20000000,16622400,17275000,14071800,16105700.0,6,20000000,40000000,skip buckets whose min cannot beat current best,{},"{""i"":17670535}"
-certificate,merge_overlap,2000000,17517400,22373800,16265800,18286366.666666668,6,3148587,25188696,must inspect both inputs; certificate ≈ input,"{""out"":619484}","{""out"":619484}"
-certificate,gallop_overlap,2000000,15127400,17304200,13301200,14931583.333333334,6,1574067,25185072,galloping loses when output is dense,"{""out"":619484}","{""out"":619484}"
-certificate,merge_sparse,2000000,1704100,4620400,1630900,2196962.5,8,1881056,15048448,merge still walks the large side,"{""out"":189,""small"":189}","{""out"":189}"
-certificate,gallop_sparse,2000000,8100,8500,8000,8116.666666666667,12,189,12096,work tracks small side + log jumps,"{""out"":189,""small"":189}","{""out"":189}"
-certificate,merge_disjoint_range,2000000,2116300,4933900,1778300,2593250.0,6,4000000,32000000,empty result still walks until one side ends,"{""out"":0}","{""out"":0}"
-certificate,bound_certificate_disjoint,2000000,0,0,0,0.0,40,2,16,two extrema prove empty intersection,"{""out"":1}","{""disjoint"":true}"
-certificate,merge_interleaved_empty,2000000,24462400,29998000,22278300,25120160.0,5,4000000,32000000,"empty result, but bounds overlap; merge is the certificate","{""out"":0}","{""bound_lies"":false,""out"":0}"
-wcoj,leapfrog_two_cliques_40,80,90100,138500,87900,99660.0,5,1560,24960,intersect neighbor lists; AGM-style,"{""edges"":1560,""triangles"":19760}","{""triangles"":19760}"
-wcoj,binary_expand_two_cliques_40,80,299400,424000,298100,340500.0,3,121680,1460160,R⋈S materializes two-hop pairs then probes T,"{""edges"":1560,""triangles"":19760,""two_hop"":121680}","{""intermediates"":19760,""triangles"":19760}"
-wcoj,leapfrog_two_cliques_70,140,406800,413100,405100,407480.0,5,4830,77280,intersect neighbor lists; AGM-style,"{""edges"":4830,""triangles"":109480}","{""triangles"":109480}"
-wcoj,binary_expand_two_cliques_70,140,1854800,2046300,1676600,1859233.3333333333,3,666540,7998480,R⋈S materializes two-hop pairs then probes T,"{""edges"":4830,""triangles"":109480,""two_hop"":666540}","{""intermediates"":109480,""triangles"":109480}"
-wcoj,leapfrog_er_200_p0.03,200,31900,38900,28500,32960.0,5,556,8896,intersect neighbor lists; AGM-style,"{""edges"":556,""triangles"":39}","{""triangles"":39}"
-wcoj,binary_expand_er_200_p0.03,200,54300,55200,54200,54566.666666666664,3,7426,89112,R⋈S materializes two-hop pairs then probes T,"{""edges"":556,""triangles"":39,""two_hop"":7426}","{""intermediates"":1125,""triangles"":39}"
-wcoj,leapfrog_er_300_p0.02,300,68200,71300,62900,68180.0,5,941,15056,intersect neighbor lists; AGM-style,"{""edges"":941,""triangles"":46}","{""triangles"":46}"
-wcoj,binary_expand_er_300_p0.02,300,96500,96500,96400,96466.66666666667,3,13930,167160,R⋈S materializes two-hop pairs then probes T,"{""edges"":941,""triangles"":46,""two_hop"":13930}","{""intermediates"":1986,""triangles"":46}"
-wcoj,leapfrog_bipartite_150,300,4143300,4796200,3290000,3978780.0,5,22558,360928,intersect neighbor lists; AGM-style,"{""edges"":22558,""triangles"":8700}","{""triangles"":8700}"
-wcoj,binary_expand_bipartite_150,300,1750100,2290500,1639700,1893433.3333333333,3,6785012,81420144,R⋈S materializes two-hop pairs then probes T,"{""edges"":22558,""triangles"":8700,""two_hop"":6785012}","{""intermediates"":8714,""triangles"":8700}"
-wcoj,leapfrog_bipartite_250,500,18298200,19488100,16514000,18348380.0,5,62580,1001280,intersect neighbor lists; AGM-style,"{""edges"":62580,""triangles"":20000}","{""triangles"":20000}"
-wcoj,binary_expand_bipartite_250,500,15728400,16048900,13813000,15196766.666666666,3,31330284,375963408,R⋈S materializes two-hop pairs then probes T,"{""edges"":62580,""triangles"":20000,""two_hop"":31330284}","{""intermediates"":20015,""triangles"":20000}"
-coordination,global_cas,400000,71674400,76935900,68375700,71515375.0,4,1280000,20480000,every reserve contends on one counter,"{""left"":0,""ok"":400000,""per"":80000,""soldout"":880000,""threads"":16}","{""left"":0,""ok"":400000,""soldout"":880000}"
-coordination,quota_restock_1,400000,48449100,49700500,46666700,47881750.0,4,1280000,0,local rights until restock; leftover quota can strand units,"{""left"":0,""ok"":400000,""per"":80000,""restock"":1,""soldout"":880000,""stranded_or_false_soldout"":0,""threads"":16}","{""left"":0,""ok"":400000,""soldout"":880000}"
-coordination,quota_restock_16,400000,48581700,51952500,47343800,49105150.0,4,1280000,0,local rights until restock; leftover quota can strand units,"{""left"":0,""ok"":400000,""per"":80000,""restock"":16,""soldout"":880000,""stranded_or_false_soldout"":0,""threads"":16}","{""left"":0,""ok"":400000,""soldout"":880000}"
-coordination,quota_restock_256,400000,48469600,48492700,45558200,47640950.0,4,1280000,0,local rights until restock; leftover quota can strand units,"{""left"":0,""ok"":400000,""per"":80000,""restock"":256,""soldout"":880000,""stranded_or_false_soldout"":0,""threads"":16}","{""left"":0,""ok"":400000,""soldout"":880000}"
-coordination,quota_restock_4096,400000,50215300,52217200,45418600,48936025.0,4,1280000,0,local rights until restock; leftover quota can strand units,"{""left"":0,""ok"":400000,""per"":80000,""restock"":4096,""soldout"":880000,""stranded_or_false_soldout"":0,""threads"":16}","{""left"":0,""ok"":400000,""soldout"":880000}"
-redundancy,sum_from_a_and_b,8000000,10296500,11460300,6638900,9369216.666666666,6,16000000,128000000,read both source blocks,{},"{""sum"":-1422612513}"
-redundancy,sum_from_coded_c,8000000,4176200,7976600,3284700,5016400.0,6,8000000,64000000,"parity block is the elementwise sum, same width as a source",{},"{""sum"":-1422612513}"
-redundancy,filter_sum_from_sources,8000000,9274800,12787400,7653900,9706983.333333334,6,16000000,128000000,predicate on A+B still needs both sources without C,"{""t"":0}","{""sum"":2666896605961}"
-redundancy,filter_sum_from_coded_c,8000000,7546600,10798500,4215700,6939316.666666667,6,8000000,64000000,same predicate against the recovery block,"{""t"":0}","{""sum"":2666896605961}"
-redundancy,filter_a_only_negative_control,8000000,7667700,9933900,5182000,7312116.666666667,6,8000000,64000000,C = A+B does not answer predicates on A; coded queryability is operator-specific,{},"{""count"":3999694}"
-redundancy,recover_a_from_b_and_c,8000000,33622600,36293400,31109600,33469800.0,4,8000000,192000000,erasure repair cost of the same extra block,{},"{""checksum"":-1118654224}"
-pgm,binary_linear,5000000,51501300,56259500,43114300,50960400.0,6,200000,12800000,classic sorted-array binary search,"{""queries"":200000}","{""xor"":3696485}"
-pgm,pgm_linear,5000000,13031700,14904600,8844700,12502433.333333334,6,200000,9600000,linear CDF model + bounded correction window,"{""queries"":200000,""segments"":1}","{""bytes_model"":32,""segments"":1,""xor"":3696485}"
-pgm,hash_linear,5000000,18113100,23816700,15254700,18309633.333333332,6,200000,12800000,"HashMap specialist: extra memory, O(1) expected","{""map_len"":5000000,""queries"":200000}","{""xor"":3696485}"
-pgm,binary_gaps,5000000,56794300,60725300,50995000,55920000.0,6,200000,12800000,classic sorted-array binary search,"{""queries"":200000}","{""xor"":7952242}"
-pgm,pgm_gaps,5000000,50716200,59887300,47077100,52084900.0,6,200000,9600000,linear CDF model + bounded correction window,"{""queries"":200000,""segments"":14562}","{""bytes_model"":465984,""segments"":14562,""xor"":7952242}"
-pgm,hash_gaps,5000000,18484900,23651800,14658100,18785400.0,6,200000,12800000,"HashMap specialist: extra memory, O(1) expected","{""map_len"":5000000,""queries"":200000}","{""xor"":7952242}"
-pgm,binary_clusters,5000000,60449500,65739300,51753600,58830483.333333336,6,200000,12800000,classic sorted-array binary search,"{""queries"":200000}","{""xor"":3141750}"
-pgm,pgm_clusters,5000000,35278800,36367700,34671500,35411116.666666664,6,200000,9600000,linear CDF model + bounded correction window,"{""queries"":200000,""segments"":22228}","{""bytes_model"":711296,""segments"":22228,""xor"":3141750}"
-pgm,hash_clusters,5000000,19628700,20303900,18430400,19374483.333333332,6,200000,12800000,"HashMap specialist: extra memory, O(1) expected","{""map_len"":5000000,""queries"":200000}","{""xor"":3141750}"
-engine,row_scan_predicate,20000000,82764400,84999900,80889300,83036740.0,5,20000000,480000000,AoS: filter+project touches full rows,"{""count"":14968961,""min_price"":2500}","{""count"":14968961,""sum"":93541164451}"
-engine,col_scan_scalar,20000000,58528700,66241900,56564300,59639040.0,5,20000000,160000000,SoA: only the two referenced columns,"{""count"":14968961,""min_price"":2500}","{""count"":14968961,""sum"":93541164451}"
-engine,col_scan_avx2,20000000,78153400,82044300,76482100,79082500.0,5,20000000,160000000,"same columns, vectorized remaining work","{""count"":14968961,""min_price"":2500}","{""count"":14968961,""sum"":93541164451}"
-engine,lookup_4k_independent_bsearch,1000000,287200,3003800,271900,805100.0,10,4000,256000,"4,000 separate binary searches","{""k"":4000}","{""xor"":686366}"
-engine,lookup_4k_sorted_merge,1000000,467300,519700,464300,474820.0,10,4000,0,"sort keys, one forward scan of the id column","{""k"":4000}","{""xor"":506146}"
-engine,lookup_4k_direct_id,1000000,3700,3800,3600,3675.0,16,4000,16000,"dense primary key: 4,000 direct loads","{""k"":4000}","{""sum"":33482579738}"
-engine,lookup_4k_independent_bsearch,20000000,1268200,2855800,941900,1517010.0,10,4000,256000,"4,000 separate binary searches","{""k"":4000}","{""xor"":8161387}"
-engine,lookup_4k_sorted_merge,20000000,17421500,21045700,16223800,18069000.0,10,4000,0,"sort keys, one forward scan of the id column","{""k"":4000}","{""xor"":13064758}"
-engine,lookup_4k_direct_id,20000000,12600,21100,12200,13275.0,16,4000,16000,"dense primary key: 4,000 direct loads","{""k"":4000}","{""sum"":688693265911}"
-engine,payload_bound,4000,0,0,0,0.0,1,4000,1024000,network payload lower bound; independent of engine speed,"{""bytes_per_row"":256,""ms_at_10gbit_ideal"":0.8191999999999999,""ms_at_1gbit_ideal"":8.192,""total_bytes"":1024000}",{}
-engine,payload_bound,4000,0,0,0,0.0,1,4000,16384000,network payload lower bound; independent of engine speed,"{""bytes_per_row"":4096,""ms_at_10gbit_ideal"":13.107199999999999,""ms_at_1gbit_ideal"":131.072,""total_bytes"":16384000}",{}
-shared_state,rescan_each_query,500000,2701100,2930500,2565900,2700133.3333333335,6,4000000,32000000,no shared state: scan the key array once per query,"{""queries"":8}","{""sum"":9982}"
-shared_state,private_counts,500000,1,1,1,1.0,10,8,79856,"each query stores its own match list (O(1) count, duplicated memory)","{""queries"":8,""retained_bytes"":79856}","{""retained_bytes"":79856,""sum"":9982}"
-shared_state,shared_index_counts,500000,500,575,500,515.0,10,8,512,one sorted array serves every range,"{""index_bytes"":4000000,""queries"":8}","{""index_bytes"":4000000,""sum"":9982}"
-shared_state,private_insert,500000,17,18,16,16.625,8,8,64,update fan-out = number of queries,"{""queries"":8}","{""sum"":9982}"
-shared_state,shared_insert,500000,1020500,1421300,719800,1023375.0,8,1,24,one insert into the shared array; queries stay cheap. Vec insert is O(n).,"{""queries"":8}","{""sum"":9982}"
-shared_state,rescan_each_query,500000,25331400,27655800,23388300,25187166.666666668,6,32000000,256000000,no shared state: scan the key array once per query,"{""queries"":64}","{""sum"":80762}"
-shared_state,private_counts,500000,11,11,11,11.0,10,64,646096,"each query stores its own match list (O(1) count, duplicated memory)","{""queries"":64,""retained_bytes"":646096}","{""retained_bytes"":646096,""sum"":80762}"
-shared_state,shared_index_counts,500000,6700,8400,6600,6960.0,10,64,4096,one sorted array serves every range,"{""index_bytes"":4000000,""queries"":64}","{""index_bytes"":4000000,""sum"":80760}"
-shared_state,private_insert,500000,150,350,125,165.625,8,64,512,update fan-out = number of queries,"{""queries"":64}","{""sum"":80763}"
-shared_state,shared_insert,500000,777900,1004900,701200,807912.5,8,1,24,one insert into the shared array; queries stay cheap. Vec insert is O(n).,"{""queries"":64}","{""sum"":80761}"
-shared_state,rescan_each_query,500000,98892100,105603800,97775900,99750500.0,6,128000000,1024000000,no shared state: scan the key array once per query,"{""queries"":256}","{""sum"":320314}"
-shared_state,private_counts,500000,62,62,62,62.0,10,256,2562512,"each query stores its own match list (O(1) count, duplicated memory)","{""queries"":256,""retained_bytes"":2562512}","{""retained_bytes"":2562512,""sum"":320314}"
-shared_state,shared_index_counts,500000,27100,32500,26000,27220.0,10,256,16384,one sorted array serves every range,"{""index_bytes"":4000000,""queries"":256}","{""index_bytes"":4000000,""sum"":320312}"
-shared_state,private_insert,500000,600,1900,500,887.5,8,256,2048,update fan-out = number of queries,"{""queries"":256}","{""sum"":320314}"
-shared_state,shared_insert,500000,871700,977000,785000,876775.0,8,1,24,one insert into the shared array; queries stay cheap. Vec insert is O(n).,"{""queries"":256}","{""sum"":320312}"
-shared_state,rescan_each_query,500000,423675600,426347800,414311600,422015950.0,6,512000000,4096000000,no shared state: scan the key array once per query,"{""queries"":1024}","{""sum"":1280048}"
-shared_state,private_counts,500000,350,350,325,347.5,10,1024,10240384,"each query stores its own match list (O(1) count, duplicated memory)","{""queries"":1024,""retained_bytes"":10240384}","{""retained_bytes"":10240384,""sum"":1280048}"
-shared_state,shared_index_counts,500000,129600,222900,106300,133290.0,10,1024,65536,one sorted array serves every range,"{""index_bytes"":4000000,""queries"":1024}","{""index_bytes"":4000000,""sum"":1280057}"
-shared_state,private_insert,500000,3000,7100,2300,3562.5,8,1024,8192,update fan-out = number of queries,"{""queries"":1024}","{""sum"":1280051}"
-shared_state,shared_insert,500000,1028200,1150000,873900,1020025.0,8,1,24,one insert into the shared array; queries stay cheap. Vec insert is O(n).,"{""queries"":1024}","{""sum"":1280060}"
-joint,brute_materialized_scan,60000,1164811800,1175652700,1163696900,1167090180.0,5,900000000,14400000000,evaluate every product for every weight,"{""queries"":15000}","{""xor"":0}"
-joint,joint_cells_over_bases,60000,83700,139300,79700,89730.0,10,15000,480000,envelope on bases; adj is invisible to ranking,"{""cells"":2,""queries"":15000}","{""cells"":2,""xor"":0}"
-joint,joint_mixed_bulk_and_exceptions,60000,398189600,400877400,387303900,394588225.0,4,15000,0,bulk ops free for ranking; exception forces envelope rebuild,"{""bulk_every"":20,""exc_every"":400,""queries"":15000}","{""xor"":1}"
-joint,brute_mixed_bulk_and_exceptions,60000,1550884500,1560790000,1548371400,1553348633.3333333,3,900000000,14400000000,"same mixed mutations, no certificate","{""queries"":15000}","{""xor"":1}"
-joint,rebuild_on_irregular_updates,60000,2849318500,2881267400,2783081400,2837889100.0,3,15000,0,irregular per-row changes deny the bulk-adj identity; rebuild cost shows up,"{""queries"":15000}","{""xor"":0}"
-correlation,full_columns_tight,8000000,7378700,10988500,3917100,6754516.666666667,6,8000000,128000000,scan stored delivery,"{""noise"":0.05,""resid_span"":0.050024800823898374,""selectivity"":0.332953625,""t"":40.0}","{""count"":2663629,""resid_span"":0.050024800823898374}"
-correlation,model_prune_tight,8000000,9339800,10086000,7264000,8620483.333333334,6,8000000,64000000,global residual envelope; decode only the uncertain band,"{""noise"":0.05,""resid_span"":0.050024800823898374,""selectivity"":0.332953625,""t"":40.0}","{""count"":2663629}"
-correlation,decode_all_tight,8000000,8289700,10394800,6689100,7962250.0,6,8000000,128000000,"lossless but reconstructs every delivery; storage win, scan not cheaper","{""noise"":0.05,""t"":40.0}","{""count"":2663629}"
-correlation,block_bounds_tight,8000000,10800,11200,10700,10850.0,6,8000000,64000000,"min/max delivery per 1024-row block; same idea as progressive, on the stored column","{""noise"":0.05,""resid_span"":0.050024800823898374,""t"":40.0}","{""count"":2663629}"
-correlation,full_columns_moderate,8000000,4755200,6173700,4670000,5121566.666666667,6,8000000,128000000,scan stored delivery,"{""noise"":4.0,""resid_span"":4.001984066375876,""selectivity"":0.30009925,""t"":40.0}","{""count"":2400794,""resid_span"":4.001984066375876}"
-correlation,model_prune_moderate,8000000,10006500,11350700,7828100,9776583.333333334,6,8000000,64000000,global residual envelope; decode only the uncertain band,"{""noise"":4.0,""resid_span"":4.001984066375876,""selectivity"":0.30009925,""t"":40.0}","{""count"":2400794}"
-correlation,decode_all_moderate,8000000,10315700,11697900,5814000,8674166.666666666,6,8000000,128000000,"lossless but reconstructs every delivery; storage win, scan not cheaper","{""noise"":4.0,""t"":40.0}","{""count"":2400794}"
-correlation,block_bounds_moderate,8000000,166600,182700,119500,155100.0,6,8000000,64000000,"min/max delivery per 1024-row block; same idea as progressive, on the stored column","{""noise"":4.0,""resid_span"":4.001984066375876,""t"":40.0}","{""count"":2400794}"
-correlation,full_columns_none,8000000,4347800,8182400,3439700,5219400.0,6,8000000,128000000,scan stored delivery,"{""noise"":80.0,""resid_span"":139.91456742400288,""selectivity"":0.0416465,""t"":40.0}","{""count"":333172,""resid_span"":139.91456742400288}"
-correlation,model_prune_none,8000000,16818000,17664000,16245100,16911916.666666668,6,8000000,64000000,global residual envelope; decode only the uncertain band,"{""noise"":80.0,""resid_span"":139.91456742400288,""selectivity"":0.0416465,""t"":40.0}","{""count"":333172}"
-correlation,decode_all_none,8000000,9351200,14177100,6546700,9678150.0,6,8000000,128000000,"lossless but reconstructs every delivery; storage win, scan not cheaper","{""noise"":80.0,""t"":40.0}","{""count"":333172}"
-correlation,block_bounds_none,8000000,4448800,7835400,3552300,5320150.0,6,8000000,64000000,"min/max delivery per 1024-row block; same idea as progressive, on the stored column","{""noise"":80.0,""resid_span"":139.91456742400288,""t"":40.0}","{""count"":333172}"
+experiment,variant,n,median_ns,p99_ns,min_ns,mean_ns,iters,inner_reps,below_timer_resolution,ops,bytes_touched,notes
+factorized,naive_pairs,200,14400.0,15800.000000000002,14400.0,14700.0,8,1,False,40000,640000,materializes every matching pair
+factorized,hashjoin_then_pairs,200,15400.000000000002,16000.0,14300.0,14975.0,8,1,False,40000,640000,join matching does not remove the product expansion
+factorized,factorized_sums,200,112.5,125.0,106.25,113.02083333333333,12,16,True,400,3200,sum(A)*sum(B) per group; pairs never exist
+factorized,incremental_insert_a,200,1.171875,1.26953125,1.07421875,1.162109375,20,1024,True,1,32,insert x into A is O(1) per group: sum_a += x
+factorized,naive_pairs,800,230000.0,234400.0,228100.0,229637.5,8,1,False,640000,10240000,materializes every matching pair
+factorized,hashjoin_then_pairs,800,228100.0,232300.0,209900.0,225212.5,8,1,False,640000,10240000,join matching does not remove the product expansion
+factorized,factorized_sums,800,375.0,425.0,375.0,385.4166666666667,12,4,True,1600,12800,sum(A)*sum(B) per group; pairs never exist
+factorized,incremental_insert_a,800,0.9765625,1.07421875,0.87890625,0.9423828125,20,1024,True,1,32,insert x into A is O(1) per group: sum_a += x
+factorized,naive_pairs,2000,1712800.0,2106200.0,1497800.0,1711687.5,8,1,False,4000000,64000000,materializes every matching pair
+factorized,hashjoin_then_pairs,2000,1886800.0,2115300.0,1804600.0,1895925.0,8,1,False,4000000,64000000,join matching does not remove the product expansion
+factorized,factorized_sums,2000,1300.0,2700.0,1300.0,1416.6666666666667,12,1,False,4000,32000,sum(A)*sum(B) per group; pairs never exist
+factorized,incremental_insert_a,2000,1.3671875,1.7578125,1.171875,1.38671875,20,1024,True,1,32,insert x into A is O(1) per group: sum_a += x
+factorized,naive_pairs,5000,9871600.0,10240500.0,9445500.0,9833075.0,8,1,False,25000000,400000000,materializes every matching pair
+factorized,hashjoin_then_pairs,5000,9993900.0,11121900.0,9686700.0,10094500.0,8,1,False,25000000,400000000,join matching does not remove the product expansion
+factorized,factorized_sums,5000,2800.0,2900.0,2800.0,2816.6666666666665,12,1,False,10000,80000,sum(A)*sum(B) per group; pairs never exist
+factorized,incremental_insert_a,5000,1.171875,1.3671875,1.07421875,1.142578125,20,1024,True,1,32,insert x into A is O(1) per group: sum_a += x
+factorized,naive_pairs,8000,25305600.0,28044000.0,23546600.0,25058237.5,8,1,False,64000000,1024000000,materializes every matching pair
+factorized,hashjoin_then_pairs,8000,25924800.0,29738400.0,25379300.0,26610425.0,8,1,False,64000000,1024000000,join matching does not remove the product expansion
+factorized,factorized_sums,8000,4500.0,4600.0,4500.0,4508.333333333333,12,1,False,16000,128000,sum(A)*sum(B) per group; pairs never exist
+factorized,incremental_insert_a,8000,1.171875,1.66015625,1.07421875,1.201171875,20,1024,True,1,32,insert x into A is O(1) per group: sum_a += x
+factorized,naive_pairs,16000,12792000.0,15292800.0,10855700.0,12853425.0,8,1,False,32000000,512000000,materializes every matching pair
+factorized,hashjoin_then_pairs,16000,12622300.0,13856100.0,12033400.0,12685512.5,8,1,False,32000000,512000000,join matching does not remove the product expansion
+factorized,factorized_sums,16000,9200.0,9500.0,9200.0,9250.0,12,1,False,32000,256000,sum(A)*sum(B) per group; pairs never exist
+factorized,incremental_insert_a,16000,6.640625,7.03125,6.640625,6.77734375,20,256,True,8,256,insert x into A is O(1) per group: sum_a += x
+factorized,factorized_sums,50000,27600.0,114300.0,26900.0,34791.666666666664,12,1,False,100000,800000,sum(A)*sum(B) per group; pairs never exist
+factorized,incremental_insert_a,50000,1.07421875,1.171875,1.07421875,1.103515625,20,1024,True,1,32,insert x into A is O(1) per group: sum_a += x
+factorized,factorized_sums,500000,277700.0,1993500.0,230800.0,614741.6666666666,12,1,False,1000000,8000000,sum(A)*sum(B) per group; pairs never exist
+factorized,incremental_insert_a,500000,0.9765625,1.171875,0.87890625,0.947265625,20,1024,True,1,32,insert x into A is O(1) per group: sum_a += x
+factorized,factorized_sums,5000000,4965300.0,8877900.0,4077800.0000000005,5783500.0,12,1,False,10000000,80000000,sum(A)*sum(B) per group; pairs never exist
+factorized,incremental_insert_a,5000000,0.9765625,1.07421875,0.87890625,0.9375,20,1024,True,1,32,insert x into A is O(1) per group: sum_a += x
+factorized,inseparable_negative_control,1500,2659800.0,2790300.0,2485000.0,2645483.3333333335,6,1,False,2250000,54000000,XOR coupling prevents factorization; expansion is required
+executable_regions,materialized_bulk_add,10000,3600.0,3800.0,3500.0,3640.0,5,1,False,10000,80000,N scalar writes per bulk operation
+executable_regions,compact_bulk_add,10000,0.537109375,31.396484375000004,0.5126953125,1.56005859375,30,4096,True,1,8,one adjustment increment; N writes never happen
+executable_regions,compact_point_lookup_4k,10000,4600.0,4600.0,4600.0,4600.0,12,1,False,4000,96000,evaluate base+adj-birth+exc per lookup
+executable_regions,materialized_point_lookup_4k,10000,2100.0,2200.0,2100.0,2116.6666666666665,12,1,False,4000,32000,direct load of current scalar
+executable_regions,compact_filter_scan,10000,5200.0,5300.0,5100.0,5212.5,8,1,False,10000,80000,bulk adj is free; filter still touches every base unless an index exists
+executable_regions,materialized_bulk_add,200000,109800.0,295600.0,68400.0,146680.0,5,1,False,200000,1600000,N scalar writes per bulk operation
+executable_regions,compact_bulk_add,200000,0.537109375,0.5615234375,0.5126953125,0.5338541666666666,30,4096,True,1,8,one adjustment increment; N writes never happen
+executable_regions,compact_point_lookup_4k,200000,6400.0,50900.0,5700.0,19550.0,12,1,False,4000,96000,evaluate base+adj-birth+exc per lookup
+executable_regions,materialized_point_lookup_4k,200000,3500.0,4300.0,3100.0,3558.3333333333335,12,1,False,4000,32000,direct load of current scalar
+executable_regions,compact_filter_scan,200000,103800.0,104500.0,101900.0,103687.5,8,1,False,200000,1600000,bulk adj is free; filter still touches every base unless an index exists
+executable_regions,materialized_bulk_add,2000000,1956500.0,6612400.0,1675200.0,2925000.0,5,1,False,2000000,16000000,N scalar writes per bulk operation
+executable_regions,compact_bulk_add,2000000,0.537109375,0.537109375,0.5126953125,0.5338541666666666,30,4096,True,1,8,one adjustment increment; N writes never happen
+executable_regions,compact_point_lookup_4k,2000000,10800.0,11400.0,10700.0,10883.333333333334,12,1,False,4000,96000,evaluate base+adj-birth+exc per lookup
+executable_regions,materialized_point_lookup_4k,2000000,6000.0,6200.0,6000.0,6050.0,12,1,False,4000,32000,direct load of current scalar
+executable_regions,compact_filter_scan,2000000,2037199.9999999998,3914100.0,1442400.0,2142950.0,8,1,False,2000000,16000000,bulk adj is free; filter still touches every base unless an index exists
+executable_regions,materialized_bulk_add,20000000,31189700.0,32804300.0,23388800.0,28746680.0,5,1,False,20000000,160000000,N scalar writes per bulk operation
+executable_regions,compact_bulk_add,20000000,0.537109375,0.537109375,0.5126953125,0.5314127604166666,30,4096,True,1,8,one adjustment increment; N writes never happen
+executable_regions,compact_point_lookup_4k,20000000,17300.0,17400.0,17200.0,17333.333333333332,12,1,False,4000,96000,evaluate base+adj-birth+exc per lookup
+executable_regions,materialized_point_lookup_4k,20000000,14300.0,14300.0,14200.0,14275.0,12,1,False,4000,32000,direct load of current scalar
+executable_regions,compact_filter_scan,20000000,20508600.0,23592900.0,19110700.0,21012975.0,8,1,False,20000000,160000000,bulk adj is free; filter still touches every base unless an index exists
+executable_regions,exception_density_sum,500000,0.341796875,0.3662109375,0.2685546875,0.3173828125,10,4096,True,1,32,compact form wins while exceptions stay sparse
+executable_regions,exception_density_sum,500000,0.29296875,0.3662109375,0.2685546875,0.302734375,10,4096,True,1,120032,compact form wins while exceptions stay sparse
+executable_regions,exception_density_sum,500000,0.4150390625,0.439453125,0.3173828125,0.38330078125,10,4096,True,1,1200032,compact form wins while exceptions stay sparse
+executable_regions,exception_density_sum,500000,0.341796875,0.3662109375,0.29296875,0.32958984375,10,4096,True,1,12000032,compact form wins while exceptions stay sparse
+progressive,full_scan_clustered,20000000,11455100.0,12303800.0,6618600.0,10131050.0,6,1,False,20000000,80000000,decode every u32
+progressive,bucket_scalar_clustered,20000000,24116200.0,25234600.0,22332500.0,23664583.333333332,6,1,False,20000000,40000000,16-bit bounds first; residual on boundary bucket only
+progressive,bucket_avx2_clustered,20000000,43488300.0,45814900.0,40198500.0,42746433.333333336,6,1,False,20000000,40000000,per-row 16-bit bounds; still one access per record
+progressive,block_bounds_clustered,20000000,26100.0,26100.0,26000.0,26066.666666666668,6,1,False,20000000,4096,one min/max per 1024-row block; skip or accept whole blocks
+progressive,full_scan_clustered,20000000,12003600.0,13210100.0,7611700.0,10357150.0,6,1,False,20000000,80000000,decode every u32
+progressive,bucket_scalar_clustered,20000000,23910900.0,28101100.0,21517500.0,23804216.666666668,6,1,False,20000000,40000000,16-bit bounds first; residual on boundary bucket only
+progressive,bucket_avx2_clustered,20000000,42073500.0,43490800.0,37411700.0,41271750.0,6,1,False,20000000,40000000,per-row 16-bit bounds; still one access per record
+progressive,block_bounds_clustered,20000000,25500.0,25600.0,25400.0,25483.333333333332,6,1,False,20000000,4096,one min/max per 1024-row block; skip or accept whole blocks
+progressive,full_scan_clustered,20000000,10726600.0,12079000.0,7213700.0,10113950.0,6,1,False,20000000,80000000,decode every u32
+progressive,bucket_scalar_clustered,20000000,25132700.0,27289700.0,21640500.0,24653633.333333332,6,1,False,20000000,40000000,16-bit bounds first; residual on boundary bucket only
+progressive,bucket_avx2_clustered,20000000,38975900.0,44698800.0,37902000.0,40181566.666666664,6,1,False,20000000,40000000,per-row 16-bit bounds; still one access per record
+progressive,block_bounds_clustered,20000000,24500.0,24500.0,24400.0,24466.666666666668,6,1,False,20000000,4096,one min/max per 1024-row block; skip or accept whole blocks
+progressive,full_scan_clustered,20000000,10791700.0,11339200.0,6494500.0,9143466.666666666,6,1,False,20000000,80000000,decode every u32
+progressive,bucket_scalar_clustered,20000000,15573200.0,16982000.0,12136200.0,14989266.666666666,6,1,False,20000000,40000000,16-bit bounds first; residual on boundary bucket only
+progressive,bucket_avx2_clustered,20000000,16654900.0,20255500.0,11150400.0,15173500.0,6,1,False,20000000,40000000,per-row 16-bit bounds; still one access per record
+progressive,block_bounds_clustered,20000000,22600.0,22600.0,22600.0,22600.0,6,1,False,20000000,0,one min/max per 1024-row block; skip or accept whole blocks
+progressive,argmin_full_clustered,20000000,26262800.0,27553100.0,20617500.0,24380233.333333332,6,1,False,20000000,80000000,full value scan
+progressive,argmin_bounds_clustered,20000000,26463100.0,28215800.0,25168500.0,26612216.666666668,6,1,False,20000000,40000000,skip buckets whose min cannot beat current best
+progressive,full_scan_spread,20000000,11815400.0,12889800.0,8375400.0,11006066.666666666,6,1,False,20000000,80000000,decode every u32
+progressive,bucket_scalar_spread,20000000,18717100.0,20700100.0,17518900.0,18677650.0,6,1,False,20000000,40000000,16-bit bounds first; residual on boundary bucket only
+progressive,bucket_avx2_spread,20000000,14378600.0,14788700.0,11379000.0,13484733.333333334,6,1,False,20000000,40000000,per-row 16-bit bounds; still one access per record
+progressive,block_bounds_spread,20000000,99900.0,113100.0,48600.0,78416.66666666667,6,1,False,20000000,327680,one min/max per 1024-row block; skip or accept whole blocks
+progressive,full_scan_spread,20000000,11923500.0,13168800.0,6617700.0,10281216.666666666,6,1,False,20000000,80000000,decode every u32
+progressive,bucket_scalar_spread,20000000,18723000.0,25679300.0,16853100.0,19316616.666666668,6,1,False,20000000,40000000,16-bit bounds first; residual on boundary bucket only
+progressive,bucket_avx2_spread,20000000,15300200.0,15915800.0,10484300.0,14346700.0,6,1,False,20000000,40000000,per-row 16-bit bounds; still one access per record
+progressive,block_bounds_spread,20000000,11191700.0,13481000.0,6131400.0,9906933.333333334,6,1,False,20000000,78123008,one min/max per 1024-row block; skip or accept whole blocks
+progressive,full_scan_spread,20000000,12155100.0,12669500.0,7201000.0,10494083.333333334,6,1,False,20000000,80000000,decode every u32
+progressive,bucket_scalar_spread,20000000,51059200.0,58623800.0,48644100.0,51699350.0,6,1,False,20000000,40000000,16-bit bounds first; residual on boundary bucket only
+progressive,bucket_avx2_spread,20000000,15562400.0,17729800.0,13244600.0,15572216.666666666,6,1,False,20000000,40000000,per-row 16-bit bounds; still one access per record
+progressive,block_bounds_spread,20000000,11246900.0,15924200.0,6746700.0,11128416.666666666,6,1,False,20000000,80003072,one min/max per 1024-row block; skip or accept whole blocks
+progressive,full_scan_spread,20000000,10271500.0,12388400.0,6572400.0,9382600.0,6,1,False,20000000,80000000,decode every u32
+progressive,bucket_scalar_spread,20000000,65200200.0,66771700.0,58911500.0,63544916.666666664,6,1,False,20000000,40000000,16-bit bounds first; residual on boundary bucket only
+progressive,bucket_avx2_spread,20000000,14059200.0,15297100.0,11805000.0,13469183.333333334,6,1,False,20000000,40000000,per-row 16-bit bounds; still one access per record
+progressive,block_bounds_spread,20000000,12014300.0,13194900.0,7925200.0,10669650.0,6,1,False,20000000,80003072,one min/max per 1024-row block; skip or accept whole blocks
+progressive,argmin_full_spread,20000000,25032000.0,26232300.0,23090400.0,24793650.0,6,1,False,20000000,80000000,full value scan
+progressive,argmin_bounds_spread,20000000,17962200.0,28069000.0,14289200.0,19127800.0,6,1,False,20000000,40000000,skip buckets whose min cannot beat current best
+certificate,merge_overlap,2000000,17422100.0,19350300.0,16585800.000000002,17521750.0,6,1,False,3148587,25188696,must inspect both inputs; certificate ≈ input
+certificate,gallop_overlap,2000000,15687300.000000002,16846300.0,12588500.0,15169200.0,6,1,False,1574067,25185072,galloping loses when output is dense
+certificate,merge_sparse,2000000,1899000.0,4629500.0,1737700.0,2744312.5,8,1,False,1881056,15048448,merge still walks the large side
+certificate,gallop_sparse,2000000,8300.0,8900.0,8200.0,8325.0,12,1,False,189,12096,work tracks small side + log jumps
+certificate,merge_disjoint_range,2000000,2541800.0,6389400.0,1774400.0,3114066.6666666665,6,1,False,4000000,32000000,empty result still walks until one side ends
+certificate,bound_certificate_disjoint,2000000,0.341796875,0.3662109375,0.2685546875,0.3436279296875,40,4096,True,2,16,two extrema prove empty intersection
+certificate,merge_interleaved_empty,2000000,8114700.000000001,27687700.0,5287000.0,13989240.0,5,1,False,4000000,32000000,"empty result, but bounds overlap; merge is the certificate"
+wcoj,leapfrog_two_cliques_40,80,89700.0,132100.0,88300.0,98540.0,5,1,False,1560,24960,intersect neighbor lists; AGM-style
+wcoj,binary_expand_two_cliques_40,80,299300.0,300900.0,297100.0,299100.0,3,1,False,121680,1460160,R⋈S materializes two-hop pairs then probes T
+wcoj,leapfrog_two_cliques_70,140,438400.0,1606500.0,419300.0,669540.0,5,1,False,4830,77280,intersect neighbor lists; AGM-style
+wcoj,binary_expand_two_cliques_70,140,3331900.0,4324300.0,2108000.0,3254733.3333333335,3,1,False,666540,7998480,R⋈S materializes two-hop pairs then probes T
+wcoj,leapfrog_er_200_p0.03,200,33100.0,39300.0,26600.0,33100.0,5,1,False,556,8896,intersect neighbor lists; AGM-style
+wcoj,binary_expand_er_200_p0.03,200,63399.99999999999,64200.0,62400.0,63333.333333333336,3,1,False,7426,89112,R⋈S materializes two-hop pairs then probes T
+wcoj,leapfrog_er_300_p0.02,300,74000.0,81800.0,71900.0,76220.0,5,1,False,941,15056,intersect neighbor lists; AGM-style
+wcoj,binary_expand_er_300_p0.02,300,117300.0,121400.0,116900.0,118533.33333333333,3,1,False,13930,167160,R⋈S materializes two-hop pairs then probes T
+wcoj,leapfrog_bipartite_150,300,4170400.0000000005,5134300.0,3305200.0,4195000.0,5,1,False,22558,360928,intersect neighbor lists; AGM-style
+wcoj,binary_expand_bipartite_150,300,2872300.0,5161100.0,2816600.0,3616666.6666666665,3,1,False,6785012,81420144,R⋈S materializes two-hop pairs then probes T
+wcoj,leapfrog_bipartite_250,500,19570800.0,24214700.0,18708200.0,20260820.0,5,1,False,62580,1001280,intersect neighbor lists; AGM-style
+wcoj,binary_expand_bipartite_250,500,14195100.0,20167500.0,13961400.0,16108000.0,3,1,False,31330284,375963408,R⋈S materializes two-hop pairs then probes T
+coordination,global_cas,400000,58184600.0,61272700.0,56980400.0,58548425.0,4,1,False,1280000,20480000,every reserve contends on one counter
+coordination,quota_restock_1,400000,43276100.0,45071500.0,40334600.0,42445325.0,4,1,False,1280000,0,local rights until restock; leftover quota can strand units
+coordination,quota_restock_16,400000,45324900.0,45458100.0,41910500.0,43706700.0,4,1,False,1280000,0,local rights until restock; leftover quota can strand units
+coordination,quota_restock_256,400000,44244500.0,45739800.0,39674000.0,43437800.0,4,1,False,1280000,0,local rights until restock; leftover quota can strand units
+coordination,quota_restock_4096,400000,43299100.0,46007900.0,40308800.0,43105725.0,4,1,False,1280000,0,local rights until restock; leftover quota can strand units
+redundancy,sum_from_a_and_b,8000000,11037200.0,12004600.0,6615200.0,9776566.666666666,6,1,False,16000000,128000000,read both source blocks
+redundancy,sum_from_coded_c,8000000,5029800.0,7541700.0,3443200.0,5040216.666666667,6,1,False,8000000,64000000,"parity block is the elementwise sum, same width as a source"
+redundancy,filter_sum_from_sources,8000000,14519400.0,15024700.0,8541800.0,13223133.333333334,6,1,False,16000000,128000000,predicate on A+B still needs both sources without C
+redundancy,filter_sum_from_coded_c,8000000,11283000.0,17560300.0,6877200.0,11055766.666666666,6,1,False,8000000,64000000,same predicate against the recovery block
+redundancy,filter_a_only_negative_control,8000000,9279300.0,12035900.0,5023100.0,8354766.666666667,6,1,False,8000000,64000000,C = A+B does not answer predicates on A; coded queryability is operator-specific
+redundancy,recover_a_from_b_and_c,8000000,34471900.0,36626700.0,32179300.0,34215800.0,4,1,False,8000000,192000000,erasure repair cost of the same extra block
+pgm,binary_linear,5000000,67056599.99999999,75354500.0,57886000.0,66245683.333333336,6,1,False,200000,12800000,classic sorted-array binary search
+pgm,pgm_linear,5000000,15856400.0,17864200.0,12026300.0,14927116.666666666,6,1,False,200000,9600000,linear CDF model + bounded correction window
+pgm,hash_linear,5000000,20298300.0,27229800.0,19125700.0,22139833.333333332,6,1,False,200000,12800000,"HashMap specialist: extra memory, O(1) expected"
+pgm,binary_gaps,5000000,60629500.0,72407500.0,57482200.0,62766766.666666664,6,1,False,200000,12800000,classic sorted-array binary search
+pgm,pgm_gaps,5000000,64871399.99999999,71269900.0,56803200.0,65033450.0,6,1,False,200000,9600000,linear CDF model + bounded correction window
+pgm,hash_gaps,5000000,25382900.0,26809100.0,19739500.0,23543316.666666668,6,1,False,200000,12800000,"HashMap specialist: extra memory, O(1) expected"
+pgm,binary_clusters,5000000,72017500.0,74200100.0,53391900.0,65826033.333333336,6,1,False,200000,12800000,classic sorted-array binary search
+pgm,pgm_clusters,5000000,42169400.0,48125300.0,36592200.0,41428783.333333336,6,1,False,200000,9600000,linear CDF model + bounded correction window
+pgm,hash_clusters,5000000,25332400.0,29733300.0,19206300.0,24381950.0,6,1,False,200000,12800000,"HashMap specialist: extra memory, O(1) expected"
+engine,row_scan_predicate,20000000,97714400.0,111446800.0,95127900.0,99862980.0,5,1,False,20000000,480000000,AoS: filter+project touches full rows
+engine,col_scan_scalar,20000000,69146000.0,75621600.0,64071000.0,69738600.0,5,1,False,20000000,160000000,SoA: only the two referenced columns
+engine,col_scan_avx2,20000000,87037400.0,92721700.0,82441200.0,87794700.0,5,1,False,20000000,160000000,"same columns, vectorized remaining work"
+engine,lookup_4k_independent_bsearch,1000000,326400.0,396900.0,324800.0,343840.0,10,1,False,4000,256000,"4,000 separate binary searches; XOR payload; missing=0; dups independent"
+engine,lookup_4k_sorted_merge,1000000,802600.0,2762600.0,480800.0,1133330.0,10,1,False,4000,0,"sort keys, one forward scan; duplicate requests stay on the match"
+engine,lookup_4k_direct_id,1000000,4700.0,5200.0,4600.0,4781.25,16,1,False,4000,16000,"dense primary key: 4,000 direct payload loads, same XOR contract"
+engine,lookup_4k_independent_bsearch,20000000,1602900.0,8943800.0,912000.0,3369840.0,10,1,False,4000,256000,"4,000 separate binary searches; XOR payload; missing=0; dups independent"
+engine,lookup_4k_sorted_merge,20000000,19999900.0,27461400.0,16558000.0,19860350.0,10,1,False,4000,0,"sort keys, one forward scan; duplicate requests stay on the match"
+engine,lookup_4k_direct_id,20000000,12100.0,12100.0,12000.0,12068.75,16,1,False,4000,16000,"dense primary key: 4,000 direct payload loads, same XOR contract"
+engine,payload_bound,4000,0.0,0.0,0.0,0.0,1,1,True,4000,1024000,network payload lower bound; independent of engine speed
+engine,payload_bound,4000,0.0,0.0,0.0,0.0,1,1,True,4000,16384000,network payload lower bound; independent of engine speed
+shared_state,rescan_each_query,500000,2641200.0,6513600.0,2512400.0,3291033.3333333335,6,1,False,4000000,32000000,no shared state: scan the key array once per query
+shared_state,private_counts,500000,1.85546875,2.5390625,1.85546875,1.943359375,10,1024,True,8,79856,"each query stores its own match list (O(1) count, duplicated memory)"
+shared_state,shared_index_counts,500000,525.0,600.0,500.0,525.0,10,4,True,8,512,one sorted array serves every range
+shared_state,private_insert,500000,12.890625,14.0625,12.890625,13.0859375,8,256,True,8,64,update fan-out = number of queries
+shared_state,shared_insert,500000,1035100.0,1957899.9999999998,971700.0,1136962.5,8,1,False,1,24,one insert into the shared array; queries stay cheap. Vec insert is O(n).
+shared_state,rescan_each_query,500000,30097900.0,33890000.0,28285200.0,30199400.0,6,1,False,32000000,256000000,no shared state: scan the key array once per query
+shared_state,private_counts,500000,10.9375,11.328125,10.9375,11.015625,10,256,True,64,646096,"each query stores its own match list (O(1) count, duplicated memory)"
+shared_state,shared_index_counts,500000,6600.0,15200.0,6500.0,7530.0,10,1,False,64,4096,one sorted array serves every range
+shared_state,private_insert,500000,100.0,350.0,75.0,143.75,8,4,True,64,512,update fan-out = number of queries
+shared_state,shared_insert,500000,916700.0,1044599.9999999999,201900.0,747087.5,8,1,False,1,24,one insert into the shared array; queries stay cheap. Vec insert is O(n).
+shared_state,rescan_each_query,500000,120908400.0,131685699.99999999,113337100.0,120604200.0,6,1,False,128000000,1024000000,no shared state: scan the key array once per query
+shared_state,private_counts,500000,62.5,68.75,56.25,62.5,10,16,True,256,2562512,"each query stores its own match list (O(1) count, duplicated memory)"
+shared_state,shared_index_counts,500000,27500.0,29500.0,26900.0,27630.0,10,1,False,256,16384,one sorted array serves every range
+shared_state,private_insert,500000,800.0,1900.0,500.0,912.5,8,1,True,256,2048,update fan-out = number of queries
+shared_state,shared_insert,500000,1212600.0,2468800.0,990200.0000000001,1442350.0,8,1,False,1,24,one insert into the shared array; queries stay cheap. Vec insert is O(n).
+shared_state,rescan_each_query,500000,497754700.0,516896600.00000006,402049400.0,472867833.3333333,6,1,False,512000000,4096000000,no shared state: scan the key array once per query
+shared_state,private_counts,500000,325.0,350.0,325.0,332.5,10,4,True,1024,10240384,"each query stores its own match list (O(1) count, duplicated memory)"
+shared_state,shared_index_counts,500000,120700.0,128500.0,112200.0,119140.0,10,1,False,1024,65536,one sorted array serves every range
+shared_state,private_insert,500000,2300.0,6900.0,2000.0,3275.0,8,1,False,1024,8192,update fan-out = number of queries
+shared_state,shared_insert,500000,1185600.0,2656200.0,955800.0,1489525.0,8,1,False,1,24,one insert into the shared array; queries stay cheap. Vec insert is O(n).
+joint,brute_materialized_scan,60000,2444709300.0,2462256300.0,2442979400.0,2451088180.0,5,1,False,900000000,14400000000,scan every product; no envelope allocated
+joint,joint_cells_over_bases,60000,357100.0,365700.0,337900.0,351380.0,10,1,False,15000,480000,envelope on bases; adj is invisible to ranking
+joint,joint_mixed_bulk_and_exceptions,60000,299410600.0,314140800.0,294967400.0,301512925.0,4,1,False,15000,0,bulk ops free for ranking; exception rebuilds envelope
+joint,brute_mixed_bulk_and_exceptions,60000,2491957900.0,2509021800.0,2473241299.9999995,2491407000.0,3,1,False,900000000,14400000000,same mixed mutations; no envelope construction or rebuild
+joint,rebuild_on_irregular_updates,60000,2230139600.0,2240428600.0,2207907300.0,2226158500.0,3,1,False,15000,0,irregular per-row changes deny the bulk-adj identity
+correlation,full_columns_tight,8000000,3800800.0,9018800.0,3447000.0,4879150.0,6,1,False,8000000,128000000,scan stored delivery
+correlation,model_prune_tight,8000000,10619700.0,12153800.0,7653800.0,10283783.333333334,6,1,False,8000000,64000000,global residual envelope; decode only the uncertain band
+correlation,decode_all_tight,8000000,10655800.0,11151000.0,5842500.0,8975116.666666666,6,1,False,8000000,128000000,"lossless but reconstructs every delivery; storage win, scan not cheaper"
+correlation,block_bounds_tight,8000000,11400.0,11500.0,11300.0,11383.333333333334,6,1,False,8000000,64000000,"min/max delivery per 1024-row block; same idea as progressive, on the stored column"
+correlation,full_columns_moderate,8000000,5060100.0,8011100.0,3463500.0,5247000.0,6,1,False,8000000,128000000,scan stored delivery
+correlation,model_prune_moderate,8000000,11828900.0,12863100.0,8241699.999999999,10696850.0,6,1,False,8000000,64000000,global residual envelope; decode only the uncertain band
+correlation,decode_all_moderate,8000000,11464900.0,11516200.0,6350300.0,9919850.0,6,1,False,8000000,128000000,"lossless but reconstructs every delivery; storage win, scan not cheaper"
+correlation,block_bounds_moderate,8000000,119500.0,122000.0,118100.0,119950.0,6,1,False,8000000,64000000,"min/max delivery per 1024-row block; same idea as progressive, on the stored column"
+correlation,full_columns_none,8000000,5059500.0,8001899.999999999,3411900.0,5130616.666666667,6,1,False,8000000,128000000,scan stored delivery
+correlation,model_prune_none,8000000,17341200.0,18355100.0,16311599.999999998,17258316.666666668,6,1,False,8000000,64000000,global residual envelope; decode only the uncertain band
+correlation,decode_all_none,8000000,10190400.0,11602500.0,6204600.0,8862600.0,6,1,False,8000000,128000000,"lossless but reconstructs every delivery; storage win, scan not cheaper"
+correlation,block_bounds_none,8000000,4755500.0,8964400.0,3713500.0,5724766.666666667,6,1,False,8000000,64000000,"min/max delivery per 1024-row block; same idea as progressive, on the stored column"
+residue,scalar_recompute_q100,1048576,452667800.0,454166900.0,444352700.0,450150500.0,5,1,False,50331648,402653184,"rescan and round every value for every (p,b)"
+residue,histogram_stream_q100,1048576,55000.0,67300.0,39300.0,53612.5,8,1,False,9600,1600,O(q) query; original values retained and updated
+residue,histogram_build_q100,1048576,6871200.0,9650500.0,5710800.0,6903966.666666667,6,1,False,1048576,8388608,"one pass to build n, sum, and 2q bins; charged separately"
+residue,scalar_recompute_q10000,1048576,445458900.0,451898100.0,437983300.0,445191120.0,5,1,False,50331648,402653184,"rescan and round every value for every (p,b)"
+residue,histogram_stream_q10000,1048576,4424800.0,5427700.0,3997100.0,4472662.5,8,1,False,960000,160000,O(q) query; original values retained and updated
+residue,histogram_build_q10000,1048576,7810100.0,9258000.0,6341500.0,7713116.666666667,6,1,False,1048576,8388608,"one pass to build n, sum, and 2q bins; charged separately"
+residue,unmaintained_filter_negative,1048576,503800.0,766300.0,493700.0,543600.0,6,1,False,1048576,8388608,histogram of x mod 2q does not answer x > T
+chase,interleave_1,33554432,575234700.0,589865300.0,569047300.0,575856500.0,5,1,False,4194304,16777216,same logical follows; width is in-flight independent chains
+chase,interleave_4,33554432,179195400.0,186434300.0,173080700.0,179358880.0,5,1,False,4194304,16777216,same logical follows; width is in-flight independent chains
+chase,interleave_16,33554432,59677900.0,60984300.0,55079700.0,58556940.0,5,1,False,4194304,16777216,same logical follows; width is in-flight independent chains
+chase,interleave_32,33554432,47624900.0,53433200.0,43950700.0,48004020.0,5,1,False,4194304,16777216,same logical follows; width is in-flight independent chains
+chase,interleave_64,33554432,47973500.0,58799000.0,44070200.0,49318960.0,5,1,False,4194304,16777216,same logical follows; width is in-flight independent chains
+prefix,row_scan_clustered,2097152,447965100.0,456435200.0,442781700.0,449060666.6666667,3,1,False,100663296,6442450944,"64-byte rows, scan every record"
+prefix,col_scan_clustered,2097152,56764300.0,62857200.0,55866600.0,58496033.333333336,3,1,False,100663296,805306368,"8-byte columns, still every record"
+prefix,row_blocks_clustered,2097152,281400.0,375800.0,277000.0,311400.0,3,1,False,48,0,"512-row min/max/sum; clustered can skip, shuffled cannot"
+prefix,col_blocks_clustered,2097152,723100.0,1827500.0,182900.0,911166.6666666666,3,1,False,48,0,column layout plus block summaries
+prefix,fenwick_build_clustered,2097152,7292800.0,9558700.0,5986400.0,7669080.0,5,1,False,2097152,16777216,"Fenwick construction, charged separately from the stream"
+prefix,fenwick_clustered,2097152,36200.0,64200.0,29100.0,41620.0,5,1,False,1008,0,specialist prefix index on dense keys; extra ~8n bytes
+prefix,row_scan_shuffled,2097152,584419500.0,586059100.0,574750800.0,581743133.3333334,3,1,False,100663296,6442450944,"64-byte rows, scan every record"
+prefix,col_scan_shuffled,2097152,268691400.0,283221000.0,268675300.0,273529233.3333333,3,1,False,100663296,805306368,"8-byte columns, still every record"
+prefix,row_blocks_shuffled,2097152,623148700.0,631126600.0,608542500.0,620939266.6666666,3,1,False,48,0,"512-row min/max/sum; clustered can skip, shuffled cannot"
+prefix,col_blocks_shuffled,2097152,295381200.0,297051600.0,289962300.0,294131700.0,3,1,False,48,0,column layout plus block summaries
+prefix,fenwick_build_shuffled,2097152,32793100.0,33623200.0,30574100.0,32515000.0,5,1,False,2097152,16777216,"Fenwick construction, charged separately from the stream"
+prefix,fenwick_shuffled,2097152,39700.0,218300.0,25500.0,86340.0,5,1,False,1008,0,specialist prefix index on dense keys; extra ~8n bytes
+ranking_cert,coverage_dim2,4096,37050500.0,37050500.0,37050500.0,37050500.0,1,1,False,50,0,sufficient bounds vs actual stability; high dim should reject many true stables
+ranking_cert,coverage_dim8,4096,52912200.0,52912200.0,52912200.0,52912200.0,1,1,False,50,0,sufficient bounds vs actual stability; high dim should reject many true stables
+ranking_cert,coverage_dim32,4096,119790300.0,119790300.0,119790300.0,119790300.0,1,1,False,50,0,sufficient bounds vs actual stability; high dim should reject many true stables
+answer_cells,brute_scan_pareto,20000,295464100.0,300365600.0,273105400.0,288882433.3333333,6,1,False,240000000,3840000000,full scan per parameterized ranking; integer millunits
+answer_cells,cell_lookup_pareto,20000,126599.99999999999,171100.0,124600.0,131210.0,10,1,False,12000,384000,O(log cells) exact winner; smaller-index ties
+answer_cells,mixed_small_drift_pareto,20000,240000.0,240900.0,239100.0,239775.0,4,1,False,12000,0,certificate reused until drift consumes the gap
+answer_cells,mixed_large_drift_pareto,20000,1465413400.0,1481020000.0,1405973200.0,1440612325.0,4,1,False,12000,0,certificate reused until drift consumes the gap
+answer_cells,brute_scan_random,20000,620911600.0,628222100.0,604608300.0,616690850.0,6,1,False,240000000,3840000000,full scan per parameterized ranking; integer millunits
+answer_cells,cell_lookup_random,20000,228400.0,236100.0,228000.0,229310.0,10,1,False,12000,384000,O(log cells) exact winner; smaller-index ties
+answer_cells,mixed_small_drift_random,20000,1294251400.0,1307953700.0,1263568499.9999998,1284961225.0,4,1,False,12000,0,certificate reused until drift consumes the gap
+answer_cells,mixed_large_drift_random,20000,1916633000.0,1938628800.0,1867521700.0,1908683525.0,4,1,False,12000,0,certificate reused until drift consumes the gap
+answer_cells,brute_scan_near_tie,20000,626026500.0,632104900.0,531049400.0,603338616.6666666,6,1,False,240000000,3840000000,full scan per parameterized ranking; integer millunits
+answer_cells,cell_lookup_near_tie,20000,126400.00000000001,180400.0,114100.0,129440.0,10,1,False,12000,384000,O(log cells) exact winner; smaller-index ties
+answer_cells,mixed_small_drift_near_tie,20000,23774790900.0,23774790900.0,23774790900.0,23774790900.0,1,1,False,12000,0,certificate reused until drift consumes the gap
+answer_cells,mixed_large_drift_near_tie,20000,23944622300.0,23944622300.0,23944622300.0,23944622300.0,1,1,False,12000,0,certificate reused until drift consumes the gap

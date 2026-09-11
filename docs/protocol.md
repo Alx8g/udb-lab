@@ -30,6 +30,10 @@ Not a database ranking. Isolated mechanisms, same process, same compiler.
 | shared state | one index, N parameterized counts | private match lists |
 | joint | bulk adj invisible to ranking | irregular per-row jitter |
 | correlation | same model for storage and prune | shuffled delivery |
+| residue | rounded affine family from n, sum, 2q histogram | unmaintained x>T filter |
+| chase | same logical pointer-chases, more overlap | width-1 serial chains |
+| prefix | layout x block summaries vs Fenwick | shuffled keys; Fenwick specialist |
+| ranking_cert | ordinary vs simplex-tight winner certificates | high-d, sufficient bound rejects true stables |
 
 ## Acceptance for a mechanism
 

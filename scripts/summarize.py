@@ -29,6 +29,14 @@ PAIRS = [
     ("correlation", "full_columns_none", "block_bounds_none"),
     ("correlation", "full_columns_tight", "model_prune_tight"),
     ("shared_state", "private_counts", "shared_index_counts"),
+    ("residue", "scalar_recompute_q100", "histogram_stream_q100"),
+    ("residue", "scalar_recompute_q10000", "histogram_stream_q10000"),
+    ("chase", "interleave_1", "interleave_32"),
+    ("prefix", "row_scan_clustered", "col_blocks_clustered"),
+    ("prefix", "col_scan_clustered", "fenwick_clustered"),
+    ("prefix", "row_scan_shuffled", "col_blocks_shuffled"),
+    ("prefix", "col_blocks_shuffled", "fenwick_shuffled"),
+    ("prefix", "fenwick_build_clustered", "fenwick_clustered"),
 ]
 
 
@@ -65,7 +73,12 @@ def main() -> None:
             by_n.setdefault(r["n"], r)
         for b in bs:
             a = by_n.get(b["n"]) or as_[0]
-            if b["median_ns"] <= 0 or a["median_ns"] <= 0:
+            if a["median_ns"] <= 0:
+                continue
+            if b.get("below_timer_resolution") or a.get("below_timer_resolution"):
+                print(
+                    f"{exp:<22} {before:<28} {after:<28} {b['n']:>10} {fmt(b['median_ns']):>10} {fmt(a['median_ns']):>10}     n/a (below 1us)"
+                )
                 continue
             sp = b["median_ns"] / a["median_ns"]
             print(

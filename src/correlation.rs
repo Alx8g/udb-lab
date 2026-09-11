@@ -161,7 +161,9 @@ pub fn correctness() -> Result<(), String> {
             let d = filter_delivery_decode(&r, t);
             let e = filter_delivery_blocks(&c, &r, t);
             if a != b || a != d || a != e {
-                return Err(format!("noise={noise} t={t} full={a} bound={b} dec={d} blk={e}"));
+                return Err(format!(
+                    "noise={noise} t={t} full={a} bound={b} dec={d} blk={e}"
+                ));
             }
         }
         for i in 0..c.price.len() {
@@ -183,7 +185,12 @@ pub fn run(quick: bool) -> Vec<Record> {
         if label == "none" {
             c.delivery.shuffle(&mut SmallRng::seed_from_u64(99));
         } else {
-            let mut pairs: Vec<(f64, f64)> = c.price.iter().copied().zip(c.delivery.iter().copied()).collect();
+            let mut pairs: Vec<(f64, f64)> = c
+                .price
+                .iter()
+                .copied()
+                .zip(c.delivery.iter().copied())
+                .collect();
             pairs.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
             c.price = pairs.iter().map(|p| p.0).collect();
             c.delivery = pairs.iter().map(|p| p.1).collect();
@@ -192,52 +199,56 @@ pub fn run(quick: bool) -> Vec<Record> {
         let t = 40.0;
         let sel = filter_delivery_full(&c, t) as f64 / n as f64;
 
-        let (val, times) = time_ns(2, 6, || filter_delivery_full(&c, t));
+        let (val, times, reps) = time_ns(2, 6, || filter_delivery_full(&c, t));
         out.push(record(
             "correlation",
             &format!("full_columns_{label}"),
             n as u64,
             json!({"noise": noise, "t": t, "selectivity": sel, "resid_span": r.resid_max - r.resid_min}),
             times,
+           reps,
             n as u64,
             (n * 16) as u64,
             json!({"count": val, "resid_span": r.resid_max - r.resid_min}),
             "scan stored delivery",
         ));
 
-        let (val, times) = time_ns(2, 6, || filter_delivery_residual(&r, t));
+        let (val, times, reps) = time_ns(2, 6, || filter_delivery_residual(&r, t));
         out.push(record(
             "correlation",
             &format!("model_prune_{label}"),
             n as u64,
             json!({"noise": noise, "t": t, "selectivity": sel, "resid_span": r.resid_max - r.resid_min}),
             times,
+           reps,
             n as u64,
             (n * 8) as u64,
             json!({"count": val}),
             "global residual envelope; decode only the uncertain band",
         ));
 
-        let (val, times) = time_ns(2, 6, || filter_delivery_decode(&r, t));
+        let (val, times, reps) = time_ns(2, 6, || filter_delivery_decode(&r, t));
         out.push(record(
             "correlation",
             &format!("decode_all_{label}"),
             n as u64,
             json!({"noise": noise, "t": t}),
             times,
+            reps,
             n as u64,
             (n * 16) as u64,
             json!({"count": val}),
             "lossless but reconstructs every delivery; storage win, scan not cheaper",
         ));
 
-        let (val, times) = time_ns(2, 6, || filter_delivery_blocks(&c, &r, t));
+        let (val, times, reps) = time_ns(2, 6, || filter_delivery_blocks(&c, &r, t));
         out.push(record(
             "correlation",
             &format!("block_bounds_{label}"),
             n as u64,
             json!({"noise": noise, "t": t, "resid_span": r.resid_max - r.resid_min}),
             times,
+            reps,
             n as u64,
             (n * 8) as u64,
             json!({"count": val}),

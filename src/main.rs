@@ -1,5 +1,6 @@
 mod answer_cells;
 mod certificate;
+mod chase;
 mod coordination;
 mod correlation;
 mod engine;
@@ -7,8 +8,11 @@ mod executable;
 mod factorized;
 mod joint;
 mod pgm;
+mod prefix;
 mod progressive;
+mod ranking_cert;
 mod redundancy;
+mod residue;
 mod shared;
 mod stats;
 mod wcoj;
@@ -32,6 +36,10 @@ fn run_correctness() -> Result<(), String> {
     shared::correctness()?;
     joint::correctness()?;
     correlation::correctness()?;
+    residue::correctness()?;
+    chase::correctness()?;
+    prefix::correctness()?;
+    ranking_cert::correctness()?;
     Ok(())
 }
 
@@ -67,7 +75,11 @@ fn main() {
         for r in &recs {
             print_record(r);
         }
-        eprintln!("{name} done in {:.2}s ({} records)", t.elapsed().as_secs_f64(), recs.len());
+        eprintln!(
+            "{name} done in {:.2}s ({} records)",
+            t.elapsed().as_secs_f64(),
+            recs.len()
+        );
         all.extend(recs);
     };
 
@@ -84,6 +96,10 @@ fn main() {
     run("shared_state", shared::run);
     run("joint", joint::run);
     run("correlation", correlation::run);
+    run("residue", residue::run);
+    run("chase", chase::run);
+    run("prefix", prefix::run);
+    run("ranking_cert", ranking_cert::run);
 
     let out_dir = if quick {
         "results/quick"
@@ -91,10 +107,41 @@ fn main() {
         "results/full"
     };
     fs::create_dir_all(out_dir).expect("results dir");
-    let path = format!("{out_dir}/records.json");
+    let path = if let Some(name) = only {
+        format!("{out_dir}/records.{name}.json")
+    } else {
+        format!("{out_dir}/records.json")
+    };
     fs::write(&path, serde_json::to_string_pretty(&all).unwrap()).unwrap();
+    let csv_path = if let Some(name) = only {
+        format!("{out_dir}/records.{name}.csv")
+    } else {
+        format!("{out_dir}/records.csv")
+    };
+    let mut csv = String::from(
+        "experiment,variant,n,median_ns,p99_ns,min_ns,mean_ns,iters,inner_reps,below_timer_resolution,ops,bytes_touched,notes\n",
+    );
+    for r in &all {
+        csv.push_str(&format!(
+            "{},{},{},{:.6},{:.6},{:.6},{:.6},{},{},{},{},{},{}\n",
+            r.experiment,
+            r.variant,
+            r.n,
+            r.median_ns,
+            r.p99_ns,
+            r.min_ns,
+            r.mean_ns,
+            r.iters,
+            r.inner_reps,
+            r.below_timer_resolution,
+            r.ops,
+            r.bytes_touched,
+            r.notes.replace(',', ";"),
+        ));
+    }
+    fs::write(&csv_path, csv).unwrap();
     eprintln!(
-        "\n{} records -> {path}  total {:.1}s",
+        "\n{} records -> {path} and {csv_path}  total {:.1}s",
         all.len(),
         t0.elapsed().as_secs_f64()
     );
