@@ -103,6 +103,24 @@ pub fn run(quick: bool) -> Vec<Record> {
             })
             .collect();
 
+        let (val, times) = time_ns(2, 6, || {
+            bounds
+                .iter()
+                .map(|&(lo, hi)| keys.iter().filter(|&&k| k >= lo && k < hi).count())
+                .sum::<usize>()
+        });
+        out.push(record(
+            "shared_state",
+            "rescan_each_query",
+            n as u64,
+            json!({"queries": nq}),
+            times,
+            (n * nq) as u64,
+            (n * nq * 8) as u64,
+            json!({"sum": val}),
+            "no shared state: scan the key array once per query",
+        ));
+
         let privs: Vec<PrivateQuery> = bounds
             .iter()
             .map(|&(lo, hi)| PrivateQuery::from_keys(&keys, lo, hi))
@@ -120,7 +138,7 @@ pub fn run(quick: bool) -> Vec<Record> {
             nq as u64,
             bytes,
             json!({"sum": val, "retained_bytes": bytes}),
-            "each query stores its own match list",
+            "each query stores its own match list (O(1) count, duplicated memory)",
         ));
 
         let shared = SharedIndex::new(keys.clone());

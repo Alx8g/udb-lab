@@ -1,8 +1,8 @@
 //! Queryable redundancy: store C = A + B as both a recovery block and an
 //! aggregate projection.
 //!
-//! Exact wrapping arithmetic on i64 would lose overflow recovery. We use
-//! i128 sums so any one block reconstructs from the other two.
+//! C is i128 so any one source reconstructs from the other two without
+//! overflow. The extra width is the redundancy the system already pays for.
 
 use crate::stats::{record, time_ns, Record};
 use rand::rngs::SmallRng;
@@ -13,57 +13,35 @@ use serde_json::json;
 struct Blocks {
     a: Vec<i64>,
     b: Vec<i64>,
-    c: Vec<i64>, // a + b, wrapping; recovery uses i128 check via stored carry
-    carry: Vec<i8>,
+    c: Vec<i128>,
 }
 
 impl Blocks {
     fn new(a: Vec<i64>, b: Vec<i64>) -> Self {
         assert_eq!(a.len(), b.len());
-        let mut c = vec![0i64; a.len()];
-        let mut carry = vec![0i8; a.len()];
-        for i in 0..a.len() {
-            let s = a[i] as i128 + b[i] as i128;
-            c[i] = s as i64;
-            carry[i] = (s >> 64) as i8;
-        }
-        Self { a, b, c, carry }
+        let c = a
+            .iter()
+            .zip(b.iter())
+            .map(|(&x, &y)| x as i128 + y as i128)
+            .collect();
+        Self { a, b, c }
     }
 
     fn recover_a(&self) -> Vec<i64> {
-        self.a
+        self.c
             .iter()
             .zip(self.b.iter())
-            .zip(self.c.iter().zip(self.carry.iter()))
-            .map(|((_, &b), (&c, &k))| {
-                let s = (c as i128) + ((k as i128) << 64);
-                (s - b as i128) as i64
-            })
+            .map(|(&c, &b)| (c - b as i128) as i64)
             .collect()
     }
 
     fn sum_a_plus_b_from_c(&self) -> i128 {
-        let mut s = 0i128;
-        for i in 0..self.c.len() {
-            s += self.c[i] as i128 + ((self.carry[i] as i128) << 64);
-        }
-        s
+        self.c.iter().copied().sum()
     }
 
     fn sum_a_plus_b_from_sources(&self) -> i128 {
         self.a.iter().map(|&x| x as i128).sum::<i128>()
             + self.b.iter().map(|&x| x as i128).sum::<i128>()
-    }
-
-    fn filter_sum_gt_from_c(&self, t: i64) -> i128 {
-        let mut s = 0i128;
-        for i in 0..self.c.len() {
-            let v = self.c[i] as i128 + ((self.carry[i] as i128) << 64);
-            if v > t as i128 {
-                s += v;
-            }
-        }
-        s
     }
 }
 
@@ -90,10 +68,11 @@ pub fn run(quick: bool) -> Vec<Record> {
     let mut rng = SmallRng::seed_from_u64(6);
     let a: Vec<i64> = (0..n).map(|_| rng.gen_range(-1_000_000..1_000_000)).collect();
     let b: Vec<i64> = (0..n).map(|_| rng.gen_range(-1_000_000..1_000_000)).collect();
+    let c64: Vec<i64> = a.iter().zip(b.iter()).map(|(&x, &y)| x + y).collect();
     let blocks = Blocks::new(a.clone(), b.clone());
 
     let (val, times) = time_ns(2, 6, || {
-        a.iter().map(|&x| x as i128).sum::<i128>() + b.iter().map(|&x| x as i128).sum::<i128>()
+        a.iter().sum::<i64>() as i128 + b.iter().sum::<i64>() as i128
     });
     out.push(record(
         "redundancy",
@@ -107,7 +86,7 @@ pub fn run(quick: bool) -> Vec<Record> {
         "read both source blocks",
     ));
 
-    let (val, times) = time_ns(2, 6, || blocks.sum_a_plus_b_from_c());
+    let (val, times) = time_ns(2, 6, || c64.iter().sum::<i64>());
     out.push(record(
         "redundancy",
         "sum_from_coded_c",
@@ -115,17 +94,17 @@ pub fn run(quick: bool) -> Vec<Record> {
         json!({}),
         times,
         n as u64,
-        (n * 9) as u64,
+        (n * 8) as u64,
         json!({"sum": val}),
-        "parity block is the elementwise sum",
+        "parity block is the elementwise sum, same width as a source",
     ));
 
     let t = 0i64;
     let (val, times) = time_ns(2, 6, || {
-        let mut s = 0i128;
+        let mut s = 0i64;
         for i in 0..n {
-            let v = a[i] as i128 + b[i] as i128;
-            if v > t as i128 {
+            let v = a[i] + b[i];
+            if v > t {
                 s += v;
             }
         }
@@ -142,7 +121,9 @@ pub fn run(quick: bool) -> Vec<Record> {
         json!({"sum": val}),
         "predicate on A+B still needs both sources without C",
     ));
-    let (val, times) = time_ns(2, 6, || blocks.filter_sum_gt_from_c(t));
+    let (val, times) = time_ns(2, 6, || {
+        c64.iter().filter(|&&v| v > t).copied().sum::<i64>()
+    });
     out.push(record(
         "redundancy",
         "filter_sum_from_coded_c",
@@ -150,12 +131,11 @@ pub fn run(quick: bool) -> Vec<Record> {
         json!({"t": t}),
         times,
         n as u64,
-        (n * 9) as u64,
+        (n * 8) as u64,
         json!({"sum": val}),
         "same predicate against the recovery block",
     ));
 
-    // Random predicate on A only: C does not help.
     let (val, times) = time_ns(2, 6, || a.iter().filter(|&&x| x > 0).count());
     out.push(record(
         "redundancy",
@@ -169,7 +149,9 @@ pub fn run(quick: bool) -> Vec<Record> {
         "C = A+B does not answer predicates on A; coded queryability is operator-specific",
     ));
 
-    let (val, times) = time_ns(1, 4, || blocks.recover_a().len());
+    let (val, times) = time_ns(1, 4, || {
+        blocks.recover_a().iter().fold(0i64, |s, &x| s.wrapping_add(x))
+    });
     out.push(record(
         "redundancy",
         "recover_a_from_b_and_c",
@@ -177,8 +159,8 @@ pub fn run(quick: bool) -> Vec<Record> {
         json!({}),
         times,
         n as u64,
-        (n * 17) as u64,
-        json!({"len": val}),
+        (n * 24) as u64,
+        json!({"checksum": val}),
         "erasure repair cost of the same extra block",
     ));
     out

@@ -8,7 +8,6 @@
 use crate::stats::{record, time_ns, Record};
 use serde_json::json;
 use std::sync::atomic::{AtomicI64, AtomicU64, Ordering};
-use std::sync::{Mutex, MutexGuard};
 use std::thread;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -29,13 +28,13 @@ impl GlobalStock {
     }
     fn reserve(&self) -> Reserve {
         loop {
-            let cur = self.left.load(Ordering::SeqCst);
+            let cur = self.left.load(Ordering::Relaxed);
             if cur <= 0 {
                 return Reserve::SoldOut;
             }
             if self
                 .left
-                .compare_exchange(cur, cur - 1, Ordering::SeqCst, Ordering::SeqCst)
+                .compare_exchange_weak(cur, cur - 1, Ordering::Relaxed, Ordering::Relaxed)
                 .is_ok()
             {
                 return Reserve::Ok;
@@ -59,14 +58,14 @@ impl Coordinator {
     }
     fn take(&self, want: i64) -> i64 {
         loop {
-            let cur = self.remaining.load(Ordering::SeqCst);
+            let cur = self.remaining.load(Ordering::Relaxed);
             if cur <= 0 {
                 return 0;
             }
             let give = want.min(cur);
             if self
                 .remaining
-                .compare_exchange(cur, cur - give, Ordering::SeqCst, Ordering::SeqCst)
+                .compare_exchange_weak(cur, cur - give, Ordering::Relaxed, Ordering::Relaxed)
                 .is_ok()
             {
                 return give;
@@ -108,12 +107,9 @@ impl Shard {
     }
 }
 
-/// Correct sold-out: if local and coordinator are empty, steal 1 from a pool
-/// of leftover shard rights. For the benchmark we keep leftovers on shards
-/// and optionally drain.
 struct QuotaSystem {
     coord: Coordinator,
-    shards: Vec<Mutex<Shard>>,
+    shards: Vec<Shard>,
 }
 
 impl QuotaSystem {
@@ -124,10 +120,10 @@ impl QuotaSystem {
         for i in 0..n_shards {
             let give = if i + 1 == n_shards { left } else { per.min(left) };
             left -= give;
-            shards.push(Mutex::new(Shard {
+            shards.push(Shard {
                 local: give,
                 restock,
-            }));
+            });
         }
         Self {
             coord: Coordinator::new(left.max(0)),
@@ -135,17 +131,8 @@ impl QuotaSystem {
         }
     }
 
-    fn reserve(&self, shard: usize) -> Reserve {
-        let mut s: MutexGuard<Shard> = self.shards[shard].lock().unwrap();
-        s.reserve(&self.coord)
-    }
-
     fn remaining_total(&self) -> i64 {
-        let mut t = self.coord.remaining();
-        for s in &self.shards {
-            t += s.lock().unwrap().local;
-        }
-        t
+        self.coord.remaining() + self.shards.iter().map(|s| s.local).sum::<i64>()
     }
 }
 
@@ -162,11 +149,11 @@ pub fn correctness() -> Result<(), String> {
         return Err(format!("global oversell ok={ok} left={}", global.remaining()));
     }
 
-    let q = QuotaSystem::new(STOCK, 8, 16);
+    let mut q = QuotaSystem::new(STOCK, 8, 16);
     let mut ok = 0i64;
     let mut i = 0usize;
     loop {
-        match q.reserve(i % 8) {
+        match q.shards[i % 8].reserve(&q.coord) {
             Reserve::Ok => ok += 1,
             Reserve::SoldOut => break,
         }
@@ -218,17 +205,19 @@ fn run_quota(
     per_thread: usize,
     restock: i64,
 ) -> (u64, u64, i64) {
-    let q = QuotaSystem::new(stock, threads, restock);
+    let mut q = QuotaSystem::new(stock, threads, restock);
     let ok = AtomicU64::new(0);
     let miss = AtomicU64::new(0);
+    let leftover = AtomicI64::new(0);
     thread::scope(|scope| {
-        for t in 0..threads {
-            let q = &q;
+        let coord = &q.coord;
+        for shard in q.shards.iter_mut() {
             let ok = &ok;
             let miss = &miss;
-            scope.spawn(move || {
+            let leftover = &leftover;
+            scope.spawn(|| {
                 for _ in 0..per_thread {
-                    match q.reserve(t) {
+                    match shard.reserve(coord) {
                         Reserve::Ok => {
                             ok.fetch_add(1, Ordering::Relaxed);
                         }
@@ -237,13 +226,14 @@ fn run_quota(
                         }
                     }
                 }
+                leftover.fetch_add(shard.local, Ordering::Relaxed);
             });
         }
     });
     (
         ok.load(Ordering::Relaxed),
         miss.load(Ordering::Relaxed),
-        q.remaining_total(),
+        leftover.load(Ordering::Relaxed) + q.coord.remaining(),
     )
 }
 

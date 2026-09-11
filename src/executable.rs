@@ -151,9 +151,9 @@ pub fn run(quick: bool) -> Vec<Record> {
         let bases: Vec<i64> = (0..n).map(|_| rng.gen_range(50..5_000)).collect();
 
         let mut mat = Materialized::new(&bases);
-        let ((), times) = time_ns(1, 5, || {
+        let (val, times) = time_ns(1, 5, || {
             mat.bulk_add(100);
-            mat.bulk_add(-100);
+            mat.sum()
         });
         out.push(record(
             "executable_regions",
@@ -163,14 +163,14 @@ pub fn run(quick: bool) -> Vec<Record> {
             times,
             n as u64,
             (n * 8) as u64,
-            json!({"sum": mat.sum()}),
+            json!({"sum": val}),
             "N scalar writes per bulk operation",
         ));
 
         let mut region = Region::with_bases(&bases);
-        let ((), times) = time_ns(4, 30, || {
+        let (val, times) = time_ns(4, 30, || {
             region.bulk_add_existing(100);
-            region.bulk_add_existing(-100);
+            region.adj
         });
         out.push(record(
             "executable_regions",
@@ -180,7 +180,7 @@ pub fn run(quick: bool) -> Vec<Record> {
             times,
             1,
             8,
-            json!({"sum": region.sum()}),
+            json!({"adj": val, "sum": region.sum()}),
             "one adjustment increment; N writes never happen",
         ));
 

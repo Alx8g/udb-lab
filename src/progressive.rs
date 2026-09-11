@@ -136,12 +136,48 @@ pub fn argmin_full(values: &[u32]) -> usize {
         .unwrap_or(0)
 }
 
+const BLOCK: usize = 1024;
+
+fn block_bounds(values: &[u32]) -> (Vec<u32>, Vec<u32>) {
+    let mut mins = Vec::new();
+    let mut maxs = Vec::new();
+    for chunk in values.chunks(BLOCK) {
+        let mut mn = u32::MAX;
+        let mut mx = 0u32;
+        for &v in chunk {
+            mn = mn.min(v);
+            mx = mx.max(v);
+        }
+        mins.push(mn);
+        maxs.push(mx);
+    }
+    (mins, maxs)
+}
+
+fn filter_blocks(values: &[u32], mins: &[u32], maxs: &[u32], t: u32) -> u64 {
+    let mut c = 0u64;
+    for (b, chunk) in values.chunks(BLOCK).enumerate() {
+        if maxs[b] <= t {
+            continue;
+        }
+        if mins[b] > t {
+            c += chunk.len() as u64;
+            continue;
+        }
+        c += chunk.iter().filter(|&&v| v > t).count() as u64;
+    }
+    c
+}
+
 fn gen(n: usize, seed: u64, clustered: bool) -> Vec<u32> {
     let mut rng = SmallRng::seed_from_u64(seed);
     if clustered {
-        (0..n)
+        // Physically grouped by value so a block min/max is tight.
+        let mut v: Vec<u32> = (0..n)
             .map(|_| 1_000_000 + rng.gen_range(0..50_000))
-            .collect()
+            .collect();
+        v.sort_unstable();
+        v
     } else {
         (0..n).map(|_| rng.gen::<u32>() >> 4).collect()
     }
@@ -152,13 +188,15 @@ pub fn correctness() -> Result<(), String> {
         let values = gen(10_000, 4, clustered);
         let hi: Vec<u16> = values.iter().map(|&v| split(v).0).collect();
         let lo: Vec<u16> = values.iter().map(|&v| split(v).1).collect();
+        let (mins, maxs) = block_bounds(&values);
         for t in [0u32, 50_000, 1_010_000, 2_000_000, u32::MAX - 10] {
             let a = filter_full(&values, t);
             let b = filter_progressive(&hi, &lo, t);
             let c = filter_progressive_avx2(&hi, &lo, t);
-            if a != b || a != c {
+            let d = filter_blocks(&values, &mins, &maxs, t);
+            if a != b || a != c || a != d {
                 return Err(format!(
-                    "filter mismatch clustered={clustered} t={t} full={a} prog={b} avx={c}"
+                    "filter mismatch clustered={clustered} t={t} full={a} prog={b} avx={c} blk={d}"
                 ));
             }
         }
@@ -181,6 +219,7 @@ pub fn run(quick: bool) -> Vec<Record> {
         let values = gen(n, 9, clustered);
         let hi: Vec<u16> = values.iter().map(|&v| split(v).0).collect();
         let lo: Vec<u16> = values.iter().map(|&v| split(v).1).collect();
+        let (mins, maxs) = block_bounds(&values);
         let label = if clustered { "clustered" } else { "spread" };
 
         let thresholds = if clustered {
@@ -227,7 +266,25 @@ pub fn run(quick: bool) -> Vec<Record> {
                 n as u64,
                 (n * 2) as u64,
                 json!({"count": val}),
-                "representation + vectorized remaining work",
+                "per-row 16-bit bounds; still one access per record",
+            ));
+
+            let (val, times) = time_ns(2, 6, || filter_blocks(&values, &mins, &maxs, t));
+            let skipped = mins
+                .iter()
+                .zip(maxs.iter())
+                .filter(|(&mn, &mx)| mx <= t || mn > t)
+                .count();
+            out.push(record(
+                "progressive",
+                &format!("block_bounds_{label}"),
+                n as u64,
+                json!({"t": t, "selectivity": sel, "blocks_pruned": skipped, "blocks": mins.len()}),
+                times,
+                n as u64,
+                ((mins.len() - skipped) * BLOCK * 4) as u64,
+                json!({"count": val, "blocks_pruned": skipped}),
+                "one min/max per 1024-row block; skip or accept whole blocks",
             ));
         }
 

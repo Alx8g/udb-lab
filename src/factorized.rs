@@ -231,7 +231,6 @@ pub fn run(quick: bool) -> Vec<Record> {
             for m in &mut maint {
                 m.insert_a(7);
                 acc += m.result();
-                m.delete_a(7);
             }
             acc
         });

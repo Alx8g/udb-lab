@@ -24,9 +24,8 @@ struct Pgm {
 }
 
 impl Pgm {
-    /// Linear-time greedy segments. Fit a two-point slope from the segment
-    /// start through the latest key; close the segment when that model's
-    /// error on the new point exceeds `eps`. Then measure true max error.
+    /// Slope is fixed from the first two keys of the segment. A start-to-end
+    /// fit always has zero error at the newest endpoint, so it never splits.
     fn build(keys: Vec<u64>, eps: usize) -> Self {
         let mut segs = Vec::new();
         if keys.is_empty() {
@@ -34,25 +33,26 @@ impl Pgm {
         }
         let mut start = 0usize;
         while start < keys.len() {
-            let mut last = start;
-            for end in (start + 1)..keys.len() {
-                let dx = (keys[end] - keys[start]) as f64;
-                let dy = (end - start) as f64;
-                let slope = if dx == 0.0 { 0.0 } else { dy / dx };
+            if start + 1 >= keys.len() {
+                segs.push(Segment {
+                    key0: keys[start],
+                    pos0: start,
+                    slope: 0.0,
+                    err: 1,
+                });
+                break;
+            }
+            let dx0 = (keys[start + 1] - keys[start]) as f64;
+            let slope = if dx0 == 0.0 { 0.0 } else { 1.0 / dx0 };
+            let mut last = start + 1;
+            let mut err = 1usize;
+            for end in (start + 2)..keys.len() {
                 let pred = start as f64 + slope * (keys[end] - keys[start]) as f64;
                 let e = (pred.round() as i64 - end as i64).unsigned_abs() as usize;
                 if e > eps {
                     break;
                 }
                 last = end;
-            }
-            let dx = (keys[last] - keys[start]) as f64;
-            let dy = (last - start) as f64;
-            let slope = if dx == 0.0 { 0.0 } else { dy / dx };
-            let mut err = 1usize;
-            for i in start..=last {
-                let pred = start as f64 + slope * (keys[i] - keys[start]) as f64;
-                let e = (pred.round() as i64 - i as i64).unsigned_abs() as usize;
                 if e > err {
                     err = e;
                 }

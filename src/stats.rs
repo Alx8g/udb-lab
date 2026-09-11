@@ -37,16 +37,32 @@ pub fn summarize(times: &mut [u128]) -> (u128, u128, u128, f64) {
 }
 
 /// Warm up, then time `iters` runs. Returns (last_output, times_ns).
+/// Tiny bodies are repeated until the sample is at least 1µs so the timer
+/// does not report 0 on sub-nanosecond work.
 pub fn time_ns<R>(warmup: u32, iters: u32, mut f: impl FnMut() -> R) -> (R, Vec<u128>) {
     let mut last = None;
     for _ in 0..warmup {
         last = Some(black_box(f()));
     }
+    let mut reps = 1u32;
+    loop {
+        let t0 = Instant::now();
+        for _ in 0..reps {
+            last = Some(black_box(f()));
+        }
+        let dt = t0.elapsed().as_nanos();
+        if dt >= 1_000 || reps >= 1_000_000 {
+            break;
+        }
+        reps *= 4;
+    }
     let mut times = Vec::with_capacity(iters as usize);
     for _ in 0..iters {
         let t0 = Instant::now();
-        last = Some(black_box(f()));
-        times.push(t0.elapsed().as_nanos());
+        for _ in 0..reps {
+            last = Some(black_box(f()));
+        }
+        times.push(t0.elapsed().as_nanos() / reps as u128);
     }
     (last.expect("warmup+iters > 0"), times)
 }

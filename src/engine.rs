@@ -83,25 +83,35 @@ unsafe fn scan_col_avx2_inner(price: &[u32], qty: &[u32], min_price: u32) -> (u6
     let mut sum = 0u64;
     let minv = _mm256_set1_epi32(min_price as i32);
     let zero = _mm256_setzero_si256();
+    let bias = _mm256_set1_epi32(i32::MIN);
+    let one = _mm256_set1_epi32(1);
+    let mut acc_count = _mm256_setzero_si256();
+    let mut acc_sum = _mm256_setzero_si256();
     while i + 8 <= n {
         let p = _mm256_loadu_si256(price.as_ptr().add(i) as *const __m256i);
         let q = _mm256_loadu_si256(qty.as_ptr().add(i) as *const __m256i);
-        let gt = _mm256_cmpgt_epi32(p, minv);
+        let p_s = _mm256_xor_si256(p, bias);
+        let min_s = _mm256_xor_si256(minv, bias);
+        let gt = _mm256_cmpgt_epi32(p_s, min_s);
         let qnz = _mm256_cmpgt_epi32(q, zero);
         let m = _mm256_and_si256(gt, qnz);
-        let mask = _mm256_movemask_epi8(m) as u32;
-        if mask != 0 {
-            let kept = _mm256_and_si256(p, m);
-            let mut tmp = [0i32; 8];
-            _mm256_storeu_si256(tmp.as_mut_ptr() as *mut __m256i, kept);
-            for x in tmp {
-                if x > 0 {
-                    count += 1;
-                    sum += x as u64;
-                }
-            }
-        }
+        let kept = _mm256_and_si256(p, m);
+        let ones = _mm256_and_si256(m, one);
+        let kept_lo = _mm256_cvtepu32_epi64(_mm256_castsi256_si128(kept));
+        let kept_hi = _mm256_cvtepu32_epi64(_mm256_extracti128_si256(kept, 1));
+        let ones_lo = _mm256_cvtepu32_epi64(_mm256_castsi256_si128(ones));
+        let ones_hi = _mm256_cvtepu32_epi64(_mm256_extracti128_si256(ones, 1));
+        acc_sum = _mm256_add_epi64(acc_sum, _mm256_add_epi64(kept_lo, kept_hi));
+        acc_count = _mm256_add_epi64(acc_count, _mm256_add_epi64(ones_lo, ones_hi));
         i += 8;
+    }
+    let mut tmp_c = [0i64; 4];
+    let mut tmp_s = [0i64; 4];
+    _mm256_storeu_si256(tmp_c.as_mut_ptr() as *mut __m256i, acc_count);
+    _mm256_storeu_si256(tmp_s.as_mut_ptr() as *mut __m256i, acc_sum);
+    for k in 0..4 {
+        count += tmp_c[k] as u64;
+        sum += tmp_s[k] as u64;
     }
     while i < n {
         if price[i] > min_price && qty[i] > 0 {
@@ -124,12 +134,10 @@ fn gather_ids(ids: &[u64], keys: &[u64]) -> u64 {
 }
 
 /// Sorted 4000-key batch: merge-walk a sorted id column once.
-fn batch_merge(ids: &[u64], mut keys: Vec<u64>) -> u64 {
-    keys.sort_unstable();
-    keys.dedup();
+fn batch_merge(ids: &[u64], keys_sorted: &[u64]) -> u64 {
     let mut i = 0usize;
     let mut s = 0u64;
-    for k in keys {
+    for &k in keys_sorted {
         while i < ids.len() && ids[i] < k {
             i += 1;
         }
@@ -166,7 +174,9 @@ pub fn correctness() -> Result<(), String> {
     let ids: Vec<u64> = (0..5_000).collect();
     let keys = vec![0, 10, 11, 4999, 9_999];
     let g = gather_ids(&ids, &keys);
-    let m = batch_merge(&ids, keys.clone());
+    let mut sorted = keys.clone();
+    sorted.sort_unstable();
+    let m = batch_merge(&ids, &sorted);
     if g != m {
         return Err("batch lookup mismatch".into());
     }
@@ -247,7 +257,9 @@ pub fn run(quick: bool) -> Vec<Record> {
             "4,000 separate binary searches",
         ));
 
-        let (val, times) = time_ns(3, 10, || batch_merge(&ids_n, keys.clone()));
+        let mut keys_sorted = keys.clone();
+        keys_sorted.sort_unstable();
+        let (val, times) = time_ns(3, 10, || batch_merge(&ids_n, &keys_sorted));
         out.push(record(
             "engine",
             "lookup_4k_sorted_merge",

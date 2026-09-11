@@ -20,6 +20,8 @@ struct Col {
     delivery: Vec<f64>,
 }
 
+const BLOCK: usize = 1024;
+
 #[derive(Clone)]
 struct Residual {
     a: f64,
@@ -28,6 +30,8 @@ struct Residual {
     resid: Vec<f64>,
     resid_min: f64,
     resid_max: f64,
+    block_dmin: Vec<f64>,
+    block_dmax: Vec<f64>,
 }
 
 fn fit(price: &[f64], delivery: &[f64]) -> (f64, f64) {
@@ -56,6 +60,18 @@ fn encode(c: &Col) -> Residual {
         .collect();
     let resid_min = resid.iter().copied().fold(f64::INFINITY, f64::min);
     let resid_max = resid.iter().copied().fold(f64::NEG_INFINITY, f64::max);
+    let mut block_dmin = Vec::new();
+    let mut block_dmax = Vec::new();
+    for chunk in c.delivery.chunks(BLOCK) {
+        let mut mn = f64::INFINITY;
+        let mut mx = f64::NEG_INFINITY;
+        for &d in chunk {
+            mn = mn.min(d);
+            mx = mx.max(d);
+        }
+        block_dmin.push(mn);
+        block_dmax.push(mx);
+    }
     Residual {
         a,
         b,
@@ -63,7 +79,24 @@ fn encode(c: &Col) -> Residual {
         resid,
         resid_min,
         resid_max,
+        block_dmin,
+        block_dmax,
     }
+}
+
+fn filter_delivery_blocks(c: &Col, r: &Residual, t: f64) -> u64 {
+    let mut n = 0u64;
+    for (b, chunk) in c.delivery.chunks(BLOCK).enumerate() {
+        if r.block_dmin[b] >= t {
+            continue;
+        }
+        if r.block_dmax[b] < t {
+            n += chunk.len() as u64;
+            continue;
+        }
+        n += chunk.iter().filter(|&&d| d < t).count() as u64;
+    }
+    n
 }
 
 fn filter_delivery_full(c: &Col, t: f64) -> u64 {
@@ -126,8 +159,9 @@ pub fn correctness() -> Result<(), String> {
             let a = filter_delivery_full(&c, t);
             let b = filter_delivery_residual(&r, t);
             let d = filter_delivery_decode(&r, t);
-            if a != b || a != d {
-                return Err(format!("noise={noise} t={t} full={a} bound={b} dec={d}"));
+            let e = filter_delivery_blocks(&c, &r, t);
+            if a != b || a != d || a != e {
+                return Err(format!("noise={noise} t={t} full={a} bound={b} dec={d} blk={e}"));
             }
         }
         for i in 0..c.price.len() {
@@ -148,6 +182,11 @@ pub fn run(quick: bool) -> Vec<Record> {
         let mut c = gen_correlated(n, noise, 8);
         if label == "none" {
             c.delivery.shuffle(&mut SmallRng::seed_from_u64(99));
+        } else {
+            let mut pairs: Vec<(f64, f64)> = c.price.iter().copied().zip(c.delivery.iter().copied()).collect();
+            pairs.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+            c.price = pairs.iter().map(|p| p.0).collect();
+            c.delivery = pairs.iter().map(|p| p.1).collect();
         }
         let r = encode(&c);
         let t = 40.0;
@@ -190,6 +229,19 @@ pub fn run(quick: bool) -> Vec<Record> {
             (n * 16) as u64,
             json!({"count": val}),
             "lossless but reconstructs every delivery; storage win, scan not cheaper",
+        ));
+
+        let (val, times) = time_ns(2, 6, || filter_delivery_blocks(&c, &r, t));
+        out.push(record(
+            "correlation",
+            &format!("block_bounds_{label}"),
+            n as u64,
+            json!({"noise": noise, "t": t, "resid_span": r.resid_max - r.resid_min}),
+            times,
+            n as u64,
+            (n * 8) as u64,
+            json!({"count": val}),
+            "min/max delivery per 1024-row block; same idea as progressive, on the stored column",
         ));
     }
     out

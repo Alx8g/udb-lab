@@ -14,8 +14,9 @@ PAIRS = [
     ("answer_cells", "brute_scan_near_tie", "cell_lookup_near_tie"),
     ("executable_regions", "materialized_bulk_add", "compact_bulk_add"),
     ("executable_regions", "materialized_point_lookup_4k", "compact_point_lookup_4k"),
-    ("progressive", "full_scan_clustered", "bucket_avx2_clustered"),
-    ("progressive", "full_scan_spread", "bucket_avx2_spread"),
+    ("progressive", "full_scan_clustered", "block_bounds_clustered"),
+    ("progressive", "full_scan_spread", "block_bounds_spread"),
+    ("shared_state", "rescan_each_query", "shared_index_counts"),
     ("certificate", "merge_disjoint_range", "bound_certificate_disjoint"),
     ("certificate", "merge_sparse", "gallop_sparse"),
     ("certificate", "merge_overlap", "gallop_overlap"),
@@ -24,8 +25,9 @@ PAIRS = [
     ("engine", "lookup_4k_independent_bsearch", "lookup_4k_direct_id"),
     ("joint", "brute_materialized_scan", "joint_cells_over_bases"),
     ("joint", "brute_mixed_bulk_and_exceptions", "joint_mixed_bulk_and_exceptions"),
+    ("correlation", "full_columns_tight", "block_bounds_tight"),
+    ("correlation", "full_columns_none", "block_bounds_none"),
     ("correlation", "full_columns_tight", "model_prune_tight"),
-    ("correlation", "full_columns_none", "model_prune_none"),
     ("shared_state", "private_counts", "shared_index_counts"),
 ]
 

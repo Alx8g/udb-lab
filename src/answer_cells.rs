@@ -46,39 +46,32 @@ fn brute_winner(ps: &[Product], w: f64) -> (usize, f64) {
     (best_i, second - best)
 }
 
-/// Lower envelope of lines intercept=delivery, slope=price-delivery on [0,1].
+/// Lower envelope of lines `delivery + w*(price-delivery)` on [0,1].
+/// The pointwise min of linear functions is concave, so successive slopes
+/// decrease. Sort high slope first (winner at small w).
 pub fn envelope(ps: &[Product]) -> Vec<Cell> {
     if ps.is_empty() {
         return Vec::new();
     }
+    let intercept = |i: usize| ps[i].delivery;
+    let slope = |i: usize| ps[i].price - ps[i].delivery;
     let mut idx: Vec<usize> = (0..ps.len()).collect();
     idx.sort_by(|&i, &j| {
-        let si = ps[i].price - ps[i].delivery;
-        let sj = ps[j].price - ps[j].delivery;
-        si.partial_cmp(&sj)
+        slope(j)
+            .partial_cmp(&slope(i))
             .unwrap()
-            .then_with(|| ps[i].delivery.partial_cmp(&ps[j].delivery).unwrap())
+            .then_with(|| intercept(i).partial_cmp(&intercept(j)).unwrap())
+            .then_with(|| i.cmp(&j))
     });
-    // Dedup equal slopes, keep lowest intercept.
     let mut uniq: Vec<usize> = Vec::new();
     for i in idx {
         if let Some(&last) = uniq.last() {
-            let s_last = ps[last].price - ps[last].delivery;
-            let s = ps[i].price - ps[i].delivery;
-            if (s - s_last).abs() < 1e-15 {
-                if ps[i].delivery < ps[last].delivery {
-                    uniq.pop();
-                    uniq.push(i);
-                }
+            if (slope(i) - slope(last)).abs() < 1e-15 {
                 continue;
             }
         }
         uniq.push(i);
     }
-    // Convex hull: intersection x must increase.
-    let mut hull: Vec<usize> = Vec::new();
-    let intercept = |i: usize| ps[i].delivery;
-    let slope = |i: usize| ps[i].price - ps[i].delivery;
     let meet = |i: usize, j: usize| -> f64 {
         let ds = slope(j) - slope(i);
         if ds.abs() < 1e-18 {
@@ -86,6 +79,7 @@ pub fn envelope(ps: &[Product]) -> Vec<Cell> {
         }
         (intercept(i) - intercept(j)) / ds
     };
+    let mut hull: Vec<usize> = Vec::new();
     for i in uniq {
         while hull.len() >= 2 {
             let a = hull[hull.len() - 2];
@@ -97,6 +91,12 @@ pub fn envelope(ps: &[Product]) -> Vec<Cell> {
             }
         }
         hull.push(i);
+    }
+    while hull.len() >= 2 && meet(hull[0], hull[1]) <= 0.0 {
+        hull.remove(0);
+    }
+    while hull.len() >= 2 && meet(hull[hull.len() - 2], hull[hull.len() - 1]) >= 1.0 {
+        hull.pop();
     }
     // Clip to [0,1] and drop segments that miss the interval.
     let mut cells = Vec::new();
@@ -133,6 +133,11 @@ pub fn envelope(ps: &[Product]) -> Vec<Cell> {
             min_gap: g,
         });
     }
+    if !cells.is_empty() {
+        cells[0].w_lo = 0.0;
+        let last = cells.len() - 1;
+        cells[last].w_hi = 1.0;
+    }
     cells
 }
 
@@ -143,7 +148,7 @@ pub fn lookup_cell(cells: &[Cell], w: f64) -> Option<Cell> {
         let mid = (lo + hi) / 2;
         if w < cells[mid].w_lo {
             hi = mid;
-        } else if w >= cells[mid].w_hi {
+        } else if w > cells[mid].w_hi {
             lo = mid + 1;
         } else {
             return Some(cells[mid]);
