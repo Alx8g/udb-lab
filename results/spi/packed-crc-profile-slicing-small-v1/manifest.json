@@ -1,0 +1,15 @@
+{
+  "source_commit": "af2d53c55ee564d41980372087fb7f85fd981b2d",
+  "diagnostic_only": true,
+  "sha256": {
+    "command-spi-17.json": "fdca8ec7f73aaf5de020f4bc1958f1cde5f4d36c6ce4bca91e2054da0ed76f78",
+    "command-spi-packed-17.json": "ef5e78183053902c5f358be6e963687e5d6745684c10d5efd1767cc411fcaf80",
+    "command-sqlite-17.json": "21579e55b0aab0c6e72d351eba4a3eb6c75a790d25dd3c5ecce12ac240fd3703",
+    "environment.json": "b302c45dbbb111d479c85957ddb6d9717204df2ebbb21eb5a21a21d3ec7abc9e",
+    "spi-packed-seed-17/result.json": "c308e72c1566460353a6176b3858655271df55c8d50dbbd3382203ead2c738bf",
+    "spi-seed-17/result.json": "e60b575e55664024eb67a634e8843ccce975886abfafbe2ac6a8c9188b5f9cf8",
+    "sqlite-seed-17/result.json": "511e5ad5b492569d2999f085724785260e3458363e83e1aadfb04c3ef4c30bfd",
+    "summary.json": "7813c97b5e3d4b8c14971420705c2b093c6da70f3d4b795c5a08cbaabcdcbeba"
+  },
+  "limits": "Exact logical outputs validated. Layouts differ. Diagnostic timings are not performance claims. File lengths are not allocated-device bytes. OS cache uncontrolled."
+}
