@@ -1,0 +1,65 @@
+{
+  "diagnostic_only": true,
+  "binary_identity": {
+    "identity_schema": 1,
+    "benchmark_schema": 2,
+    "debug_assertions": false,
+    "profile_enabled": true,
+    "crc32_implementation": "ieee-slicing8",
+    "packed_scan_implementation": "direct-base",
+    "compiled_engines": [
+      "spi",
+      "spi-value-cache",
+      "spi-unbuffered",
+      "spi-grouped",
+      "spi-packed",
+      "sqlite"
+    ],
+    "source_sha256": {
+      "Cargo.lock": "ef34c9bcf85b089be5d206da18e1844752301ccbecf39f51389b8a3c27ce18ae",
+      "Cargo.toml": "c4d87ea54cfd9dad3189132776acd5b1911b514d2e619e9d714de3ba5ab694d2",
+      "src/bin/spi-compare.rs": "8c5d95405d1d9256a82e4c53d014fbf15c293e1dc401280cb8ea2e0b24819c8b",
+      "src/lib.rs": "1f2fd1f3ef60ec9ba5381059ed54d9068991b57543903090c3bf3c663c2f5f02",
+      "src/spi/append_buffer.rs": "e7861eebad447ca3ff5ecdbb882d6e19e891548c42ee82f4f3623bd8c4d17721",
+      "src/spi/mod.rs": "70cb78964e38b0c07763f5aab89c48c9b8c70499889b97ba8abb4afec271cdf8",
+      "src/spi/packed.rs": "d6ca679c4dc4dd3a2d2ebd32c2d22d5096f69d38a7efdf2f2ffd4879f188e6fb",
+      "src/spi/profile.rs": "4ea1f516231abe2b179d32a50bfffe47d6f03496880260eac123a101cd7f2fe6",
+      "src/spi/storage.rs": "4ac6f7c711d953dc129e28abad6b5fb3a5932740002eb2c52986bc9978518ea1",
+      "src/spi/transaction.rs": "5c116bda409684a001ac234691b59da6e2099f4d04beb0d1ed311cc662f67ff0"
+    },
+    "limitations": "Source-byte identity is checked. Build flags beyond debug assertions and external dependencies are recorded separately, not attested by this protocol."
+  },
+  "binary_sha256": "b0c86b90e4b73551bb5d034d55603d1e5efba6723c181ca3fd609984428dddd7",
+  "git_head": "e7bd9a912d82159391339cdd4ed685c65bf9d7f1",
+  "source_sha256": {
+    "Cargo.lock": "ef34c9bcf85b089be5d206da18e1844752301ccbecf39f51389b8a3c27ce18ae",
+    "Cargo.toml": "c4d87ea54cfd9dad3189132776acd5b1911b514d2e619e9d714de3ba5ab694d2",
+    "src/bin/spi-compare.rs": "8c5d95405d1d9256a82e4c53d014fbf15c293e1dc401280cb8ea2e0b24819c8b",
+    "src/lib.rs": "1f2fd1f3ef60ec9ba5381059ed54d9068991b57543903090c3bf3c663c2f5f02",
+    "src/spi/append_buffer.rs": "e7861eebad447ca3ff5ecdbb882d6e19e891548c42ee82f4f3623bd8c4d17721",
+    "src/spi/mod.rs": "70cb78964e38b0c07763f5aab89c48c9b8c70499889b97ba8abb4afec271cdf8",
+    "src/spi/packed.rs": "d6ca679c4dc4dd3a2d2ebd32c2d22d5096f69d38a7efdf2f2ffd4879f188e6fb",
+    "src/spi/profile.rs": "4ea1f516231abe2b179d32a50bfffe47d6f03496880260eac123a101cd7f2fe6",
+    "src/spi/storage.rs": "4ac6f7c711d953dc129e28abad6b5fb3a5932740002eb2c52986bc9978518ea1",
+    "src/spi/transaction.rs": "5c116bda409684a001ac234691b59da6e2099f4d04beb0d1ed311cc662f67ff0",
+    "scripts/run_spi_profile.py": "3961eab2e70b139aa28bdb68f8faa613e58c5f12e63956aeacf2b87e5fc4b6c0",
+    "scripts/run_spi_campaign.py": "a2cde1ecdfc54e28815f4f08f57223368c143d8f6e5512f4141d3e4b5b461dd0",
+    "scripts/spi_benchmark_identity.py": "841e293673f991ffc49c2d73424f9fd97548e566850d99bd380d27934a5ab4c1"
+  },
+  "rows": 2000,
+  "seeds": [
+    17
+  ],
+  "cache_bytes": 8388608,
+  "value_bytes": 64,
+  "rustc": "rustc 1.96.0 (ac68faa20 2026-05-25)\nbinary: rustc\ncommit-hash: ac68faa20c58cbccd01ee7208bf3b6e93a7d7f96\ncommit-date: 2026-05-25\nhost: x86_64-pc-windows-msvc\nrelease: 1.96.0\nLLVM version: 22.1.2",
+  "limits": [
+    "Instrumented wall timings are not accepted performance results",
+    "Process CPU includes harness/oracle work, not CPU per engine operation",
+    "Rust allocator counts omit native SQLite allocations, allocator metadata and OS cache",
+    "Process memory samples include benchmark inputs and output buffers",
+    "Storage counters persist across reopen/maintenance and include verify",
+    "Storage timers overlap when nested. Do not add all categories.",
+    "Process CPU has OS-specific resolution and may report zero in short phases"
+  ]
+}

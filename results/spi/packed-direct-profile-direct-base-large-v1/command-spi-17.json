@@ -1,0 +1,14 @@
+{
+  "command": [
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\direct-scan-profile-binaries-v1\\direct-base.exe",
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\packed-direct-profile-direct-base-large-v1\\spi-seed-17",
+    "spi",
+    "1000",
+    "17",
+    "4096",
+    "8388608"
+  ],
+  "exit_code": 0,
+  "stdout": "{\"engine\":\"spi\",\"load_ms\":81.1119,\"result\":\"C:\\\\Users\\\\verom\\\\.treehouse\\\\dbs-5593e8\\\\4\\\\dbs\\\\.working\\\\tmp\\\\packed-direct-profile-direct-base-large-v1\\\\spi-seed-17\\\\result.json\",\"rows\":1000,\"single_commit_p50_us\":8767.7,\"validation\":\"PASS\",\"warm_read_ms\":9.3229}\n",
+  "stderr": ""
+}

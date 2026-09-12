@@ -308,8 +308,16 @@ measured 0.432 versus 0.565 ms. Large-value scan improvements were small.
 Not every phase improved. The 1 KiB packed update median increased from 116.98
 to 122.56 ms and maintenance from 18.37 to 20.84 ms. Unchanged legacy and SQLite
 controls also varied. Three seeds do not establish statistical equivalence or
-an across-workload win. Direct-scan allocation validation remains pending
-separate diagnostics, and none of these timings demonstrates lower page-read bytes.
+an across-workload win.
+
+All 18 [diagnostic trials](results/spi/packed-direct-profile-direct-base-normal-v1/summary.json)
+passed their contracts. Against the [materialized control](results/spi/packed-direct-profile-materialized-normal-v1/summary.json),
+normal packed full-scan allocation requests fell from 783,408 to 543,408 bytes
+and allocation calls from 6,094 to 4,082. Range requests fell from 2,664,592 to
+1,772,504 bytes. Read calls and bytes were identical for corresponding scan phases.
+The 4 KiB-value full-scan request volume improved only from 4.295 to 4.239 MB.
+These one-seed diagnostic measurements include harness allocations, are not
+retained-memory or RSS measurements, and do not establish total CPU/RAM superiority.
 
 ## Diagnostic attribution
 
