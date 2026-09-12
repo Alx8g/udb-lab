@@ -121,3 +121,63 @@ fn disjoint_transactions_progress_in_parallel_until_single_writer_commit() {
         conflicts.load(Ordering::Relaxed)
     );
 }
+#[test]
+fn bounded_validation_history_is_conservative_under_many_ranges_and_writes() {
+    let p = path("validation-rollover");
+    let db = Database::create(
+        &p,
+        Options {
+            conflict_bytes: 512,
+            ..Options::default()
+        },
+    )
+    .unwrap();
+    let mut seed_tx = db.begin().unwrap();
+    for i in 0..256u64 {
+        seed_tx
+            .set(format!("bucket/{i:03}").into_bytes(), i.to_le_bytes())
+            .unwrap();
+    }
+    seed_tx.commit().unwrap();
+
+    // This transaction observes several disjoint predicates. It must either
+    // validate every intervening mutation or conservatively abort after the
+    // bounded journal rolls past its snapshot.
+    let mut old = db.begin().unwrap();
+    assert_eq!(old.scan_prefix(b"bucket/0").unwrap().len(), 100);
+    assert_eq!(old.scan_prefix(b"bucket/1").unwrap().len(), 100);
+    assert_eq!(
+        old.scan(b"bucket/200", Some(b"bucket/220")).unwrap().len(),
+        20
+    );
+
+    for i in 0..40u64 {
+        let mut tx = db.begin().unwrap();
+        let key = format!("other/{i:03}").into_bytes();
+        tx.set(key, vec![i as u8]).unwrap();
+        tx.commit().unwrap();
+    }
+    old.set(b"derived", b"must-not-publish-with-unknown-history")
+        .unwrap();
+    assert!(matches!(old.commit(), Err(Error::Conflict)));
+    assert_eq!(db.get(b"derived").unwrap(), None);
+
+    // A new transaction can still commit after rollover, and a range change
+    // inside its predicate must still reject it even if the journal is small.
+    let mut range = db.begin().unwrap();
+    assert!(range.scan_prefix(b"fresh/").unwrap().is_empty());
+    let mut writer = db.begin().unwrap();
+    writer.set(b"fresh/one", b"x").unwrap();
+    writer.commit().unwrap();
+    range.set(b"derived/fresh", b"no").unwrap();
+    assert!(matches!(range.commit(), Err(Error::Conflict)));
+
+    let mut unrelated = db.begin().unwrap();
+    assert!(unrelated.scan_prefix(b"fresh/").unwrap().len() >= 1);
+    let mut outside = db.begin().unwrap();
+    outside.set(b"outside", b"ok").unwrap();
+    outside.commit().unwrap();
+    unrelated.set(b"derived/outside", b"yes").unwrap();
+    unrelated.commit().unwrap();
+    db.verify().unwrap();
+}
