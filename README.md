@@ -98,6 +98,21 @@ flushes before the unchanged data and manifest sync barriers. Set
 `Options::append_buffer` to `false` for the direct-write control. Buffering changes
 write-call count, not arena bytes or the persistent format.
 
+`Options::value_cache` is an opt-in experiment and defaults to `false`.
+When enabled, point reads can admit immutable values up to 4 KiB into the same
+charged budget as index nodes. A value's allocation capacity plus its metadata
+charge must fit within one-eighth of that budget. Scans and compaction can reuse
+admitted values but do not populate the value cache. `verify()` bypasses both
+caches. Retired epochs drop both maps and the eviction queue, and returned values
+are independent buffers. This does not bound total RSS or the OS file cache.
+
+The comparison runner names this experimental path `spi-value-cache`. The `spi`
+path keeps value admission disabled, and `spi-unbuffered` additionally disables
+append buffering. Use these controls rather than comparing new results against
+an older executable. Repeated-key, unique-key, and one-off-scan phases distinguish
+reuse savings from admission overhead. No value-cache performance claim is made
+until the source-identified comparison results are recorded.
+
 [The measured buffer comparison](results/spi/append-buffer-v2/summary.json) and
 [small-cache control](results/spi/append-buffer-small-cache-v2/summary.json) retain
 complete samples, source identities, and output checks. SQLite still wins most

@@ -39,6 +39,42 @@ def write_json(path: Path, content: object) -> None:
         stream.write("\n")
 
 
+def validate_record(record: dict, engine: str, rows: int, seed: int, value_bytes: int, cache_bytes: int) -> None:
+    """Check the native result's operation and resource contract before acceptance."""
+    expected = {"benchmark_schema": 2, "value_cache_workload_extension": 1,
+                "engine": engine, "rows": rows, "seed": seed,
+                "value_bytes": value_bytes, "cache_bytes": cache_bytes,
+                "full_output_validation": "PASS"}
+    for field, value in expected.items():
+        if record.get(field) != value:
+            raise RuntimeError(f"native result contract mismatch: {field}")
+    for field in ("warm_hits", "reused_16_key_hits", "unique_value_reads", "one_off_scan"):
+        metric = record.get(field, {})
+        samples = metric.get("samples_ns")
+        if not isinstance(samples, list) or not samples or any(type(n) is not int or n < 0 for n in samples):
+            raise RuntimeError(f"invalid timing samples: {field}")
+        if metric.get("total_ns") != sum(samples) or metric.get("sample_count") != len(samples):
+            raise RuntimeError(f"inconsistent timing summary: {field}")
+    if not engine.startswith("spi"):
+        return
+    snapshots = ("cache_after_reused_hits", "cache_after_unique_reads", "cache_after_one_off_scan",
+                 "before_maintenance", "after_maintenance")
+    for field in snapshots:
+        stats = record[field]
+        if not 0 <= stats["cache_bytes"] <= cache_bytes:
+            raise RuntimeError(f"shared cache exceeds budget: {field}")
+        if stats["value_cache_enabled"] != (engine == "spi-value-cache"):
+            raise RuntimeError(f"incorrect cache control: {field}")
+        if stats["retired_cache_value_capacity"] != 0:
+            raise RuntimeError(f"retired value cache retained capacity: {field}")
+        if engine != "spi-value-cache" and stats["cache_value_entries"] != 0:
+            raise RuntimeError(f"node-only control admitted values: {field}")
+        if value_bytes + 192 > cache_bytes // 8 and stats["cache_value_entries"] != 0:
+            raise RuntimeError(f"undersized cache admitted values: {field}")
+    if record["cache_after_one_off_scan"]["cache_value_entries"] != 0:
+        raise RuntimeError("one-off scan populated the value cache")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--binary", type=Path, required=True)
@@ -47,7 +83,7 @@ def main() -> None:
     parser.add_argument("--value-bytes", type=int, default=64)
     parser.add_argument("--cache-bytes", type=int, default=8 * 1024 * 1024)
     parser.add_argument("--seeds", type=int, nargs="+", default=[17, 29, 43])
-    parser.add_argument("--engines", nargs="+", choices=["spi", "spi-unbuffered", "sqlite"], default=["spi", "sqlite"])
+    parser.add_argument("--engines", nargs="+", choices=["spi", "spi-value-cache", "spi-unbuffered", "sqlite"], default=["spi", "sqlite"])
     args = parser.parse_args()
     binary = args.binary.resolve(strict=True)
     root = Path(__file__).resolve().parents[1]
@@ -109,15 +145,18 @@ def main() -> None:
             if result.returncode:
                 raise RuntimeError(f"{engine} seed {seed} failed: {result.stderr}")
             record = json.loads((destination / "result.json").read_text(encoding="utf-8"))
-            if record.get("benchmark_schema") != 2 or record.get("full_output_validation") != "PASS":
-                raise RuntimeError("old benchmark schema or failed full-output validation")
+            validate_record(record, engine, args.rows, seed, args.value_bytes, args.cache_bytes)
             records.append(record)
     check_unchanged_inputs()
-    summary = {"trials": len(records), "all_full_outputs_match": True, "engines": {}}
+    summary = {"trials": len(records), "all_full_outputs_match": True,
+               "value_cache_workload_extension": 1, "cache_contract_checks": "PASS", "engines": {}}
     for engine in args.engines:
         trials = [r for r in records if r["engine"] == engine]
         metrics = {
             "load_ms": [r["load_batches_256"]["total_ns"] / 1e6 for r in trials],
+            "reused_16_key_p50_us": [r["reused_16_key_hits"]["p50_ns"] / 1e3 for r in trials],
+            "unique_reads_ms": [r["unique_value_reads"]["total_ns"] / 1e6 for r in trials],
+            "one_off_scan_ms": [r["one_off_scan"]["total_ns"] / 1e6 for r in trials],
             "warm_hit_p50_us": [r["warm_hits"]["p50_ns"] / 1e3 for r in trials],
             "warm_hit_p99_us": [r["warm_hits"]["p99_ns"] / 1e3 for r in trials],
             "cleared_app_cache_p50_us": [r["application_cache_cleared_hits_not_storage_cold"]["p50_ns"] / 1e3 for r in trials],
@@ -131,6 +170,11 @@ def main() -> None:
         if all("arena_write_calls" in r["before_maintenance"] for r in trials):
             metrics["arena_write_calls"] = [r["before_maintenance"]["arena_write_calls"] for r in trials]
             metrics["arena_bytes_written"] = [r["before_maintenance"]["bytes_written"] for r in trials]
+        if engine.startswith("spi"):
+            metrics["cache_bytes_after_reuse"] = [r["cache_after_reused_hits"]["cache_bytes"] for r in trials]
+            metrics["cache_values_after_reuse"] = [r["cache_after_reused_hits"]["cache_value_entries"] for r in trials]
+            metrics["cache_values_after_unique_reads"] = [r["cache_after_unique_reads"]["cache_value_entries"] for r in trials]
+            metrics["cache_values_after_scan"] = [r["cache_after_one_off_scan"]["cache_value_entries"] for r in trials]
         summary["engines"][engine] = {k: {"median": statistics.median(v), "samples": v} for k, v in metrics.items()}
         if "arena_write_calls" not in metrics:
             summary["engines"][engine]["arena_write_calls"] = {"median": None, "samples": [], "status": "not measured"}

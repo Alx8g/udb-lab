@@ -1,0 +1,16 @@
+{
+  "command": [
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\target\\release\\spi-compare.exe",
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\value-cache-small-v1\\spi-unbuffered-seed-43",
+    "spi-unbuffered",
+    "2000",
+    "43",
+    "64",
+    "1024"
+  ],
+  "started_utc": "2026-09-12T08:36:21.456925+00:00",
+  "finished_utc": "2026-09-12T08:36:23.050532+00:00",
+  "exit_code": 0,
+  "stdout": "{\"engine\":\"spi-unbuffered\",\"load_ms\":609.3604,\"result\":\"C:\\\\Users\\\\verom\\\\.treehouse\\\\dbs-5593e8\\\\4\\\\dbs\\\\.working\\\\tmp\\\\value-cache-small-v1\\\\spi-unbuffered-seed-43\\\\result.json\",\"rows\":2000,\"single_commit_p50_us\":9577.3,\"validation\":\"PASS\",\"warm_read_ms\":114.7571}\n",
+  "stderr": ""
+}

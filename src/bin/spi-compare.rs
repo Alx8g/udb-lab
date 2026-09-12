@@ -17,9 +17,9 @@ fn build_info() -> Value {
         "benchmark_schema": BENCHMARK_SCHEMA,
         "debug_assertions": cfg!(debug_assertions),
         "engines": if cfg!(feature = "rusqlite") {
-            vec!["spi", "spi-unbuffered", "sqlite"]
+            vec!["spi", "spi-value-cache", "spi-unbuffered", "sqlite"]
         } else {
-            vec!["spi", "spi-unbuffered"]
+            vec!["spi", "spi-value-cache", "spi-unbuffered"]
         },
         "sources": {
             "Cargo.toml": include_str!("../../Cargo.toml"),
@@ -49,10 +49,11 @@ struct Spi {
     options: Options,
 }
 impl Spi {
-    fn new(path: PathBuf, cache: usize, append_buffer: bool) -> Result<Self> {
+    fn new(path: PathBuf, cache: usize, append_buffer: bool, value_cache: bool) -> Result<Self> {
         let options = Options {
             cache_bytes: cache,
             append_buffer,
+            value_cache,
             ..Options::default()
         };
         Ok(Self {
@@ -97,6 +98,7 @@ impl Engine for Spi {
     }
     fn stats(&self) -> Result<Value> {
         let mut stats = serde_json::to_value(self.db().stats()?)?;
+        stats["value_cache_enabled"] = json!(self.options.value_cache);
         stats["append_buffer_enabled"] = json!(self.options.append_buffer);
         stats["append_buffer_capacity_bytes"] =
             json!(if self.options.append_buffer { 65536 } else { 0 });
@@ -307,6 +309,64 @@ fn run(engine: &mut dyn Engine, rows: usize, seed: u64, size: usize) -> Result<V
         }
     }
     report["ranges_up_to_100_keys"] = measure(samples, 30);
+    // Measure deliberate reuse independently from first-touch/streaming traffic.
+    engine.clear()?;
+    let reused_keys: Vec<_> = (0..16u64).map(key).collect();
+    for k in &reused_keys {
+        if engine.get(k)?.as_ref() != expected.get(k) {
+            return Err("reuse warmup mismatch".into());
+        }
+    }
+    let mut samples = Vec::new();
+    let mut outputs = Vec::with_capacity(1000);
+    for i in 0..1000 {
+        let k = &reused_keys[i % reused_keys.len()];
+        let t = Instant::now();
+        let value = engine.get(k)?;
+        let elapsed = t.elapsed().as_nanos() as u64;
+        samples.push(elapsed);
+        outputs.push(value);
+    }
+    for (i, v) in outputs.iter().enumerate() {
+        if v.as_ref() != expected.get(&reused_keys[i % reused_keys.len()]) {
+            return Err("reused value mismatch".into());
+        }
+    }
+    report["reused_16_key_hits"] = measure(samples, 1000);
+    report["cache_after_reused_hits"] = engine.stats()?;
+
+    // Stream unique values through point reads. A fixed-stride permutation is
+    // not needed: every key appears exactly once, guaranteeing no value reuse.
+    engine.clear()?;
+    let mut samples = Vec::new();
+    for r in initial.iter().rev() {
+        let t = Instant::now();
+        let found = engine.get(&r.key)?;
+        samples.push(t.elapsed().as_nanos() as u64);
+        if found.as_ref() != expected.get(&r.key) {
+            return Err("one-touch value mismatch".into());
+        }
+    }
+    report["unique_value_reads"] = measure(samples, rows);
+    report["cache_after_unique_reads"] = engine.stats()?;
+
+    engine.clear()?;
+    let t = Instant::now();
+    let scanned = engine.range(&[], None)?;
+    let scan_elapsed = t.elapsed().as_nanos() as u64;
+    let want: Vec<_> = expected
+        .iter()
+        .map(|(key, value)| Entry {
+            key: key.clone(),
+            value: value.clone(),
+        })
+        .collect();
+    if scanned != want {
+        return Err("one-off scan mismatch".into());
+    }
+    report["one_off_scan"] = measure(vec![scan_elapsed], rows);
+    report["cache_after_one_off_scan"] = engine.stats()?;
+    report["value_cache_workload_extension"] = json!(1);
     let updates: Vec<_> = (0..512)
         .map(|_| {
             let i = next(&mut state) % rows as u64;
@@ -419,7 +479,7 @@ fn main() -> Result<()> {
         return Ok(());
     }
     if args.len() < 3 {
-        return Err("usage: spi-compare NEW_OUTPUT_DIR spi|spi-unbuffered|sqlite [rows=5000] [seed=1] [value_bytes=64] [cache_bytes=8388608]".into());
+        return Err("usage: spi-compare NEW_OUTPUT_DIR spi|spi-value-cache|spi-unbuffered|sqlite [rows=5000] [seed=1] [value_bytes=64] [cache_bytes=8388608]".into());
     }
     let dir = PathBuf::from(&args[1]);
     let kind = &args[2];
@@ -435,6 +495,7 @@ fn main() -> Result<()> {
         return Err("rows>=100 and value_bytes in 1..4096 required".into());
     }
     if kind != "spi"
+        && kind != "spi-value-cache"
         && kind != "spi-unbuffered"
         && (kind != "sqlite" || !cfg!(feature = "rusqlite"))
     {
@@ -442,8 +503,9 @@ fn main() -> Result<()> {
     }
     fs::create_dir(&dir)?;
     let mut engine: Box<dyn Engine> = match kind.as_str() {
-        "spi" => Box::new(Spi::new(dir.join("db"), cache, true)?),
-        "spi-unbuffered" => Box::new(Spi::new(dir.join("db"), cache, false)?),
+        "spi" => Box::new(Spi::new(dir.join("db"), cache, true, false)?),
+        "spi-value-cache" => Box::new(Spi::new(dir.join("db"), cache, true, true)?),
+        "spi-unbuffered" => Box::new(Spi::new(dir.join("db"), cache, false, false)?),
         #[cfg(feature = "rusqlite")]
         "sqlite" => Box::new(Sqlite::new(dir.join("db"), cache)?),
         _ => return Err("unknown engine or SQLite feature not enabled".into()),

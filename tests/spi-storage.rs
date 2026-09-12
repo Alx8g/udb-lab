@@ -649,3 +649,203 @@ fn repeated_pinned_retirements_release_capacity_and_stay_readable() {
     assert_eq!(db.collect().unwrap(), 5);
     db.verify().unwrap();
 }
+
+// Intended additions to tests/spi-storage.rs after the active Cargo job exits.
+// Every test uses the existing unique project-scoped path()/put() helpers.
+
+#[test]
+fn value_cache_reuses_payload_and_returns_independent_buffers() {
+    let db = Database::create(
+        path("value-cache-hit"),
+        Options {
+            value_cache: true,
+            cache_bytes: 1024 * 1024,
+            ..Options::default()
+        },
+    )
+    .unwrap();
+    put(&db, b"key", b"immutable value");
+    let before = db.stats().unwrap().reads;
+    let mut returned = db.get(b"key").unwrap().unwrap();
+    assert_eq!(returned, b"immutable value");
+    let admitted = db.stats().unwrap();
+    assert_eq!(admitted.reads - before, 1);
+    assert_eq!(admitted.cache_value_entries, 1);
+    returned[0] ^= 0xff;
+    for _ in 0..50 {
+        assert_eq!(db.get(b"key").unwrap(), Some(b"immutable value".to_vec()));
+    }
+    assert_eq!(db.stats().unwrap().reads, admitted.reads);
+    db.verify().unwrap();
+}
+
+#[test]
+fn disabled_tiny_and_zero_cache_paths_do_not_admit_values() {
+    for (enabled, bytes) in [(false, 1024 * 1024), (true, 1024), (true, 0)] {
+        let db = Database::create(
+            path("value-cache-bypass"),
+            Options {
+                value_cache: enabled,
+                cache_bytes: bytes,
+                ..Options::default()
+            },
+        )
+        .unwrap();
+        put(&db, b"small", &[37; 64]);
+        for _ in 0..5 {
+            let before = db.stats().unwrap().reads;
+            assert_eq!(db.get(b"small").unwrap(), Some(vec![37; 64]));
+            let stats = db.stats().unwrap();
+            assert!(stats.reads > before);
+            assert_eq!(stats.cache_value_entries, 0);
+            assert_eq!(stats.cache_value_capacity, 0);
+            assert!(stats.cache_bytes <= bytes);
+        }
+    }
+}
+
+#[test]
+fn oversized_values_bypass_admission_without_displacing_a_small_value() {
+    let db = Database::create(
+        path("large-value-bypass"),
+        Options {
+            value_cache: true,
+            cache_bytes: 2 * 1024 * 1024,
+            ..Options::default()
+        },
+    )
+    .unwrap();
+    let large = vec![73; 70000];
+    let mut tx = db.begin().unwrap();
+    tx.set(b"small", b"cached").unwrap();
+    tx.set(b"large", large.clone()).unwrap();
+    tx.commit().unwrap();
+    assert_eq!(db.get(b"small").unwrap(), Some(b"cached".to_vec()));
+    for _ in 0..5 {
+        assert_eq!(db.get(b"large").unwrap(), Some(large.clone()));
+        assert_eq!(db.stats().unwrap().cache_value_entries, 1);
+    }
+    let before = db.stats().unwrap().reads;
+    assert_eq!(db.get(b"small").unwrap(), Some(b"cached".to_vec()));
+    assert_eq!(db.stats().unwrap().reads, before);
+}
+
+#[test]
+fn scans_and_compaction_do_not_populate_value_cache() {
+    let db = Database::create(
+        path("scan-admission"),
+        Options {
+            value_cache: true,
+            cache_bytes: 4 * 1024 * 1024,
+            ..Options::default()
+        },
+    )
+    .unwrap();
+    let mut tx = db.begin().unwrap();
+    for i in 0..250u64 {
+        tx.set(i.to_be_bytes(), vec![i as u8; 64]).unwrap();
+    }
+    tx.commit().unwrap();
+    assert_eq!(db.scan_prefix(&[]).unwrap().len(), 250);
+    assert_eq!(db.stats().unwrap().cache_value_entries, 0);
+    let mut tx = db.begin().unwrap();
+    assert_eq!(tx.scan_prefix(&[]).unwrap().len(), 250);
+    tx.commit().unwrap();
+    assert_eq!(db.stats().unwrap().cache_value_entries, 0);
+    db.compact().unwrap();
+    db.collect().unwrap();
+    assert_eq!(db.scan_prefix(&[]).unwrap().len(), 250);
+    assert_eq!(db.stats().unwrap().cache_value_entries, 0);
+    assert_eq!(db.stats().unwrap().retired_cache_value_capacity, 0);
+}
+
+#[test]
+fn values_stay_snapshot_exact_through_updates_deletes_and_retirement() {
+    let p = path("value-cache-snapshot");
+    let options = Options {
+        value_cache: true,
+        cache_bytes: 1024 * 1024,
+        ..Options::default()
+    };
+    let db = Database::create(&p, options.clone()).unwrap();
+    put(&db, b"key", b"old");
+    let old = db.snapshot().unwrap();
+    assert_eq!(old.get(b"key").unwrap(), Some(b"old".to_vec()));
+    put(&db, b"key", b"new");
+    assert_eq!(db.get(b"key").unwrap(), Some(b"new".to_vec()));
+    assert_eq!(old.get(b"key").unwrap(), Some(b"old".to_vec()));
+    let newer = db.snapshot().unwrap();
+    let mut tx = db.begin().unwrap();
+    tx.delete(b"key").unwrap();
+    tx.commit().unwrap();
+    assert_eq!(db.get(b"key").unwrap(), None);
+    db.compact().unwrap();
+    assert_eq!(db.collect().unwrap(), 0);
+    for _ in 0..5 {
+        assert_eq!(old.get(b"key").unwrap(), Some(b"old".to_vec()));
+        assert_eq!(newer.get(b"key").unwrap(), Some(b"new".to_vec()));
+        let stats = db.stats().unwrap();
+        assert_eq!(stats.retired_cache_map_capacity, 0);
+        assert_eq!(stats.retired_cache_order_capacity, 0);
+        assert_eq!(stats.retired_cache_value_capacity, 0);
+    }
+    drop(old);
+    drop(newer);
+    db.collect().unwrap();
+    drop(db);
+    let db = Database::open(&p, options).unwrap();
+    assert_eq!(db.get(b"key").unwrap(), None);
+    db.verify().unwrap();
+}
+
+#[test]
+fn full_verification_bypasses_cached_values_and_detects_disk_corruption() {
+    let p = path("cached-corruption");
+    let options = Options {
+        value_cache: true,
+        ..Options::default()
+    };
+    let db = Database::create(&p, options).unwrap();
+    put(&db, b"key", b"protected");
+    assert_eq!(db.get(b"key").unwrap(), Some(b"protected".to_vec()));
+    assert_eq!(db.stats().unwrap().cache_value_entries, 1);
+    // The first value begins after the 8-byte arena prefix and 32-byte header.
+    let mut file = OpenOptions::new()
+        .write(true)
+        .open(p.join("arena-0.spi"))
+        .unwrap();
+    file.seek(SeekFrom::Start(8 + 32)).unwrap();
+    file.write_all(&[0xff]).unwrap();
+    file.sync_all().unwrap();
+    drop(file);
+    assert!(matches!(db.verify(), Err(Error::Corrupt(_))));
+    db.clear_cache();
+    assert!(matches!(db.get(b"key"), Err(Error::Corrupt(_))));
+}
+
+#[test]
+fn mixed_node_and_value_evictions_stay_within_one_budget() {
+    let limit = 8192;
+    let db = Database::create(
+        path("mixed-cache-eviction"),
+        Options {
+            value_cache: true,
+            cache_bytes: limit,
+            ..Options::default()
+        },
+    )
+    .unwrap();
+    let mut tx = db.begin().unwrap();
+    for i in 0..100u64 {
+        tx.set(i.to_be_bytes(), vec![i as u8; 64]).unwrap();
+    }
+    tx.commit().unwrap();
+    for i in (0..100u64).chain((0..100u64).rev()).cycle().take(500) {
+        assert_eq!(db.get(&i.to_be_bytes()).unwrap(), Some(vec![i as u8; 64]));
+        let stats = db.stats().unwrap();
+        assert!(stats.cache_bytes <= limit);
+        assert!(stats.cache_value_entries > 0);
+        assert!(stats.cache_entries <= limit / 192);
+    }
+    db.verify().unwrap();
+}

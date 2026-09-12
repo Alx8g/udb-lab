@@ -65,6 +65,9 @@ pub struct Options {
     /// Coalesce immutable records in a writer-private 64 KiB buffer.
     /// False retains the unbuffered control with identical durable barriers.
     pub append_buffer: bool,
+    /// Admit small immutable values on point reads within the shared cache budget.
+    /// Scans and compaction do not populate the value cache.
+    pub value_cache: bool,
 }
 impl Default for Options {
     fn default() -> Self {
@@ -76,6 +79,7 @@ impl Default for Options {
             fail_at: None,
             write_chunk: None,
             append_buffer: true,
+            value_cache: false,
         }
     }
 }
@@ -90,9 +94,12 @@ pub struct Stats {
     /// Usable container slots, not allocated bytes or process RSS.
     pub cache_map_capacity: usize,
     pub cache_order_capacity: usize,
+    pub cache_value_entries: usize,
+    pub cache_value_capacity: usize,
     /// Sum of container capacities across pinned retired epochs.
     pub retired_cache_map_capacity: usize,
     pub retired_cache_order_capacity: usize,
+    pub retired_cache_value_capacity: usize,
     pub reads: u64,
     pub bytes_read: u64,
     pub bytes_written: u64,
@@ -117,41 +124,90 @@ pub(crate) struct Node {
     pub height: u32,
     pub key: Vec<u8>,
 }
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+enum CacheKey {
+    Node(u64),
+    Value(u64),
+}
 struct Cache {
-    map: HashMap<u64, Arc<Node>>,
-    order: VecDeque<u64>,
+    nodes: HashMap<u64, Arc<Node>>,
+    values: HashMap<u64, Arc<Vec<u8>>>,
+    order: VecDeque<CacheKey>,
     bytes: usize,
     limit: usize,
+    admit_values: bool,
 }
 impl Cache {
     fn retire(&mut self) {
-        // Ordinary clear keeps capacity for reuse. Retired epochs will never
-        // admit nodes again, so release the actual container ownership here.
-        self.map = HashMap::new();
+        self.nodes = HashMap::new();
+        self.values = HashMap::new();
         self.order = VecDeque::new();
         self.bytes = 0;
         self.limit = 0;
+        self.admit_values = false;
     }
-    fn insert(&mut self, at: u64, n: Arc<Node>) {
-        let size = n.key.len() + 192;
-        if size > self.limit || self.map.contains_key(&at) {
-            return;
-        }
-        while self.bytes + size > self.limit {
-            if let Some(old) = self.order.pop_front() {
-                if let Some(v) = self.map.remove(&old) {
-                    self.bytes -= v.key.len() + 192;
-                }
-            } else {
+    fn evict_until(&mut self, needed: usize) {
+        while self.bytes + needed > self.limit {
+            let Some(old) = self.order.pop_front() else {
                 break;
+            };
+            match old {
+                CacheKey::Node(at) => {
+                    if let Some(v) = self.nodes.remove(&at) {
+                        self.bytes -= v.key.len() + 192;
+                    }
+                }
+                CacheKey::Value(at) => {
+                    if let Some(v) = self.values.remove(&at) {
+                        self.bytes -= v.capacity() + 192;
+                    }
+                }
             }
         }
+    }
+    fn insert_node(&mut self, at: u64, n: Arc<Node>) {
+        let size = n.key.len() + 192;
+        if size > self.limit || self.nodes.contains_key(&at) {
+            return;
+        }
+        self.evict_until(size);
+        if self.bytes + size > self.limit {
+            return;
+        }
         self.bytes += size;
-        self.order.push_back(at);
-        self.map.insert(at, n);
+        self.order.push_back(CacheKey::Node(at));
+        self.nodes.insert(at, n);
+    }
+    fn can_admit_value(&self, capacity: usize, len: usize) -> bool {
+        self.admit_values
+            && len <= 4096
+            && capacity
+                .checked_add(192)
+                .is_some_and(|size| size <= self.limit / 8)
+    }
+    fn insert_value(&mut self, at: u64, value: Arc<Vec<u8>>) {
+        let size = value.capacity() + 192;
+        // Keep one value from consuming a large fraction of the shared cache.
+        if !self.can_admit_value(value.capacity(), value.len()) || self.values.contains_key(&at) {
+            return;
+        }
+        self.evict_until(size);
+        if self.bytes + size > self.limit {
+            return;
+        }
+        self.bytes += size;
+        self.order.push_back(CacheKey::Value(at));
+        self.values.insert(at, value);
+    }
+    fn node(&self, at: u64) -> Option<Arc<Node>> {
+        self.nodes.get(&at).cloned()
+    }
+    fn value(&self, at: u64) -> Option<Arc<Vec<u8>>> {
+        self.values.get(&at).cloned()
     }
     fn clear(&mut self) {
-        self.map.clear();
+        self.nodes.clear();
+        self.values.clear();
         self.order.clear();
         self.bytes = 0;
     }
@@ -168,6 +224,7 @@ pub(crate) struct Epoch {
     bytes_read: AtomicU64,
     bytes_written: AtomicU64,
     write_calls: AtomicU64,
+    value_cache_enabled: bool,
 }
 impl Epoch {
     fn open(
@@ -175,6 +232,7 @@ impl Epoch {
         lease: Arc<Lease>,
         cache_bytes: usize,
         create: bool,
+        admit_values: bool,
     ) -> Result<Arc<Self>> {
         let file = OpenOptions::new()
             .read(true)
@@ -185,16 +243,19 @@ impl Epoch {
             file,
             path,
             cache: Mutex::new(Cache {
-                map: HashMap::new(),
+                nodes: HashMap::new(),
+                values: HashMap::new(),
                 order: VecDeque::new(),
                 bytes: 0,
                 limit: cache_bytes,
+                admit_values,
             }),
             _lease: lease,
             reads: AtomicU64::new(0),
             bytes_read: AtomicU64::new(0),
             bytes_written: AtomicU64::new(0),
             write_calls: AtomicU64::new(0),
+            value_cache_enabled: admit_values,
         }))
     }
     fn write(&self, bytes: &[u8], at: u64, chunk: Option<usize>) -> Result<()> {
@@ -237,16 +298,57 @@ impl Epoch {
         Ok(payload)
     }
     pub(crate) fn node(&self, at: u64, end: u64) -> Result<Arc<Node>> {
-        if let Some(n) = self.cache.lock().unwrap().map.get(&at).cloned() {
+        if let Some(n) = self.cache.lock().unwrap().node(at) {
             return Ok(n);
         }
         let p = self.record(at, end, 1)?;
         let n = decode_node(&p, at)?;
-        self.cache.lock().unwrap().insert(at, n.clone());
+        self.cache.lock().unwrap().insert_node(at, n.clone());
         Ok(n)
     }
+    /// Scan/maintenance reads may reuse admitted payload, but cannot pollute
+    /// the value cache with one-off values.
     pub(crate) fn value(&self, at: u64, end: u64) -> Result<Vec<u8>> {
-        self.record(at, end, 2)
+        self.read_value(at, end, false)
+    }
+    fn point_value(&self, at: u64, end: u64) -> Result<Vec<u8>> {
+        self.read_value(at, end, true)
+    }
+    fn read_value(&self, at: u64, end: u64, admit: bool) -> Result<Vec<u8>> {
+        // Preserve the original direct-read path when this expert is disabled.
+        if !self.value_cache_enabled {
+            return self.record(at, end, 2);
+        }
+        // Clone the immutable Arc under the mutex, then copy the caller's
+        // returned value outside it. Callers never mutate cached storage.
+        let cached = { self.cache.lock().unwrap().value(at) };
+        if let Some(value) = cached {
+            if at
+                .checked_add((HEADER + value.len()) as u64)
+                .is_none_or(|limit| limit > end)
+            {
+                return Err(Error::Corrupt("cached value outside snapshot".into()));
+            }
+            return Ok((*value).clone());
+        }
+        let value = self.record(at, end, 2)?;
+        if admit {
+            let should_admit = {
+                self.cache
+                    .lock()
+                    .unwrap()
+                    .can_admit_value(value.capacity(), value.len())
+            };
+            if should_admit {
+                let shared = Arc::new(value);
+                // Retirement can race with this read. Recheck admission while
+                // holding the cache lock rather than resurrecting old capacity.
+                self.cache.lock().unwrap().insert_value(at, shared.clone());
+                return Ok((*shared).clone());
+            }
+        }
+        // Large and uncached values are returned directly, not cloned in full.
+        Ok(value)
     }
 }
 #[derive(Clone)]
@@ -268,7 +370,7 @@ impl Snapshot {
     pub fn get(&self, key: &[u8]) -> Result<Option<Vec<u8>>> {
         Ok(self
             .find(key)?
-            .map(|n| self.epoch.value(n.value, self.root.end))
+            .map(|n| self.epoch.point_value(n.value, self.root.end))
             .transpose()?)
     }
     pub(crate) fn find(&self, key: &[u8]) -> Result<Option<Arc<Node>>> {
@@ -422,6 +524,7 @@ impl Database {
             lease.clone(),
             options.cache_bytes,
             true,
+            options.value_cache,
         )?;
         write_at(&epoch.file, b"SPIARE01", 0, None)?;
         epoch.file.sync_all()?;
@@ -465,6 +568,7 @@ impl Database {
             lease.clone(),
             options.cache_bytes,
             false,
+            options.value_cache,
         )?;
         if epoch.file.metadata()?.len() < root.end {
             return Err(Error::Corrupt("arena shorter than committed end".into()));
@@ -531,7 +635,13 @@ impl Database {
     /// This detects corruption, not repairs it. It is explicit O(live data) work.
     pub fn verify(&self) -> Result<u64> {
         let view = self.snapshot()?;
-        let disk = Epoch::open(view.epoch.path.clone(), self.inner.lease.clone(), 0, false)?;
+        let disk = Epoch::open(
+            view.epoch.path.clone(),
+            self.inner.lease.clone(),
+            0,
+            false,
+            false,
+        )?;
         fn walk(
             e: &Epoch,
             root: Root,
@@ -572,11 +682,13 @@ impl Database {
         let s = self.inner.state.lock().unwrap();
         let e = &s.view.epoch;
         let c = e.cache.lock().unwrap();
-        let (mut retired_map_capacity, mut retired_order_capacity) = (0, 0);
+        let (mut retired_map_capacity, mut retired_order_capacity, mut retired_value_capacity) =
+            (0, 0, 0);
         for epoch in &s.retired {
             let cache = epoch.cache.lock().unwrap();
-            retired_map_capacity += cache.map.capacity();
+            retired_map_capacity += cache.nodes.capacity();
             retired_order_capacity += cache.order.capacity();
+            retired_value_capacity += cache.values.capacity();
         }
         let mut physical = 0;
         for f in fs::read_dir(&self.inner.dir)? {
@@ -591,11 +703,14 @@ impl Database {
             committed_bytes: s.view.root.end,
             physical_bytes: physical,
             cache_bytes: c.bytes,
-            cache_entries: c.map.len(),
-            cache_map_capacity: c.map.capacity(),
+            cache_entries: c.nodes.len() + c.values.len(),
+            cache_map_capacity: c.nodes.capacity(),
             cache_order_capacity: c.order.capacity(),
+            cache_value_entries: c.values.len(),
+            cache_value_capacity: c.values.capacity(),
             retired_cache_map_capacity: retired_map_capacity,
             retired_cache_order_capacity: retired_order_capacity,
+            retired_cache_value_capacity: retired_value_capacity,
             reads: e.reads.load(Ordering::Relaxed),
             bytes_read: e.bytes_read.load(Ordering::Relaxed),
             bytes_written: e.bytes_written.load(Ordering::Relaxed),
@@ -679,6 +794,7 @@ impl Database {
             self.inner.lease.clone(),
             0,
             true,
+            self.inner.options.value_cache,
         )?;
         // Errors here affect only the unpublished candidate. Leave that file
         // for explicit collect/recovery and keep the current database usable.
@@ -828,7 +944,7 @@ impl ArenaWriter {
                     if record[8] == 1 {
                         let position = at + offset as u64;
                         let node = decode_node(&record[HEADER..end], position)?;
-                        cache.insert(position, node);
+                        cache.insert_node(position, node);
                     }
                     offset += end;
                 }
@@ -912,7 +1028,11 @@ impl ArenaWriter {
         p[40..].copy_from_slice(&n.key);
         let at = self.record(1, &p)?;
         if at < self.append.start() {
-            self.epoch.cache.lock().unwrap().insert(at, Arc::new(n));
+            self.epoch
+                .cache
+                .lock()
+                .unwrap()
+                .insert_node(at, Arc::new(n));
         }
         Ok(at)
     }

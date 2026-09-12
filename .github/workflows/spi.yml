@@ -34,10 +34,12 @@ jobs:
         run: cargo test --locked --release --lib --test spi-storage --test spi-concurrency --test spi-process -- --test-threads=1
       - name: Test benchmark provenance validation
         run: python scripts/test_spi_benchmark_identity.py
+      - name: Test benchmark result-contract validation
+        run: python scripts/test_spi_campaign.py
       - name: Build native comparison adapter
         run: cargo build --locked --release --features rusqlite --bin spi-compare
       - name: Smoke-test identified comparison binary
         shell: bash
         run: |
           mkdir -p .working/tmp/ci
-          python scripts/run_spi_campaign.py --binary "target/release/spi-compare${{ runner.os == 'Windows' && '.exe' || '' }}" --out .working/tmp/ci/identified-smoke --rows 100 --seeds 17 --engines spi sqlite
+          python scripts/run_spi_campaign.py --binary "target/release/spi-compare${{ runner.os == 'Windows' && '.exe' || '' }}" --out .working/tmp/ci/identified-smoke --rows 100 --seeds 17 --engines spi spi-value-cache sqlite
