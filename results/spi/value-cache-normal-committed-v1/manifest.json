@@ -1,0 +1,31 @@
+{
+  "sha256": {
+    "command-spi-17.json": "b323361815ab72909912adbd1cb9d9c8c9227a69a261b22df5f28ab5f5cf753f",
+    "command-spi-29.json": "cd3465b1e8f58e3c21cbcaf3baf9b602c9183e3b95309e3e07a7a12e96a90ce2",
+    "command-spi-43.json": "68944010b5e69026cc27bc24ddcf6043247ec8ffd83ddc061210e66f1c9be2e3",
+    "command-spi-unbuffered-17.json": "2785b82e72e0eee5618bc17f8471f9151d29d309302a8fc634229157d4d3a848",
+    "command-spi-unbuffered-29.json": "013a78fd9830a92afb6de9ce93d3a30ed2605244b4d4aaece65407884a1c10ef",
+    "command-spi-unbuffered-43.json": "be9b8dc1d676eef58a69cce43dca1c5fe91b51937a516cc8c79f6017ea2bfd48",
+    "command-spi-value-cache-17.json": "9024cb49e7a69f1fbd695df689c5a678d998aa1830be9507214d8bb2455dc4ab",
+    "command-spi-value-cache-29.json": "c7f3869176acd6929df0fb3c760e8ffe6d232c9415cf047fed15baacfebc94fd",
+    "command-spi-value-cache-43.json": "17e6bfdb765e1f0d0096cb7929cc282418e8a99ddc159995c022a7dfb4b651bd",
+    "command-sqlite-17.json": "c084405ea06c4bca5d4c2b543455750b2d51a02d1aa4fe0c20966eedef65cacb",
+    "command-sqlite-29.json": "03f5fa9d2df05369e2348360a1baddb7ceb78d99c48ce5bddc529fa0a120870a",
+    "command-sqlite-43.json": "885ad3bf60932c6872857d4e9134587cf36ff3841814e0a8a3bd86f602811b0d",
+    "environment.json": "38d582b59b9f2ec2b181916fec40c0590cff971a99d2a7dfb5eabe5d0ad9107c",
+    "spi-seed-17/result.json": "c52c457b702f7d11271e799207f7980a16e742cf757cc28ece432a07fff620e2",
+    "spi-seed-29/result.json": "f21ff26bef2508da1f5766f90be3b1015ca22c0c391f5405fce7d138407bdb0c",
+    "spi-seed-43/result.json": "dc5fae788196e6af4fdfd1ea9dae91b54befc6e1f3e008383a1676683fb45ea1",
+    "spi-unbuffered-seed-17/result.json": "8e135c80825fbbbca3e31b917c2e32425492ffa212c368cdbb9eb58e8c928c18",
+    "spi-unbuffered-seed-29/result.json": "b523fc8dfdab9031ab1ecaa7617d93f97536a781b91a8aa936c23f709203b9ac",
+    "spi-unbuffered-seed-43/result.json": "d09a2a4222a8fc37bb63e3eaf22bf48410a0f8f5f623dbf99547e6bab519cae6",
+    "spi-value-cache-seed-17/result.json": "0b0734c69c16534245e0363ce934538d6ddcf1489b687a977e1416b9917e0f0f",
+    "spi-value-cache-seed-29/result.json": "0a037257cc2beada7e0cda286487a04b3d590a887185505ea7ac30a2faf1b83c",
+    "spi-value-cache-seed-43/result.json": "6403526c4f62790293d17506266183209722b61c50ba592aa6b0ebe6e5495c37",
+    "sqlite-seed-17/result.json": "0ff115f5b113886dd45c35e22dc45e3d24a7f4f9a0cba93d87736f6b03638b1d",
+    "sqlite-seed-29/result.json": "adcb0a0d41b8fa8f7a7847759b6949d1c1efa4e5c99d0c83716313d355ce5a15",
+    "sqlite-seed-43/result.json": "01f0348e3c60078ace124293babd133b898ce782efeae80d43ec73e4add5581c",
+    "summary.json": "805a2b1f6c2ee44db1d10ece31e7e4c56a748a138009a5b8bca77b5e3f6345be"
+  },
+  "scope": "Committed source 046992a. Twelve trials, complete output and cache-contract validation passed. Local KV only."
+}

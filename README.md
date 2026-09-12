@@ -110,12 +110,23 @@ The comparison runner names this experimental path `spi-value-cache`. The `spi`
 path keeps value admission disabled, and `spi-unbuffered` additionally disables
 append buffering. Use these controls rather than comparing new results against
 an older executable. Repeated-key, unique-key, and one-off-scan phases distinguish
-reuse savings from admission overhead. No value-cache performance claim is made
-until the source-identified comparison results are recorded.
+reuse savings from admission overhead.
 
-[The measured buffer comparison](results/spi/append-buffer-v2/summary.json) and
-[small-cache control](results/spi/append-buffer-small-cache-v2/summary.json) retain
-complete samples, source identities, and output checks. SQLite still wins most
+The committed-source campaign used three seeds and twelve engine trials per
+cache setting. At 8 MiB, repeated 16-key reads were 0.4 microseconds with value
+admission versus 4.0 microseconds without it. The 0.4-microsecond sample is below
+this lab's 1-microsecond reporting threshold; do not quote a precise speedup
+ratio from that number. Unique reads were 16.84 ms versus
+17.16 ms, one-off scans were 16.01 ms versus 16.52 ms, and durable single-row
+updates were 9.31 ms versus 9.16 ms. At a 1 KiB cache, admission correctly stayed
+off and the opt-in path was slightly slower. The result supports keeping value
+admission opt-in, not enabling it globally. [Normal results](results/spi/value-cache-normal-committed-v1/summary.json)
+and [small-cache results](results/spi/value-cache-small-committed-v1/summary.json) are
+source-pinned and fully output-checked.
+
+[The measured buffer comparison](results/spi/append-buffer-v2/summary.json),
+[buffer small-cache control](results/spi/append-buffer-small-cache-v2/summary.json),
+and the value-cache results retain complete samples, source identities, and output checks. SQLite still wins most
 operations. These are local KV experiments, not production latency or power-loss
 validation. [Track A remains unfinished](docs/track-a-status.json).
 
@@ -123,7 +134,7 @@ Run an isolated comparison into a new directory:
 
 ```
 cargo build --release --locked --features rusqlite --bin spi-compare
-uv run --no-project scripts/run_spi_campaign.py --binary target/release/spi-compare.exe --out .working/tmp/my-new-campaign --rows 2000 --engines spi spi-unbuffered sqlite
+uv run --no-project scripts/run_spi_campaign.py --binary target/release/spi-compare.exe --out .working/tmp/my-new-campaign --rows 2000 --engines spi spi-value-cache spi-unbuffered sqlite
 ```
 
 On Unix omit `.exe`. The runner rejects stale source or missing engine adapters
