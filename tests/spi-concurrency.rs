@@ -2,7 +2,7 @@ use std::fs;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Barrier};
-use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
+use std::time::{SystemTime, UNIX_EPOCH};
 use udb_lab::spi::{Database, Error, Options};
 
 fn path(name: &str) -> PathBuf {
@@ -28,52 +28,43 @@ fn seed(db: &Database, n: u64) {
 }
 
 #[test]
-fn compaction_blocks_commit_but_preserves_snapshot_and_serializability() {
-    let p = path("blocking");
-    let db = Database::create(
-        &p,
-        Options {
-            cache_bytes: 8 * 1024 * 1024,
-            ..Options::default()
-        },
-    )
-    .unwrap();
-    seed(&db, 6000);
+fn concurrent_compaction_never_loses_a_committed_write() {
+    let p = path("concurrent-compaction");
+    let db = Database::create(&p, Options::default()).unwrap();
+    seed(&db, 2000);
     let pinned = db.snapshot().unwrap();
-    let before = pinned.get(&0u64.to_be_bytes()).unwrap();
     let barrier = Arc::new(Barrier::new(2));
-    let c = db.clone();
-    let b = barrier.clone();
-    let handle = std::thread::spawn(move || {
-        b.wait();
-        let start = Instant::now();
-        c.compact().unwrap();
-        start.elapsed()
+    let worker_db = db.clone();
+    let worker_barrier = barrier.clone();
+    let worker = std::thread::spawn(move || {
+        worker_barrier.wait();
+        worker_db.compact()
     });
     barrier.wait();
-    std::thread::sleep(Duration::from_millis(1));
-    let mut attempts = 0;
-    let started = Instant::now();
-    loop {
-        attempts += 1;
-        let mut t = db.begin().unwrap();
-        t.set(b"during", b"write").unwrap();
-        match t.commit() {
-            Ok(_) => break,
-            Err(Error::Conflict) => continue,
-            Err(e) => panic!("{e}"),
-        }
-    }
-    let commit_elapsed = started.elapsed();
-    let compact_elapsed = handle.join().unwrap();
-    assert_eq!(pinned.get(&0u64.to_be_bytes()).unwrap(), before);
-    assert_eq!(db.get(b"during").unwrap(), Some(b"write".to_vec()));
+    let mut tx = db.begin().unwrap();
+    tx.set(b"during", b"committed").unwrap();
+    tx.commit().unwrap();
+    // Either ordering is legal here. Private checkpoint tests separately force
+    // a write during preparation and require Conflict for the stale candidate.
+    assert!(matches!(
+        worker.join().unwrap(),
+        Ok(()) | Err(Error::Conflict)
+    ));
+    assert_eq!(pinned.get(b"during").unwrap(), None);
+    assert_eq!(db.get(b"during").unwrap(), Some(b"committed".to_vec()));
+    assert_eq!(
+        pinned.get(&0u64.to_be_bytes()).unwrap(),
+        Some(0u64.to_le_bytes().to_vec())
+    );
+    drop(pinned);
+    db.compact().unwrap();
+    db.collect().unwrap();
     db.verify().unwrap();
-    assert!(attempts >= 1);
-    println!(
-        "compaction_ms={:.3} commit_ms={:.3} attempts={attempts}",
-        compact_elapsed.as_secs_f64() * 1000.0,
-        commit_elapsed.as_secs_f64() * 1000.0
+    drop(db);
+    let reopened = Database::open(&p, Options::default()).unwrap();
+    assert_eq!(
+        reopened.get(b"during").unwrap(),
+        Some(b"committed".to_vec())
     );
 }
 

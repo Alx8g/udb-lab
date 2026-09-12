@@ -83,10 +83,14 @@ identities. Snapshots pin arena files and do not survive process restart.
 
 The authoritative commit is a copy-on-write root, not a separate WAL. Recovery
 opens the committed root without replaying a full log or rebuilding a key dictionary.
-Compaction publishes a new arena before collection. Whole-epoch retention is a
-conservative baseline, not Round 9's fine version-interval page reclamation.
-Cache, staging and scan budgets are accounting estimates, not a whole-machine
-RAM limit. Windows uses file flushes and write-through manifest replacement.
+Compaction copies a pinned root outside the foreground state mutex, then validates
+that root before publication. A concurrent commit invalidates the candidate and
+returns `Conflict`; retry is explicit. Publication still holds the state mutex
+while syncing the manifest. Whole-epoch retention is a conservative baseline,
+not Round 9's fine version-interval page reclamation.
+Cache retirement drops container allocations, not just their entries. Pinned
+historical snapshots remain readable without repopulating retired caches. Cache,
+staging and scan budgets are accounting estimates, not a whole-machine RAM limit. Windows uses file flushes and write-through manifest replacement.
 Neither that path nor the Unix sync/rename path has been device-power-loss tested.
 
 Small arena records now share a writer-private 64 KiB append buffer. The buffer

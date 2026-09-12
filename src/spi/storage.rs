@@ -100,7 +100,7 @@ pub struct Stats {
     pub arena_write_calls: u64,
     pub retained_epochs: usize,
 }
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) struct Root {
     pub generation: u64,
     pub epoch: u64,
@@ -399,6 +399,9 @@ impl State {
 }
 pub(crate) struct Inner {
     pub state: Mutex<State>,
+    // Lock order: maintenance, then state. Foreground operations never need
+    // maintenance ownership. It protects candidate epochs from collection.
+    maintenance: Mutex<()>,
     pub options: Options,
     dir: PathBuf,
     lease: Arc<Lease>,
@@ -445,6 +448,7 @@ impl Database {
                     history_floor: 0,
                     change_bytes: 0,
                 }),
+                maintenance: Mutex::new(()),
                 options,
                 dir,
                 lease,
@@ -488,6 +492,7 @@ impl Database {
                     history_floor: root.generation,
                     change_bytes: 0,
                 }),
+                maintenance: Mutex::new(()),
                 options,
                 dir,
                 lease,
@@ -599,7 +604,8 @@ impl Database {
         })
     }
     pub fn collect(&self) -> Result<usize> {
-        let mut s = self.inner.state.lock().unwrap();
+        let _maintenance = self.inner.maintenance.lock().map_err(|_| Error::Poisoned)?;
+        let mut s = self.inner.state.lock().map_err(|_| Error::Poisoned)?;
         if s.poisoned {
             return Err(Error::Poisoned);
         }
@@ -636,12 +642,23 @@ impl Database {
         sync_directory(&self.inner.dir)?;
         Ok(count)
     }
+    /// Copy a pinned root without holding the foreground state mutex.
+    /// Publication still serializes briefly with commits and performs sync I/O.
+    /// If a foreground commit changed the root, return Conflict without
+    /// publishing. Retry is explicit; continuous writes can starve compaction.
     pub fn compact(&self) -> Result<()> {
-        let mut s = self.inner.state.lock().unwrap();
-        if s.poisoned {
-            return Err(Error::Poisoned);
-        }
-        let old = s.view.clone();
+        self.compact_with_checkpoints(|| Ok(()), || Ok(()))
+    }
+
+    // Private test seams use the same implementation without public test gates
+    // or global sleep-based synchronization. Production passes two no-ops.
+    fn compact_with_checkpoints(
+        &self,
+        before_copy: impl FnOnce() -> Result<()>,
+        after_copy: impl FnOnce() -> Result<()>,
+    ) -> Result<()> {
+        let _maintenance = self.inner.maintenance.lock().map_err(|_| Error::Poisoned)?;
+        let old = self.snapshot()?;
         let mut epoch_id = old
             .root
             .epoch
@@ -663,44 +680,44 @@ impl Database {
             0,
             true,
         )?;
-        let result = (|| {
-            write_at(&epoch.file, b"SPIARE01", 0, self.inner.options.write_chunk)?;
-            let mut w =
-                ArenaWriter::new(epoch.clone(), 8, old.root.generation, &self.inner.options);
-            let root_at = w.copy_tree(&old, old.root.root)?;
-            w.flush_append()?;
-            epoch.file.sync_all()?;
-            w.fault.hit("compact_data_sync")?;
-            sync_directory(&self.inner.dir)?;
-            let root = Root {
-                epoch: epoch_id,
-                root: root_at,
-                end: w.end,
-                ..old.root
-            };
-            publish(&self.inner.dir, root, &mut w.fault)?;
-            Ok(Snapshot {
-                epoch,
-                root,
-                scan_budget: old.scan_budget,
-            })
-        })();
-        match result {
-            Ok(view) => {
-                // Historical readers retain the file, not a second full node cache.
-                let mut cache = old.epoch.cache.lock().unwrap();
-                cache.retire();
-                drop(cache);
-                view.epoch.cache.lock().unwrap().limit = self.inner.options.cache_bytes;
-                s.retired.push(old.epoch.clone());
-                s.view = view;
-                Ok(())
-            }
-            Err(e) => {
-                s.poisoned = true;
-                Err(e)
-            }
+        // Errors here affect only the unpublished candidate. Leave that file
+        // for explicit collect/recovery and keep the current database usable.
+        write_at(&epoch.file, b"SPIARE01", 0, self.inner.options.write_chunk)?;
+        before_copy()?;
+        let mut w = ArenaWriter::new(epoch.clone(), 8, old.root.generation, &self.inner.options);
+        let root_at = w.copy_tree(&old, old.root.root)?;
+        w.flush_append()?;
+        epoch.file.sync_all()?;
+        w.fault.hit("compact_data_sync")?;
+        sync_directory(&self.inner.dir)?;
+        after_copy()?;
+        let root = Root {
+            epoch: epoch_id,
+            root: root_at,
+            end: w.end,
+            ..old.root
+        };
+        let mut s = self.inner.state.lock().map_err(|_| Error::Poisoned)?;
+        if s.poisoned {
+            return Err(Error::Poisoned);
         }
+        if s.view.root != old.root {
+            return Err(Error::Conflict);
+        }
+        if let Err(e) = publish(&self.inner.dir, root, &mut w.fault) {
+            // Only the publication boundary can make the live root uncertain.
+            s.poisoned = true;
+            return Err(e);
+        }
+        old.epoch.cache.lock().unwrap().retire();
+        epoch.cache.lock().unwrap().limit = self.inner.options.cache_bytes;
+        s.retired.push(old.epoch.clone());
+        s.view = Snapshot {
+            epoch,
+            root,
+            scan_budget: old.scan_budget,
+        };
+        Ok(())
     }
     pub(crate) fn apply(
         &self,
@@ -1260,4 +1277,185 @@ fn checksum(parts: &[&[u8]]) -> u32 {
         }
     }
     !c
+}
+
+#[cfg(test)]
+mod compaction_tests {
+    use super::*;
+    use std::sync::mpsc::sync_channel;
+    use std::time::{Duration, SystemTime, UNIX_EPOCH};
+
+    fn database(name: &str, options: Options) -> Database {
+        static NEXT: AtomicU64 = AtomicU64::new(0);
+        let parent =
+            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(".working/tmp/compaction-checkpoints");
+        fs::create_dir_all(&parent).unwrap();
+        let path = parent.join(format!(
+            "{name}-{}-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos(),
+            NEXT.fetch_add(1, Ordering::Relaxed)
+        ));
+        let db = Database::create(&path, options).unwrap();
+        let mut tx = db.begin().unwrap();
+        for i in 0..128u64 {
+            tx.set(i.to_be_bytes(), i.to_le_bytes()).unwrap();
+        }
+        tx.commit().unwrap();
+        db
+    }
+
+    fn pause(
+        entered: std::sync::mpsc::SyncSender<()>,
+        release: std::sync::mpsc::Receiver<()>,
+    ) -> Result<()> {
+        entered
+            .send(())
+            .map_err(|_| Error::Io(io::Error::other("test observer disconnected")))?;
+        release.recv_timeout(Duration::from_secs(10)).map_err(|_| {
+            Error::Io(io::Error::new(
+                io::ErrorKind::TimedOut,
+                "test release missing",
+            ))
+        })?;
+        Ok(())
+    }
+
+    #[test]
+    fn foreground_commit_during_preparation_invalidates_candidate() {
+        for after_copy in [false, true] {
+            let db = database("concurrent-write", Options::default());
+            let original = db.snapshot().unwrap();
+            let original_manifest = fs::read(db.inner.dir.join("manifest.spi")).unwrap();
+            let (entered_tx, entered_rx) = sync_channel(1);
+            let (release_tx, release_rx) = sync_channel(1);
+            let worker = db.clone();
+            let compaction = std::thread::spawn(move || {
+                if after_copy {
+                    worker.compact_with_checkpoints(|| Ok(()), || pause(entered_tx, release_rx))
+                } else {
+                    worker.compact_with_checkpoints(|| pause(entered_tx, release_rx), || Ok(()))
+                }
+            });
+            entered_rx.recv_timeout(Duration::from_secs(10)).unwrap();
+            // The maintenance lock protects the candidate, not foreground state.
+            assert!(db.inner.maintenance.try_lock().is_err());
+            assert!(db.inner.state.try_lock().is_ok());
+            assert!(db.inner.dir.join("arena-1.spi").exists());
+            assert_eq!(
+                fs::read(db.inner.dir.join("manifest.spi")).unwrap(),
+                original_manifest
+            );
+            let foreground = db.clone();
+            let (done_tx, done_rx) = sync_channel(1);
+            let transaction = std::thread::spawn(move || {
+                let result = (|| {
+                    assert_eq!(
+                        foreground.snapshot()?.get(&0u64.to_be_bytes())?,
+                        Some(0u64.to_le_bytes().to_vec())
+                    );
+                    let mut tx = foreground.begin()?;
+                    tx.set(b"new", b"committed during compaction")?;
+                    tx.commit()
+                })();
+                done_tx.send(result).unwrap();
+            });
+            let result = done_rx.recv_timeout(Duration::from_secs(10));
+            // Release the compaction even if the foreground assertion fails.
+            release_tx.send(()).unwrap();
+            let outcome = compaction.join().unwrap();
+            transaction.join().unwrap();
+            result
+                .expect("foreground blocked during private preparation")
+                .unwrap();
+            assert!(matches!(outcome, Err(Error::Conflict)));
+            assert_eq!(original.get(b"new").unwrap(), None);
+            assert_eq!(
+                db.get(b"new").unwrap(),
+                Some(b"committed during compaction".to_vec())
+            );
+            assert_eq!(db.collect().unwrap(), 1);
+            db.compact().unwrap();
+            db.verify().unwrap();
+            let path = db.inner.dir.clone();
+            drop(original);
+            drop(db);
+            let reopened = Database::open(path, Options::default()).unwrap();
+            assert_eq!(
+                reopened.get(b"new").unwrap(),
+                Some(b"committed during compaction".to_vec())
+            );
+        }
+    }
+
+    #[test]
+    fn candidate_only_failure_keeps_current_database_usable() {
+        for after_copy in [false, true] {
+            let db = database("candidate-error", Options::default());
+            let before = fs::read(db.inner.dir.join("manifest.spi")).unwrap();
+            let fail = || {
+                Err(Error::Io(io::Error::other(
+                    "candidate-only synthetic error",
+                )))
+            };
+            let result = if after_copy {
+                db.compact_with_checkpoints(|| Ok(()), fail)
+            } else {
+                db.compact_with_checkpoints(fail, || Ok(()))
+            };
+            assert!(matches!(result, Err(Error::Io(_))));
+            assert_eq!(fs::read(db.inner.dir.join("manifest.spi")).unwrap(), before);
+            let mut tx = db.begin().unwrap();
+            tx.set(b"survives", b"yes").unwrap();
+            tx.commit().unwrap();
+            assert_eq!(db.collect().unwrap(), 1);
+            db.compact().unwrap();
+            db.verify().unwrap();
+        }
+    }
+
+    #[test]
+    fn collection_cannot_remove_an_active_compaction_candidate() {
+        let db = database("collector", Options::default());
+        let pinned = db.snapshot().unwrap();
+        let (entered_tx, entered_rx) = sync_channel(1);
+        let (release_tx, release_rx) = sync_channel(1);
+        let worker = db.clone();
+        let compaction = std::thread::spawn(move || {
+            worker.compact_with_checkpoints(|| Ok(()), || pause(entered_tx, release_rx))
+        });
+        entered_rx.recv_timeout(Duration::from_secs(10)).unwrap();
+        assert!(db.inner.maintenance.try_lock().is_err());
+        let collector = db.clone();
+        let (started_tx, started_rx) = sync_channel(1);
+        let (done_tx, done_rx) = sync_channel(1);
+        let collection = std::thread::spawn(move || {
+            started_tx.send(()).unwrap();
+            done_tx.send(collector.collect()).unwrap();
+        });
+        started_rx.recv_timeout(Duration::from_secs(10)).unwrap();
+        assert!(done_rx.try_recv().is_err());
+        assert!(db.inner.dir.join("arena-1.spi").exists());
+        assert!(db.inner.state.try_lock().is_ok());
+        release_tx.send(()).unwrap();
+        compaction.join().unwrap().unwrap();
+        assert_eq!(
+            done_rx
+                .recv_timeout(Duration::from_secs(10))
+                .unwrap()
+                .unwrap(),
+            0
+        );
+        collection.join().unwrap();
+        assert_eq!(
+            pinned.get(&0u64.to_be_bytes()).unwrap(),
+            Some(0u64.to_le_bytes().to_vec())
+        );
+        drop(pinned);
+        assert_eq!(db.collect().unwrap(), 1);
+        db.verify().unwrap();
+    }
 }
