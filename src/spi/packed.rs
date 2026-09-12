@@ -335,13 +335,135 @@ pub(super) fn find(view: &Snapshot, key: &[u8]) -> Result<Option<Row>> {
     }
 }
 
+// Four-byte handles refer to already validated serialized rows. The scan owns
+// a bounded lineage, not a BTreeMap of copied keys and values.
+#[derive(Clone, Copy)]
+struct RowRef {
+    record: u16,
+    row: u16,
+}
+struct DeltaView {
+    records: Vec<Arc<Record>>,
+    rows: Vec<RowRef>,
+}
+impl DeltaView {
+    fn load(view: &Snapshot, mut record: Arc<Record>) -> Result<Self> {
+        let mut records = Vec::with_capacity(MAX_DEPTH as usize + 1);
+        let mut expected = None;
+        loop {
+            if record.generation > view.root.generation
+                || expected.is_some_and(|(d, n, g)| {
+                    record.depth != d || record.delta_bytes != n || record.generation > g
+                })
+            {
+                return Err(Error::Corrupt("packed delta-view lineage".into()));
+            }
+            let at = record.prev;
+            let base = record.kind == 3;
+            if !base {
+                expected = Some((
+                    record.depth - 1,
+                    record.delta_bytes - record.data.len(),
+                    record.generation,
+                ));
+            }
+            records.push(record);
+            if base {
+                break;
+            }
+            record = view.epoch.packed_record(at, view.root.end, false)?;
+        }
+        Self::merge(records)
+    }
+    fn merge(records: Vec<Arc<Record>>) -> Result<Self> {
+        // Every Record was parsed at the storage boundary; the chain depth and
+        // combined delta bytes were checked by load before this allocation.
+        let capacity: usize = records.iter().map(|r| r.row_count()).sum();
+        let mut rows = Vec::with_capacity(capacity);
+        let mut merged = Vec::with_capacity(capacity);
+        let oldest = records.len() - 1;
+        for i in 0..records[oldest].row_count() {
+            rows.push(RowRef {
+                record: oldest as u16,
+                row: i as u16,
+            });
+        }
+        for ordinal in (0..oldest).rev() {
+            let record = &records[ordinal];
+            let (mut previous, mut updated) = (0, 0);
+            while previous < rows.len() || updated < record.row_count() {
+                if updated == record.row_count() {
+                    merged.extend_from_slice(&rows[previous..]);
+                    break;
+                }
+                if previous < rows.len() {
+                    let old = rows[previous];
+                    let key = records[old.record as usize].key(old.row as usize);
+                    match key.cmp(record.key(updated)) {
+                        std::cmp::Ordering::Less => {
+                            merged.push(old);
+                            previous += 1;
+                            continue;
+                        }
+                        std::cmp::Ordering::Equal => {
+                            previous += 1;
+                        }
+                        std::cmp::Ordering::Greater => {}
+                    }
+                }
+                let at = record.offsets[updated] as usize;
+                if get32(&record.data, at + 4) != u32::MAX {
+                    merged.push(RowRef {
+                        record: ordinal as u16,
+                        row: updated as u16,
+                    });
+                }
+                updated += 1;
+            }
+            std::mem::swap(&mut rows, &mut merged);
+            merged.clear();
+        }
+        // Match the materialized path's full visible-page size validation even
+        // when the caller requests a narrow range or only a few output rows.
+        let mut size = 16;
+        for row in &rows {
+            let record = &records[row.record as usize];
+            let i = row.row as usize;
+            let start = record.offsets[i] as usize;
+            let end = record
+                .offsets
+                .get(i + 1)
+                .map_or(record.data.len(), |n| *n as usize);
+            size += end - start;
+        }
+        if size > PAGE_BYTES {
+            return Err(Error::Corrupt("packed delta-view size".into()));
+        }
+        Ok(Self { records, rows })
+    }
+    fn key(&self, i: usize) -> &[u8] {
+        let row = self.rows[i];
+        self.records[row.record as usize].key(row.row as usize)
+    }
+    fn row_at(&self, i: usize) -> Row {
+        let row = self.rows[i];
+        self.records[row.record as usize].row_at(row.row as usize)
+    }
+    fn lower_bound(&self, key: &[u8]) -> usize {
+        self.rows
+            .partition_point(|row| self.records[row.record as usize].key(row.row as usize) < key)
+    }
+}
+
 pub(crate) struct Cursor {
     view: Snapshot,
     fences: super::Cursor,
     page_record: Option<Arc<Record>>,
+    page_delta: Option<DeltaView>,
     page_index: usize,
     page_rows: std::vec::IntoIter<Row>,
     direct: bool,
+    delta_direct: bool,
     start: Vec<u8>,
     end: Option<Vec<u8>>,
     failed: bool,
@@ -351,6 +473,21 @@ impl Cursor {
         Self::with_mode(view, start, end, !cfg!(feature = "spi-scan-materialized"))
     }
     fn with_mode(view: &Snapshot, start: &[u8], end: Option<&[u8]>, direct: bool) -> Result<Self> {
+        Self::with_modes(
+            view,
+            start,
+            end,
+            direct,
+            !cfg!(feature = "spi-delta-materialized"),
+        )
+    }
+    fn with_modes(
+        view: &Snapshot,
+        start: &[u8],
+        end: Option<&[u8]>,
+        direct: bool,
+        delta_direct: bool,
+    ) -> Result<Self> {
         let from = floor(view, start)?
             .map(|n| n.key.clone())
             .unwrap_or_default();
@@ -358,9 +495,11 @@ impl Cursor {
             view: view.clone(),
             fences: view.cursor(&from, end)?,
             page_record: None,
+            page_delta: None,
             page_index: 0,
             page_rows: Vec::new().into_iter(),
             direct,
+            delta_direct,
             start: start.to_vec(),
             end: end.map(Vec::from),
             failed: false,
@@ -393,6 +532,23 @@ impl Iterator for Cursor {
                 }
                 self.page_record = None;
             }
+            if let Some(page) = self.page_delta.as_ref() {
+                if self.page_index < page.rows.len() {
+                    if self
+                        .end
+                        .as_ref()
+                        .is_some_and(|end| page.key(self.page_index) >= end.as_slice())
+                    {
+                        self.failed = true;
+                        self.page_delta = None;
+                        return None;
+                    }
+                    let row = page.row_at(self.page_index);
+                    self.page_index += 1;
+                    return Some(Ok(row));
+                }
+                self.page_delta = None;
+            }
             if let Some(row) = self.page_rows.next() {
                 if row.key < self.start {
                     continue;
@@ -424,6 +580,10 @@ impl Iterator for Cursor {
                         if record.kind == 3 {
                             self.page_index = record.lower_bound(&self.start);
                             self.page_record = Some(record);
+                        } else if self.delta_direct {
+                            let page = DeltaView::load(&self.view, record)?;
+                            self.page_index = page.lower_bound(&self.start);
+                            self.page_delta = Some(page);
                         } else {
                             self.page_rows =
                                 load_record(&self.view, record, false)?.rows.into_iter();
@@ -844,6 +1004,154 @@ mod direct_scan_tests {
             last - after,
             "direct scan must not reread delta head"
         );
+    }
+
+    #[test]
+    fn delta_views_match_materialized_output_reads_and_pinned_snapshots() {
+        let db = database();
+        let pinned = db.snapshot().unwrap();
+        for generation in 0..20u16 {
+            let mut tx = db.begin().unwrap();
+            tx.set(50u16.to_be_bytes(), generation.to_le_bytes())
+                .unwrap();
+            if generation % 2 == 0 {
+                tx.delete(20u16.to_be_bytes()).unwrap();
+            } else {
+                tx.set(20u16.to_be_bytes(), b"reinserted").unwrap();
+            }
+            tx.set(
+                (200 + generation).to_be_bytes(),
+                vec![generation as u8; 1100],
+            )
+            .unwrap();
+            tx.commit().unwrap();
+            let view = db.snapshot().unwrap();
+            for v in [&view, &pinned] {
+                for (start, end) in [
+                    (vec![], None),
+                    (
+                        19u16.to_be_bytes().to_vec(),
+                        Some(52u16.to_be_bytes().to_vec()),
+                    ),
+                    (
+                        50u16.to_be_bytes().to_vec(),
+                        Some(50u16.to_be_bytes().to_vec()),
+                    ),
+                ] {
+                    let before = v.epoch.reads.load(Ordering::Relaxed);
+                    let direct: Vec<_> = Cursor::with_modes(v, &start, end.as_deref(), true, true)
+                        .unwrap()
+                        .map(|r| {
+                            let r = r.unwrap();
+                            (r.key.clone(), r.revision, r.value(v).unwrap())
+                        })
+                        .collect();
+                    let after = v.epoch.reads.load(Ordering::Relaxed);
+                    let materialized: Vec<_> =
+                        Cursor::with_modes(v, &start, end.as_deref(), true, false)
+                            .unwrap()
+                            .map(|r| {
+                                let r = r.unwrap();
+                                (r.key.clone(), r.revision, r.value(v).unwrap())
+                            })
+                            .collect();
+                    let last = v.epoch.reads.load(Ordering::Relaxed);
+                    assert_eq!(direct, materialized);
+                    assert_eq!(
+                        after - before,
+                        last - after,
+                        "identical physical read contract"
+                    );
+                }
+            }
+            if generation == 0 {
+                let mut cursor = Cursor::with_modes(&view, &[], None, true, true).unwrap();
+                cursor.next().unwrap().unwrap();
+                assert!(cursor.page_delta.is_some());
+                assert_eq!(
+                    cursor.page_rows.len(),
+                    0,
+                    "no owned rows map for delta scans"
+                );
+                let page = cursor.page_delta.as_ref().unwrap();
+                assert!(page.records.len() <= MAX_DEPTH as usize + 1);
+                assert_eq!(std::mem::size_of::<RowRef>(), 4);
+            }
+            assert_eq!(db.verify().unwrap(), view.len());
+        }
+    }
+
+    fn record_fixture(kind: u8, rows: &[Row], generation: u64) -> Arc<Record> {
+        let mut data = Vec::new();
+        if kind == 3 {
+            data.extend_from_slice(BASE);
+            data.extend_from_slice(&(rows.len() as u32).to_le_bytes());
+            data.extend_from_slice(&0u32.to_le_bytes());
+        } else {
+            data.extend_from_slice(DELTA);
+            data.extend_from_slice(&8u64.to_le_bytes());
+            data.extend_from_slice(&1u32.to_le_bytes());
+            data.extend_from_slice(&(rows.len() as u32).to_le_bytes());
+            data.extend_from_slice(
+                &((32 + rows.iter().map(Row::bytes).sum::<usize>()) as u32).to_le_bytes(),
+            );
+            data.extend_from_slice(&0u32.to_le_bytes());
+        }
+        encode_rows(rows, &mut data);
+        Arc::new(Record::parse(kind, data, 100000, generation).unwrap())
+    }
+
+    #[test]
+    fn delta_handles_preserve_latest_tombstone_and_size_rejection() {
+        let row = |key: u8, revision: u64, value: Value| Row {
+            key: vec![key],
+            revision,
+            value,
+        };
+        let base = record_fixture(
+            3,
+            &[
+                row(0, 1, Value::Inline(vec![])),
+                row(1, 1, Value::Inline(vec![1])),
+                row(2, 1, Value::Inline(vec![2])),
+            ],
+            1,
+        );
+        let old = record_fixture(
+            4,
+            &[
+                row(0, 2, Value::Deleted),
+                row(1, 2, Value::Inline(vec![3])),
+                row(3, 2, Value::Inline(vec![4])),
+            ],
+            2,
+        );
+        let new = record_fixture(
+            4,
+            &[
+                row(0, 3, Value::Inline(vec![5])),
+                row(1, 3, Value::Deleted),
+                row(3, 3, Value::Deleted),
+            ],
+            3,
+        );
+        // merge receives validated newest-first lineage from load. This isolates handle merging.
+        let merged = DeltaView::merge(vec![new, old, base]).unwrap();
+        assert_eq!(merged.rows.len(), 2);
+        assert_eq!(merged.key(0), &[0]);
+        assert_eq!(merged.row_at(0).revision, 3);
+        assert_eq!(merged.key(1), &[2]);
+        assert_eq!(merged.row_at(1).revision, 1);
+        assert_eq!(merged.lower_bound(&[1]), 1);
+        let entries: Vec<_> = (0..15)
+            .map(|i| row(i, 1, Value::Inline(vec![0; 1024])))
+            .collect();
+        let base = record_fixture(3, &entries, 1);
+        let delta = record_fixture(4, &[row(16, 2, Value::Inline(vec![0; 1024]))], 2);
+        assert!(matches!(
+            DeltaView::merge(vec![delta, base]),
+            Err(Error::Corrupt(_))
+        ));
     }
 
     #[test]

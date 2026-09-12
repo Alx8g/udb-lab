@@ -55,7 +55,7 @@ def validate_build_info(
         raise IdentityError("diagnostic-profile binary rejected for performance campaign")
     crc32 = info.get("crc32_implementation")
     packed_scan = info.get("packed_scan_implementation")
-    if packed_scan not in ("direct-base", "materialized"):
+    if packed_scan not in ("direct-base", "direct-delta", "materialized"):
         raise IdentityError("missing or unknown packed scan implementation identity; rebuild it")
     if crc32 not in ("ieee-bitwise", "ieee-slicing8"):
         raise IdentityError("missing or unknown CRC implementation identity; rebuild it")

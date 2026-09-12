@@ -107,7 +107,7 @@ class BenchmarkIdentityTests(unittest.TestCase):
                 validate_build_info(info, self.root, ["spi"])
 
     def test_scan_identity_is_explicit(self):
-        for name in ("direct-base", "materialized"):
+        for name in ("direct-base", "direct-delta", "materialized"):
             info = self.info()
             info["packed_scan_implementation"] = name
             self.assertEqual(validate_build_info(info, self.root, ["spi"])["packed_scan_implementation"], name)

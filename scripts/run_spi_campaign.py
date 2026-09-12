@@ -103,7 +103,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--binary", type=Path, required=True)
     parser.add_argument("--expected-crc", choices=["ieee-bitwise", "ieee-slicing8"])
-    parser.add_argument("--expected-scan", choices=["direct-base", "materialized"])
+    parser.add_argument("--expected-scan", choices=["direct-base", "direct-delta", "materialized"])
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--rows", type=int, default=5000)
     parser.add_argument("--value-bytes", type=int, default=64)

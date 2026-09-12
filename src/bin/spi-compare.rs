@@ -11,6 +11,16 @@ use udb_lab::spi::{Database, Entry, Options};
 const IDENTITY_SCHEMA: u64 = 1;
 const BENCHMARK_SCHEMA: u64 = 2;
 
+fn packed_scan_implementation() -> &'static str {
+    if cfg!(feature = "spi-scan-materialized") {
+        "materialized"
+    } else if cfg!(feature = "spi-delta-materialized") {
+        "direct-base"
+    } else {
+        "direct-delta"
+    }
+}
+
 fn build_info() -> Value {
     json!({
         "identity_schema": IDENTITY_SCHEMA,
@@ -18,7 +28,7 @@ fn build_info() -> Value {
         "debug_assertions": cfg!(debug_assertions),
         "profile_enabled": cfg!(feature = "spi-profile"),
         "crc32_implementation": if cfg!(feature = "spi-crc-bitwise") { "ieee-bitwise" } else { "ieee-slicing8" },
-        "packed_scan_implementation": if cfg!(feature = "spi-scan-materialized") { "materialized" } else { "direct-base" },
+        "packed_scan_implementation": packed_scan_implementation(),
         "engines": if cfg!(feature = "rusqlite") {
             vec!["spi", "spi-value-cache", "spi-unbuffered", "spi-grouped", "spi-packed", "sqlite"]
         } else {
@@ -825,11 +835,7 @@ fn main() -> Result<()> {
     } else {
         "ieee-slicing8"
     });
-    report["packed_scan_implementation"] = json!(if cfg!(feature = "spi-scan-materialized") {
-        "materialized"
-    } else {
-        "direct-base"
-    });
+    report["packed_scan_implementation"] = json!(packed_scan_implementation());
     report["benchmark_schema"] = json!(BENCHMARK_SCHEMA);
     report["engine"] = json!(kind);
     report["rows"] = json!(rows);

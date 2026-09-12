@@ -36,6 +36,8 @@ jobs:
         run: cargo test --locked --release --lib --test spi-packed --features spi-crc-bitwise -- --test-threads=1
       - name: Test materialized packed-scan control
         run: cargo test --locked --release --lib --test spi-packed --features spi-scan-materialized -- --test-threads=1
+      - name: Test direct-base materialized-delta control
+        run: cargo test --locked --release --lib --test spi-packed --features spi-delta-materialized -- --test-threads=1
       - name: Test benchmark provenance validation
         run: python scripts/test_spi_benchmark_identity.py
       - name: Test benchmark result-contract validation

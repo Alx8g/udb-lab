@@ -319,6 +319,27 @@ The 4 KiB-value full-scan request volume improved only from 4.295 to 4.239 MB.
 These one-seed diagnostic measurements include harness allocations, are not
 retained-memory or RSS measurements, and do not establish total CPU/RAM superiority.
 
+## Bounded delta scan views
+
+The `direct-delta` scan mode merges four-byte references into validated base and
+delta records rather than building a map of copied row keys and values. Newer
+updates replace older references and tombstones remove them. The full visible
+page-size check remains in place even for a narrow query. Only returned rows
+allocate their key/value payloads. The retained lineage is bounded by the existing
+eight-delta and 4 KiB combined-delta limits plus one 16 KiB base record.
+
+This is scan execution over the same authoritative bytes, not another stored
+copy. Point reads, writes, consolidation and compaction keep their existing
+algorithms. Scan-private references and retained records remain temporary memory,
+not a claim about total RSS. Requested read calls and bytes must match the controls.
+
+`spi-delta-materialized` selects the earlier `direct-base` mode. The original
+`spi-scan-materialized` mode remains available and takes precedence if both flags
+are set. The paired scan runner accepts an optional third `--delta` binary and
+verifies source, checksum and execution-mode identity before output creation.
+All three modes rotate through execution order and must produce identical
+persistent bytes. Latency and allocation acceptance for delta views remain pending.
+
 ## Diagnostic attribution
 
 The optional `spi-profile` build records phase-level storage work, nested wall

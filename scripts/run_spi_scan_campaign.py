@@ -1,4 +1,4 @@
-"""Paired direct/materialized scan experiment on identical committed sources.
+"""Two- or three-mode packed scan experiment on identical committed sources.
 
 All normal workload phases are run, not just scans. Engines and implementation
 order rotate. Diagnostic timing is rejected. SPI persistent bytes must match.
@@ -21,35 +21,79 @@ SEEDS = [17, 29, 43]
 ENGINES = ['spi', 'spi-packed', 'sqlite']
 
 
-def inspect_pair(materialized: Path, direct: Path, root: Path) -> dict:
+def inspect_pair(materialized: Path, direct: Path, root: Path, *, control_mode='materialized', candidate_mode='direct-base') -> dict:
+    if control_mode == candidate_mode:
+        raise ValueError('scan controls must select different execution modes')
     ids = {mode: inspect_binary(binary, root, ENGINES)
-           for mode, binary in [('materialized', materialized), ('direct-base', direct)]}
+           for mode, binary in [(control_mode, materialized), (candidate_mode, direct)]}
     for mode, info in ids.items():
         if info['packed_scan_implementation'] != mode:
             raise ValueError(f'incorrect scan control: {mode}')
-    if ids['materialized']['source_sha256'] != ids['direct-base']['source_sha256']:
+    if ids[control_mode]['source_sha256'] != ids[candidate_mode]['source_sha256']:
         raise ValueError('scan controls have different source bytes')
-    if ids['materialized']['crc32_implementation'] != ids['direct-base']['crc32_implementation']:
+    if ids[control_mode]['crc32_implementation'] != ids[candidate_mode]['crc32_implementation']:
         raise ValueError('scan controls have different checksum implementations')
     return ids
+
+
+def inspect_extra(delta: Path, root: Path, identities: dict) -> dict:
+    if set(identities) != {'materialized', 'direct-base'}:
+        raise ValueError('--delta requires materialized and direct-base controls')
+    info = inspect_binary(delta, root, ENGINES)
+    reference = identities['direct-base']
+    if info['packed_scan_implementation'] != 'direct-delta':
+        raise ValueError('incorrect direct-delta binary identity')
+    if info['source_sha256'] != reference['source_sha256']:
+        raise ValueError('direct-delta source mismatch')
+    if info['crc32_implementation'] != reference['crc32_implementation']:
+        raise ValueError('direct-delta CRC mismatch')
+    return info
+
+
+def physical_checks(out: Path, case: str, seed: int, modes: list[str]) -> list[dict]:
+    checks = []
+    for engine in ENGINES[:2]:
+        reference = out / f'{case}-{seed}-{modes[0]}' / f'{engine}-seed-{seed}' / 'db'
+        for mode in modes[1:]:
+            candidate = out / f'{case}-{seed}-{mode}' / f'{engine}-seed-{seed}' / 'db'
+            checks.append({'case': case, 'seed': seed, 'engine': engine,
+                           'control_mode': modes[0], 'candidate_mode': mode,
+                           'sha256': check_physical_pair(reference, candidate)})
+    return checks
+
+
+def mode_order(modes: list[str], case_index: int, ordinal: int) -> list[str]:
+    if len(modes) == 2:
+        return list(reversed(modes)) if (case_index + ordinal) % 2 else list(modes)
+    # Rotate all three positions over the three seeds; no mode always runs last.
+    shift = (case_index + ordinal) % len(modes)
+    return modes[shift:] + modes[:shift]
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--materialized', type=Path, required=True)
     parser.add_argument('--direct', type=Path, required=True)
+    parser.add_argument('--delta', type=Path, help='Optional third direct-delta control; requires default mode names')
     parser.add_argument('--out', type=Path, required=True)
+    parser.add_argument('--control-mode', choices=['materialized', 'direct-base'], default='materialized')
+    parser.add_argument('--candidate-mode', choices=['direct-base', 'direct-delta'], default='direct-base')
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[1]
-    bins = {'materialized': args.materialized.resolve(strict=True),
-            'direct-base': args.direct.resolve(strict=True)}
-    ids = inspect_pair(bins['materialized'], bins['direct-base'], root)
+    bins = {args.control_mode: args.materialized.resolve(strict=True),
+            args.candidate_mode: args.direct.resolve(strict=True)}
+    ids = inspect_pair(args.materialized.resolve(strict=True), args.direct.resolve(strict=True), root,
+                       control_mode=args.control_mode, candidate_mode=args.candidate_mode)
+    if args.delta is not None:
+        delta = args.delta.resolve(strict=True)
+        ids['direct-delta'] = inspect_extra(delta, root, ids)
+        bins['direct-delta'] = delta
     if command_output(['git', 'status', '--porcelain'], root):
         parser.error('commit all source before running a paired campaign')
     out = args.out.resolve()
     out.mkdir(parents=True, exist_ok=False)
     binary_hashes = {mode: sha256(binary) for mode, binary in bins.items()}
-    hashes = dict(ids['materialized']['source_sha256'])
+    hashes = dict(ids[args.control_mode]['source_sha256'])
     for name in ['scripts/run_spi_scan_campaign.py', 'scripts/run_spi_crc_campaign.py',
                  'scripts/run_spi_campaign.py', 'scripts/spi_benchmark_identity.py']:
         hashes[name] = sha256(root / name)
@@ -57,7 +101,7 @@ def main() -> None:
         'git_head': command_output(['git', 'rev-parse', 'HEAD'], root),
         'source_sha256': hashes, 'binary_sha256': binary_hashes,
         'identities': ids, 'cases': CASES, 'seeds': SEEDS,
-        'method': 'Sequential normal release controls. Mode order alternates by case/seed. Engine order rotates. Base and post-mutation scans included.',
+        'method': 'Sequential normal release controls. Two modes alternate, three modes rotate by case/seed. Engine order rotates. Base and post-mutation scans included.',
     })
     def check_inputs():
         if any(sha256(root / name) != sha for name, sha in hashes.items()):
@@ -68,9 +112,7 @@ def main() -> None:
     for case_index, (case, (rows, size, cache)) in enumerate(CASES.items()):
         combined[case] = {mode: {engine: [] for engine in ENGINES} for mode in bins}
         for ordinal, seed in enumerate(SEEDS):
-            modes = list(bins)
-            if (case_index + ordinal) % 2:
-                modes.reverse()
+            modes = mode_order(list(bins), case_index, ordinal)
             engines = ENGINES[ordinal:] + ENGINES[:ordinal]
             for mode in modes:
                 check_inputs()
@@ -91,10 +133,7 @@ def main() -> None:
                 for engine in ENGINES:
                     combined[case][mode][engine].append(summary['engines'][engine])
                 print(f'{case} seed={seed} {mode}: all engine outputs PASS', flush=True)
-            for engine in ENGINES[:2]:
-                paths = [out / f'{case}-{seed}-{mode}' / f'{engine}-seed-{seed}' / 'db' for mode in bins]
-                physical.append({'case': case, 'seed': seed, 'engine': engine,
-                                 'sha256': check_physical_pair(*paths)})
+            physical.extend(physical_checks(out, case, seed, list(bins)))
     check_inputs()
     for case, modes in combined.items():
         for mode, engines in modes.items():
@@ -108,7 +147,7 @@ def main() -> None:
         'trials': len(CASES)*len(SEEDS)*len(ENGINES)*len(bins),
         'all_full_outputs_match': True, 'cases': combined,
         'physical_equivalence_checks': physical,
-        'limits': ['Only base pages use direct iteration. Delta chains retain bounded materialization.',
+        'limits': ['Execution modes are explicit; direct-delta merges validated row references, direct-base materializes deltas.',
                    'Returned payload still requires copying, not zero-copy API.',
                    'Whole workload timings include negative controls; no service-latency or power-loss proof.',
                    'OS cache/CPU placement uncontrolled. Three seeds do not establish statistical equivalence.'],

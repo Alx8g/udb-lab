@@ -28,3 +28,5 @@ spi-profile = []
 spi-crc-bitwise = []
 # Direct packed-page scan control. Default uses direct base-record iteration.
 spi-scan-materialized = []
+# Prior direct-base execution with materialized delta chains; same file format.
+spi-delta-materialized = []
