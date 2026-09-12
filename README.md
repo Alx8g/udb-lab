@@ -198,6 +198,34 @@ On Unix omit `.exe`. The runner rejects stale source or missing engine adapters
 before creating output. Build and test first, then benchmark without competing
 local jobs. Never delete an existing evidence directory merely to reuse its name.
 
+## Experimental packed storage
+
+`Options::packed_pages = true` selects a new authoritative format at creation,
+not a secondary copy of the AVL data. It stores sorted keys, per-key revisions
+and small values in records of at most 16 KiB. Values over 1 KiB use immutable
+overflow records. A fence-key AVL indexes pages instead of every individual key.
+Small updates use exact deltas capped at eight records and 4 KiB total serialized
+payload before consolidation. Splits use a streaming merge over staged writes.
+
+Point reads search offsets in validated serialized pages. Scans merge a bounded
+base/delta lineage. Both use the same transaction, snapshot, publication and
+recovery code. Page caches share the existing charged cache budget with nodes
+and values. Scans do not admit page records. Retired epochs drop all containers.
+Temporary decoded pages, merge/output buffers and allocator overhead remain
+separate from the cache charge. This is not a total-process RAM guarantee.
+
+The manifest identifies packed stores as `SPIMETA2`. New binaries open either
+format based on that persisted identity, regardless of creation options. Older
+binaries reject packed manifests. There is no implicit in-place format conversion.
+The CLI opens packed stores, but creating one currently requires the library or
+the `spi-packed` comparison adapter. Legacy AVL remains the default/control.
+
+This is an integrated physical storage path, not automatic mixture-of-experts
+routing. Fixed-extent implicit mapping, fine physical reuse, expert admission
+policy and typed analytics remain open. Empty internal fence pages are retained,
+and current compaction does not merge them. Performance acceptance is pending
+normal and adverse-cache comparisons. No overall superiority is claimed.
+
 ## Diagnostic attribution
 
 The optional `spi-profile` build records phase-level storage work, nested wall
@@ -214,13 +242,11 @@ process-memory samples include inputs and returned output buffers. Nested storag
 timers overlap and must not be added as independent elapsed-time components.
 The diagnostic runner is attribution machinery, not integrated expert routing.
 The clean committed attribution campaigns measured approximately 8,000
-positional reads, 352 KiB read and 4,000 checksums for one full SPI scan. The
+positional reads, 352,000 bytes read and 4,000 checksums for one full SPI scan. The
 1 KiB-cache load added approximately 77,000 positional reads. These are work
-counters, not accepted performance timings. A packed-page integration is now
-specified to replace fragmented per-record reads with live sorted pages, while
-bounded sparse deltas avoid rewriting full pages. It must first add a private
-page-record interface and persistent format identity. The failed first draft is
-preserved outside active source and makes no claim.
+counters, not accepted performance timings. These results motivate packed live
+pages for read amplification and a separate publication investigation for durable
+single-row latency. No durability barriers have been removed.
 
 ## Run
 

@@ -21,6 +21,7 @@ REQUIRED_SOURCES = frozenset({
     "src/lib.rs",
     "src/spi/mod.rs",
     "src/spi/profile.rs",
+    "src/spi/packed.rs",
     "src/spi/append_buffer.rs",
     "src/spi/storage.rs",
     "src/spi/transaction.rs",

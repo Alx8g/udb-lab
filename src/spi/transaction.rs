@@ -55,20 +55,17 @@ impl Transaction {
         self.budget(self.bytes + charge)?;
         let mut rows = BTreeMap::new();
         let mut bytes = 0;
-        for node in self.snapshot.cursor(start, end)? {
+        for node in self.snapshot.rows(start, end)? {
             let node = node?;
-            if self.writes.contains_key(&node.key) {
+            if self.writes.contains_key(node.key()) {
                 continue;
             }
-            let value = self
-                .snapshot
-                .epoch
-                .value(node.value, self.snapshot.root.end)?;
-            bytes += node.key.len() + value.len() + 128;
+            let value = node.value(&self.snapshot)?;
+            bytes += node.key().len() + value.len() + 128;
             if bytes > self.db.inner.options.scan_bytes {
                 return Err(Error::Budget("scan output exceeds budget".into()));
             }
-            rows.insert(node.key.clone(), value);
+            rows.insert(node.key().to_vec(), value);
         }
         for (key, value) in self.writes.range(start.to_vec()..) {
             if end.is_some_and(|e| key.as_slice() >= e) {
@@ -128,7 +125,7 @@ impl Transaction {
             return Err(Error::Poisoned);
         }
         for (key, expected) in &self.reads {
-            if state.view.find(key)?.map(|n| n.revision).unwrap_or(0) != *expected {
+            if state.view.revision(key)? != *expected {
                 return Err(Error::Conflict);
             }
         }
@@ -157,7 +154,7 @@ impl Transaction {
         if !self.reads.contains_key(key) {
             let size = self.bytes + key.len() + 128;
             self.budget(size)?;
-            let version = self.snapshot.find(key)?.map(|n| n.revision).unwrap_or(0);
+            let version = self.snapshot.revision(key)?;
             self.reads.insert(key.to_vec(), version);
             self.bytes = size;
         }

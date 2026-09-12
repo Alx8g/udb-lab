@@ -11,7 +11,9 @@ def result(engine="spi-value-cache", cache_bytes=8192):
              "retired_cache_value_capacity": 0, "cache_value_entries": 1 if enabled else 0,
              "grouped_updates_enabled": engine == "spi-grouped",
              "append_buffer_enabled": engine != "spi-unbuffered",
-             "bytes_written": 1000, "arena_write_calls": 10}
+             "bytes_written": 1000, "arena_write_calls": 10,
+             "packed_format": engine == "spi-packed", "retired_cache_page_capacity": 0,
+             "cache_page_entries": 0}
     metric = {"samples_ns": [10, 20], "sample_count": 2, "total_ns": 30}
     return {"benchmark_schema": 2, "value_cache_workload_extension": 1, "diagnostic_only": False,
             "grouped_write_workload_extension": 1,
@@ -27,7 +29,7 @@ class CampaignResultTests(unittest.TestCase):
         validate_record(record, engine, 2000, 17, 64, cache)
 
     def test_valid_control_and_cache_results(self):
-        for engine in ["spi", "spi-value-cache", "spi-unbuffered", "spi-grouped", "sqlite"]:
+        for engine in ["spi", "spi-value-cache", "spi-unbuffered", "spi-grouped", "spi-packed", "sqlite"]:
             self.check(result(engine), engine)
 
     def test_old_or_mislabeled_contract_rejected(self):
@@ -76,6 +78,17 @@ class CampaignResultTests(unittest.TestCase):
         record.pop("grouped_write_workload_extension")
         with self.assertRaises(RuntimeError):
             self.check(record, "spi-grouped")
+
+    def test_packed_format_and_retired_capacity_are_checked(self):
+        for field, value in [("packed_format", False), ("retired_cache_page_capacity", 16)]:
+            record = result("spi-packed")
+            record["after_load"][field] = value
+            with self.assertRaises(RuntimeError):
+                self.check(record, "spi-packed")
+        record = result("spi")
+        record["after_load"]["cache_page_entries"] = 1
+        with self.assertRaises(RuntimeError):
+            self.check(record, "spi")
 
     def test_invalid_samples_and_totals_rejected(self):
         for field, value in [("samples_ns", [-1]), ("samples_ns", []),

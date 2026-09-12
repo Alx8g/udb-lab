@@ -11,6 +11,9 @@ use super::append_buffer::{AppendBuffer, APPEND_CAPACITY};
 use super::profile::{self, Event};
 use super::transaction::Transaction;
 
+#[path = "packed.rs"]
+mod packed;
+
 const MAGIC: &[u8; 8] = b"SPIREC01";
 const META: &[u8; 8] = b"SPIMETA1";
 const HEADER: usize = 32;
@@ -74,6 +77,9 @@ pub struct Options {
     /// Temporary borrowed-entry storage is capped at 64 KiB and one eighth of
     /// transaction_bytes, separately from staging charge. No RSS bound implied.
     pub grouped_updates: bool,
+    /// Create an experimental packed-page store. Open uses the persisted format.
+    /// Legacy AVL remains the default. Packed pages retain per-key revisions.
+    pub packed_pages: bool,
 }
 impl Default for Options {
     fn default() -> Self {
@@ -87,6 +93,7 @@ impl Default for Options {
             append_buffer: true,
             value_cache: false,
             grouped_updates: false,
+            packed_pages: false,
         }
     }
 }
@@ -112,10 +119,16 @@ pub struct Stats {
     pub bytes_written: u64,
     /// Attempted arena positional writes, including partial transfers.
     pub arena_write_calls: u64,
+    /// Packed immutable record cache shares the same charged cache budget.
+    pub cache_page_entries: usize,
+    pub cache_page_capacity: usize,
+    pub retired_cache_page_capacity: usize,
+    pub packed_format: bool,
     pub retained_epochs: usize,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) struct Root {
+    pub packed: bool,
     pub generation: u64,
     pub epoch: u64,
     pub root: u64,
@@ -135,10 +148,12 @@ pub(crate) struct Node {
 enum CacheKey {
     Node(u64),
     Value(u64),
+    Page(u64),
 }
 struct Cache {
     nodes: HashMap<u64, Arc<Node>>,
     values: HashMap<u64, Arc<Vec<u8>>>,
+    pages: HashMap<u64, Arc<packed::Record>>,
     order: VecDeque<CacheKey>,
     bytes: usize,
     limit: usize,
@@ -148,6 +163,7 @@ impl Cache {
     fn retire(&mut self) {
         self.nodes = HashMap::new();
         self.values = HashMap::new();
+        self.pages = HashMap::new();
         self.order = VecDeque::new();
         self.bytes = 0;
         self.limit = 0;
@@ -162,6 +178,11 @@ impl Cache {
                 CacheKey::Node(at) => {
                     if let Some(v) = self.nodes.remove(&at) {
                         self.bytes -= v.key.len() + 192;
+                    }
+                }
+                CacheKey::Page(at) => {
+                    if let Some(v) = self.pages.remove(&at) {
+                        self.bytes -= v.charge();
                     }
                 }
                 CacheKey::Value(at) => {
@@ -206,6 +227,19 @@ impl Cache {
         self.order.push_back(CacheKey::Value(at));
         self.values.insert(at, value);
     }
+    fn insert_page(&mut self, at: u64, page: Arc<packed::Record>) {
+        let size = page.charge();
+        if size > self.limit || self.pages.contains_key(&at) {
+            return;
+        }
+        self.evict_until(size);
+        if self.bytes + size > self.limit {
+            return;
+        }
+        self.bytes += size;
+        self.order.push_back(CacheKey::Page(at));
+        self.pages.insert(at, page);
+    }
     fn node(&self, at: u64) -> Option<Arc<Node>> {
         self.nodes.get(&at).cloned()
     }
@@ -215,6 +249,7 @@ impl Cache {
     fn clear(&mut self) {
         self.nodes.clear();
         self.values.clear();
+        self.pages.clear();
         self.order.clear();
         self.bytes = 0;
     }
@@ -252,6 +287,7 @@ impl Epoch {
             cache: Mutex::new(Cache {
                 nodes: HashMap::new(),
                 values: HashMap::new(),
+                pages: HashMap::new(),
                 order: VecDeque::new(),
                 bytes: 0,
                 limit: cache_bytes,
@@ -274,6 +310,50 @@ impl Epoch {
             Some((&self.write_calls, &self.bytes_written)),
         )?;
         Ok(())
+    }
+    fn packed_record(&self, at: u64, end: u64, admit: bool) -> Result<Arc<packed::Record>> {
+        let cached = { self.cache.lock().unwrap().pages.get(&at).cloned() };
+        if let Some(page) = cached {
+            if at < 8
+                || at
+                    .checked_add((HEADER + page.data.len()) as u64)
+                    .is_none_or(|v| v > end)
+            {
+                return Err(Error::Corrupt("packed cached snapshot bound".into()));
+            }
+            return Ok(page);
+        }
+        if at < 8 || at.checked_add(HEADER as u64).is_none_or(|v| v > end) {
+            return Err(Error::Corrupt("packed record offset".into()));
+        }
+        let mut h = [0; HEADER];
+        read_exact_at(&self.file, &mut h, at)?;
+        let kind = h[8];
+        let len = get32(&h, 24) as usize;
+        if &h[..8] != MAGIC
+            || !matches!(kind, 3 | 4)
+            || len > packed::PAGE_BYTES
+            || at
+                .checked_add((HEADER + len) as u64)
+                .is_none_or(|v| v > end)
+        {
+            return Err(Error::Corrupt("packed record header/length".into()));
+        }
+        let expected = get32(&h, 28);
+        h[28..32].fill(0);
+        let mut payload = vec![0; len];
+        read_exact_at(&self.file, &mut payload, at + HEADER as u64)?;
+        if checksum(&[&h, &payload]) != expected {
+            return Err(Error::Corrupt("packed record checksum".into()));
+        }
+        self.reads.fetch_add(1, Ordering::Relaxed);
+        self.bytes_read
+            .fetch_add((HEADER + len) as u64, Ordering::Relaxed);
+        let page = Arc::new(packed::Record::parse(kind, payload, at, get64(&h, 16))?);
+        if admit {
+            self.cache.lock().unwrap().insert_page(at, page.clone());
+        }
+        Ok(page)
     }
     fn record(&self, at: u64, end: u64, kind: u8) -> Result<Vec<u8>> {
         if at < 8 || at.checked_add(HEADER as u64).is_none_or(|v| v > end) {
@@ -379,10 +459,31 @@ impl Snapshot {
         self.len() == 0
     }
     pub fn get(&self, key: &[u8]) -> Result<Option<Vec<u8>>> {
+        if self.root.packed {
+            return packed::find(self, key)?
+                .map(|row| row.value(self))
+                .transpose();
+        }
         Ok(self
             .find(key)?
             .map(|n| self.epoch.point_value(n.value, self.root.end))
             .transpose()?)
+    }
+    pub(crate) fn revision(&self, key: &[u8]) -> Result<u64> {
+        if self.root.packed {
+            Ok(packed::find(self, key)?.map_or(0, |r| r.revision))
+        } else {
+            Ok(self.find(key)?.map_or(0, |n| n.revision))
+        }
+    }
+    pub(crate) fn rows(&self, start: &[u8], end: Option<&[u8]>) -> Result<LogicalCursor> {
+        if self.root.packed {
+            Ok(LogicalCursor::Packed(packed::Cursor::new(
+                self, start, end,
+            )?))
+        } else {
+            Ok(LogicalCursor::Legacy(self.cursor(start, end)?))
+        }
     }
     pub(crate) fn find(&self, key: &[u8]) -> Result<Option<Arc<Node>>> {
         if key.len() > MAX_KEY {
@@ -402,6 +503,9 @@ impl Snapshot {
     pub fn scan(&self, start: &[u8], end: Option<&[u8]>) -> Result<Vec<Entry>> {
         if start.len() > MAX_KEY || end.is_some_and(|e| e.len() > MAX_KEY || start > e) {
             return Err(Error::Budget("invalid range bounds".into()));
+        }
+        if self.root.packed {
+            return packed::scan(self, start, end);
         }
         let mut out = Vec::new();
         let mut bytes = 0;
@@ -442,6 +546,37 @@ impl Snapshot {
             }
         }
         Ok(c)
+    }
+}
+pub(crate) enum LogicalRow {
+    Legacy(Arc<Node>),
+    Packed(packed::Row),
+}
+impl LogicalRow {
+    pub(crate) fn key(&self) -> &[u8] {
+        match self {
+            Self::Legacy(n) => &n.key,
+            Self::Packed(r) => &r.key,
+        }
+    }
+    pub(crate) fn value(&self, view: &Snapshot) -> Result<Vec<u8>> {
+        match self {
+            Self::Legacy(n) => view.epoch.value(n.value, view.root.end),
+            Self::Packed(r) => r.value(view),
+        }
+    }
+}
+pub(crate) enum LogicalCursor {
+    Legacy(Cursor),
+    Packed(packed::Cursor),
+}
+impl Iterator for LogicalCursor {
+    type Item = Result<LogicalRow>;
+    fn next(&mut self) -> Option<Self::Item> {
+        match self {
+            Self::Legacy(c) => c.next().map(|r| r.map(LogicalRow::Legacy)),
+            Self::Packed(c) => c.next().map(|r| r.map(LogicalRow::Packed)),
+        }
     }
 }
 pub(crate) struct Cursor {
@@ -541,6 +676,7 @@ impl Database {
         epoch.file.sync_all()?;
         sync_directory(&dir)?;
         let root = Root {
+            packed: options.packed_pages,
             generation: 0,
             epoch: 0,
             root: 0,
@@ -675,7 +811,9 @@ impl Database {
             {
                 return Err(Error::Corrupt("key order/revision".into()));
             }
-            e.value(n.value, root.end)?;
+            if !root.packed {
+                e.value(n.value, root.end)?;
+            }
             let (lc, lh) = walk(e, root, n.left, lower, Some(&n.key), depth + 1)?;
             let (rc, rh) = walk(e, root, n.right, Some(&n.key), upper, depth + 1)?;
             if lh.abs_diff(rh) > 1 || n.height != 1 + lh.max(rh) {
@@ -684,6 +822,12 @@ impl Database {
             Ok((lc + rc + 1, n.height))
         }
         let (count, _) = walk(&disk, view.root, view.root.root, None, None, 0)?;
+        if view.root.packed {
+            return packed::verify(&Snapshot {
+                epoch: disk,
+                ..view
+            });
+        }
         if count != view.root.count {
             return Err(Error::Corrupt("key count".into()));
         }
@@ -695,11 +839,13 @@ impl Database {
         let c = e.cache.lock().unwrap();
         let (mut retired_map_capacity, mut retired_order_capacity, mut retired_value_capacity) =
             (0, 0, 0);
+        let mut retired_page_capacity = 0;
         for epoch in &s.retired {
             let cache = epoch.cache.lock().unwrap();
             retired_map_capacity += cache.nodes.capacity();
             retired_order_capacity += cache.order.capacity();
             retired_value_capacity += cache.values.capacity();
+            retired_page_capacity += cache.pages.capacity();
         }
         let mut physical = 0;
         for f in fs::read_dir(&self.inner.dir)? {
@@ -714,7 +860,7 @@ impl Database {
             committed_bytes: s.view.root.end,
             physical_bytes: physical,
             cache_bytes: c.bytes,
-            cache_entries: c.nodes.len() + c.values.len(),
+            cache_entries: c.nodes.len() + c.values.len() + c.pages.len(),
             cache_map_capacity: c.nodes.capacity(),
             cache_order_capacity: c.order.capacity(),
             cache_value_entries: c.values.len(),
@@ -726,6 +872,10 @@ impl Database {
             bytes_read: e.bytes_read.load(Ordering::Relaxed),
             bytes_written: e.bytes_written.load(Ordering::Relaxed),
             arena_write_calls: e.write_calls.load(Ordering::Relaxed),
+            cache_page_entries: c.pages.len(),
+            cache_page_capacity: c.pages.capacity(),
+            retired_cache_page_capacity: retired_page_capacity,
+            packed_format: s.view.root.packed,
             retained_epochs: s.retired.len(),
         })
     }
@@ -870,12 +1020,16 @@ impl Database {
             );
             let mut root = s.view.root.root;
             let mut count = s.view.root.count;
-            let grouped = if self.inner.options.grouped_updates {
+            let grouped = if s.view.root.packed {
+                None
+            } else if self.inner.options.grouped_updates {
                 w.try_grouped(root, writes, self.inner.options.transaction_bytes)?
             } else {
                 None
             };
-            if let Some(next) = grouped {
+            if s.view.root.packed {
+                (root, count) = packed::apply(&mut w, &s.view, writes)?;
+            } else if let Some(next) = grouped {
                 if root == 0 {
                     count = writes.len() as u64;
                 }
@@ -979,6 +1133,12 @@ impl ArenaWriter {
             }
             Ok(())
         })
+    }
+    fn save_packed(&mut self, kind: u8, payload: &[u8]) -> Result<u64> {
+        if !matches!(kind, 3 | 4) || payload.len() > packed::PAGE_BYTES {
+            return Err(Error::Budget("packed record shape".into()));
+        }
+        self.record(kind, payload)
     }
     fn record(&mut self, kind: u8, payload: &[u8]) -> Result<u64> {
         if kind == 2 {
@@ -1263,8 +1423,12 @@ impl ArenaWriter {
         let mut n = (*old.epoch.node(at, old.root.end)?).clone();
         n.left = self.copy_tree(old, n.left)?;
         n.right = self.copy_tree(old, n.right)?;
-        let v = old.epoch.value(n.value, old.root.end)?;
-        n.value = self.record(2, &v)?;
+        n.value = if old.root.packed {
+            packed::copy_page(self, old, n.value)?
+        } else {
+            let v = old.epoch.value(n.value, old.root.end)?;
+            self.record(2, &v)?
+        };
         self.save(n)
     }
 }
@@ -1362,7 +1526,7 @@ impl Fault {
 }
 fn publish(dir: &Path, r: Root, f: &mut Fault) -> Result<()> {
     let mut b = [0; META_LEN];
-    b[..8].copy_from_slice(META);
+    b[..8].copy_from_slice(if r.packed { b"SPIMETA2" } else { META });
     put64(&mut b, 8, r.generation);
     put64(&mut b, 16, r.epoch);
     put64(&mut b, 24, r.root);
@@ -1407,10 +1571,11 @@ fn read_manifest(p: &Path) -> Result<Root> {
     f.read_exact(&mut b)?;
     let c = get32(&b, 60);
     b[60..64].fill(0);
-    if &b[..8] != META || checksum(&[&b]) != c {
+    if (&b[..8] != META && &b[..8] != b"SPIMETA2") || checksum(&[&b]) != c {
         return Err(Error::Corrupt("manifest checksum".into()));
     }
     let r = Root {
+        packed: &b[..8] == b"SPIMETA2",
         generation: get64(&b, 8),
         epoch: get64(&b, 16),
         root: get64(&b, 24),

@@ -18,9 +18,9 @@ fn build_info() -> Value {
         "debug_assertions": cfg!(debug_assertions),
         "profile_enabled": cfg!(feature = "spi-profile"),
         "engines": if cfg!(feature = "rusqlite") {
-            vec!["spi", "spi-value-cache", "spi-unbuffered", "spi-grouped", "sqlite"]
+            vec!["spi", "spi-value-cache", "spi-unbuffered", "spi-grouped", "spi-packed", "sqlite"]
         } else {
-            vec!["spi", "spi-value-cache", "spi-unbuffered", "spi-grouped"]
+            vec!["spi", "spi-value-cache", "spi-unbuffered", "spi-grouped", "spi-packed"]
         },
         "sources": {
             "Cargo.toml": include_str!("../../Cargo.toml"),
@@ -28,6 +28,7 @@ fn build_info() -> Value {
             "src/lib.rs": include_str!("../lib.rs"),
             "src/spi/mod.rs": include_str!("../spi/mod.rs"),
             "src/spi/profile.rs": include_str!("../spi/profile.rs"),
+            "src/spi/packed.rs": include_str!("../spi/packed.rs"),
             "src/spi/append_buffer.rs": include_str!("../spi/append_buffer.rs"),
             "src/spi/storage.rs": include_str!("../spi/storage.rs"),
             "src/spi/transaction.rs": include_str!("../spi/transaction.rs"),
@@ -57,12 +58,14 @@ impl Spi {
         append_buffer: bool,
         value_cache: bool,
         grouped_updates: bool,
+        packed_pages: bool,
     ) -> Result<Self> {
         let options = Options {
             cache_bytes: cache,
             append_buffer,
             value_cache,
             grouped_updates,
+            packed_pages,
             ..Options::default()
         };
         Ok(Self {
@@ -744,7 +747,7 @@ fn main() -> Result<()> {
         return Ok(());
     }
     if args.len() < 3 {
-        return Err("usage: spi-compare NEW_OUTPUT_DIR spi|spi-value-cache|spi-unbuffered|spi-grouped|sqlite [rows=5000] [seed=1] [value_bytes=64] [cache_bytes=8388608]".into());
+        return Err("usage: spi-compare NEW_OUTPUT_DIR spi|spi-value-cache|spi-unbuffered|spi-grouped|spi-packed|sqlite [rows=5000] [seed=1] [value_bytes=64] [cache_bytes=8388608]".into());
     }
     let dir = PathBuf::from(&args[1]);
     let kind = &args[2];
@@ -763,16 +766,18 @@ fn main() -> Result<()> {
         && kind != "spi-value-cache"
         && kind != "spi-unbuffered"
         && kind != "spi-grouped"
+        && kind != "spi-packed"
         && (kind != "sqlite" || !cfg!(feature = "rusqlite"))
     {
         return Err("unknown engine or SQLite feature not enabled".into());
     }
     fs::create_dir(&dir)?;
     let mut engine: Box<dyn Engine> = match kind.as_str() {
-        "spi" => Box::new(Spi::new(dir.join("db"), cache, true, false, false)?),
-        "spi-value-cache" => Box::new(Spi::new(dir.join("db"), cache, true, true, false)?),
-        "spi-unbuffered" => Box::new(Spi::new(dir.join("db"), cache, false, false, false)?),
-        "spi-grouped" => Box::new(Spi::new(dir.join("db"), cache, true, false, true)?),
+        "spi" => Box::new(Spi::new(dir.join("db"), cache, true, false, false, false)?),
+        "spi-value-cache" => Box::new(Spi::new(dir.join("db"), cache, true, true, false, false)?),
+        "spi-unbuffered" => Box::new(Spi::new(dir.join("db"), cache, false, false, false, false)?),
+        "spi-grouped" => Box::new(Spi::new(dir.join("db"), cache, true, false, true, false)?),
+        "spi-packed" => Box::new(Spi::new(dir.join("db"), cache, true, false, false, true)?),
         #[cfg(feature = "rusqlite")]
         "sqlite" => Box::new(Sqlite::new(dir.join("db"), cache)?),
         _ => return Err("unknown engine or SQLite feature not enabled".into()),

@@ -73,12 +73,20 @@ def validate_record(record: dict, engine: str, rows: int, seed: int, value_bytes
             raise RuntimeError(f"incorrect grouped-update control: {field}")
         if stats["append_buffer_enabled"] != (engine != "spi-unbuffered"):
             raise RuntimeError(f"incorrect append-buffer control: {field}")
+        if stats["packed_format"] != (engine == "spi-packed"):
+            raise RuntimeError(f"incorrect packed-format control: {field}")
+        if stats["retired_cache_page_capacity"] != 0:
+            raise RuntimeError(f"retired packed cache retained capacity: {field}")
+        if engine != "spi-packed" and stats["cache_page_entries"] != 0:
+            raise RuntimeError(f"legacy control admitted packed pages: {field}")
         if stats["retired_cache_value_capacity"] != 0:
             raise RuntimeError(f"retired value cache retained capacity: {field}")
         if engine != "spi-value-cache" and stats["cache_value_entries"] != 0:
             raise RuntimeError(f"node-only control admitted values: {field}")
         if value_bytes + 192 > cache_bytes // 8 and stats["cache_value_entries"] != 0:
             raise RuntimeError(f"undersized cache admitted values: {field}")
+    if record["cache_after_one_off_scan"]["cache_page_entries"] != 0:
+        raise RuntimeError("one-off scan populated the packed page cache")
     if record["cache_after_one_off_scan"]["cache_value_entries"] != 0:
         raise RuntimeError("one-off scan populated the value cache")
     for counter in ("bytes_written", "arena_write_calls"):
@@ -98,7 +106,7 @@ def main() -> None:
     parser.add_argument("--value-bytes", type=int, default=64)
     parser.add_argument("--cache-bytes", type=int, default=8 * 1024 * 1024)
     parser.add_argument("--seeds", type=int, nargs="+", default=[17, 29, 43])
-    parser.add_argument("--engines", nargs="+", choices=["spi", "spi-value-cache", "spi-unbuffered", "spi-grouped", "sqlite"], default=["spi", "sqlite"])
+    parser.add_argument("--engines", nargs="+", choices=["spi", "spi-value-cache", "spi-unbuffered", "spi-grouped", "spi-packed", "sqlite"], default=["spi", "sqlite"])
     args = parser.parse_args()
     binary = args.binary.resolve(strict=True)
     root = Path(__file__).resolve().parents[1]

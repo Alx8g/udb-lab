@@ -55,7 +55,7 @@ def main() -> None:
     parser.add_argument('--value-bytes', type=int, default=64)
     parser.add_argument('--cache-bytes', type=int, default=8388608)
     parser.add_argument('--seeds', nargs='+', type=int, default=[17, 29, 43])
-    parser.add_argument('--engines', nargs='+', choices=['spi', 'spi-grouped', 'sqlite'], default=['spi', 'spi-grouped', 'sqlite'])
+    parser.add_argument('--engines', nargs='+', choices=['spi', 'spi-grouped', 'spi-packed', 'sqlite'], default=['spi', 'spi-grouped', 'sqlite'])
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[1]
     binary = args.binary.resolve(strict=True)
