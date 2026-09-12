@@ -1,0 +1,14 @@
+{
+  "command": [
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\target\\release\\spi-compare.exe",
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\packed-profile-small-v1\\spi-packed-seed-17",
+    "spi-packed",
+    "2000",
+    "17",
+    "64",
+    "1024"
+  ],
+  "exit_code": 0,
+  "stdout": "{\"engine\":\"spi-packed\",\"load_ms\":201.8791,\"result\":\"C:\\\\Users\\\\verom\\\\.treehouse\\\\dbs-5593e8\\\\4\\\\dbs\\\\.working\\\\tmp\\\\packed-profile-small-v1\\\\spi-packed-seed-17\\\\result.json\",\"rows\":2000,\"single_commit_p50_us\":9803.8,\"validation\":\"PASS\",\"warm_read_ms\":190.6475}\n",
+  "stderr": ""
+}
