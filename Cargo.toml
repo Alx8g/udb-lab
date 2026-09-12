@@ -24,3 +24,5 @@ serde_json = "1"
 rusqlite = ["dep:rusqlite"]
 # Diagnostic work attribution. Normal benchmark runner rejects these builds.
 spi-profile = []
+# Byte-identical legacy checksum control for matched implementation campaigns.
+spi-crc-bitwise = []

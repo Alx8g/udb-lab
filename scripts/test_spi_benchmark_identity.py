@@ -41,6 +41,7 @@ class BenchmarkIdentityTests(unittest.TestCase):
             "benchmark_schema": BENCHMARK_SCHEMA,
             "debug_assertions": False,
             "profile_enabled": False,
+            "crc32_implementation": "ieee-slicing8",
             "engines": ["spi", "sqlite"],
             "sources": dict(self.sources),
         }
@@ -92,6 +93,17 @@ class BenchmarkIdentityTests(unittest.TestCase):
             info["profile_enabled"] = value
             with self.assertRaisesRegex(IdentityError, "profile identity"):
                 validate_build_info(info, self.root, ["spi"], allow_profile=True)
+
+    def test_crc_implementation_identity_is_explicit(self):
+        for name in ("ieee-slicing8", "ieee-bitwise"):
+            info = self.info()
+            info["crc32_implementation"] = name
+            self.assertEqual(validate_build_info(info, self.root, ["spi"])["crc32_implementation"], name)
+        for name in (None, "crc32c", False):
+            info = self.info()
+            info["crc32_implementation"] = name
+            with self.assertRaisesRegex(IdentityError, "CRC implementation"):
+                validate_build_info(info, self.root, ["spi"])
 
     def test_missing_engine_is_rejected(self) -> None:
         info = self.info()

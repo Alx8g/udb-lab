@@ -1705,6 +1705,72 @@ fn checksum(parts: &[&[u8]]) -> u32 {
         Event::ChecksumBytes,
         parts.iter().map(|p| p.len() as u64).sum(),
     );
+    #[cfg(feature = "spi-crc-bitwise")]
+    {
+        checksum_bitwise(parts)
+    }
+    #[cfg(not(feature = "spi-crc-bitwise"))]
+    {
+        checksum_sliced(parts)
+    }
+}
+
+// IEEE reflected CRC32. Same polynomial, byte coverage and complement as the
+// legacy bitwise control. Do not substitute CRC32C hardware instructions.
+#[cfg(any(test, not(feature = "spi-crc-bitwise")))]
+const fn crc_tables() -> [[u32; 256]; 8] {
+    let mut tables = [[0u32; 256]; 8];
+    let mut i = 0;
+    while i < 256 {
+        let mut c = i as u32;
+        let mut bit = 0;
+        while bit < 8 {
+            c = (c >> 1) ^ (0xedb88320 & 0u32.wrapping_sub(c & 1));
+            bit += 1;
+        }
+        tables[0][i] = c;
+        i += 1;
+    }
+    let mut slice = 1;
+    while slice < 8 {
+        i = 0;
+        while i < 256 {
+            let c = tables[slice - 1][i];
+            tables[slice][i] = (c >> 8) ^ tables[0][(c & 255) as usize];
+            i += 1;
+        }
+        slice += 1;
+    }
+    tables
+}
+#[cfg(any(test, not(feature = "spi-crc-bitwise")))]
+static CRC_TABLES: [[u32; 256]; 8] = crc_tables();
+#[cfg(any(test, not(feature = "spi-crc-bitwise")))]
+fn checksum_sliced(parts: &[&[u8]]) -> u32 {
+    let mut c = !0u32;
+    for part in parts {
+        let mut blocks = part.chunks_exact(8);
+        for bytes in &mut blocks {
+            let a = c ^ u32::from_le_bytes(bytes[..4].try_into().unwrap());
+            let b = u32::from_le_bytes(bytes[4..].try_into().unwrap());
+            c = CRC_TABLES[7][(a & 255) as usize]
+                ^ CRC_TABLES[6][((a >> 8) & 255) as usize]
+                ^ CRC_TABLES[5][((a >> 16) & 255) as usize]
+                ^ CRC_TABLES[4][(a >> 24) as usize]
+                ^ CRC_TABLES[3][(b & 255) as usize]
+                ^ CRC_TABLES[2][((b >> 8) & 255) as usize]
+                ^ CRC_TABLES[1][((b >> 16) & 255) as usize]
+                ^ CRC_TABLES[0][(b >> 24) as usize];
+        }
+        for &byte in blocks.remainder() {
+            c = (c >> 8) ^ CRC_TABLES[0][((c ^ byte as u32) & 255) as usize];
+        }
+    }
+    !c
+}
+
+#[cfg(any(test, feature = "spi-crc-bitwise"))]
+fn checksum_bitwise(parts: &[&[u8]]) -> u32 {
     let mut c = !0u32;
     for b in parts {
         for &v in *b {
@@ -1895,5 +1961,80 @@ mod compaction_tests {
         drop(pinned);
         assert_eq!(db.collect().unwrap(), 1);
         db.verify().unwrap();
+    }
+}
+
+#[cfg(test)]
+mod crc_tests {
+    use super::*;
+    #[test]
+    fn ieee_vectors_match_independent_zlib() {
+        assert_eq!(checksum_sliced(&[b"123456789"]), 0xcbf43926);
+        assert_eq!(checksum_bitwise(&[b"123456789"]), 0xcbf43926);
+        // Expected values generated with Python's zlib.crc32, not either Rust implementation.
+        for (len, expected) in [
+            (0usize, 0x00000000u32),
+            (1usize, 0x45d03605u32),
+            (7usize, 0xef6f3b31u32),
+            (8usize, 0x648bad8bu32),
+            (9usize, 0x17dc5f9eu32),
+            (31usize, 0x4745364cu32),
+            (32usize, 0xa9f48115u32),
+            (64usize, 0xffbae609u32),
+            (255usize, 0x6626d95du32),
+            (256usize, 0x8ed7a350u32),
+            (1024usize, 0x6fea9368u32),
+            (4096usize, 0xfd7bb204u32),
+            (16384usize, 0x9c8359a0u32),
+            (65536usize, 0xd632451au32),
+            (1048576usize, 0x7f458493u32),
+        ] {
+            let data: Vec<u8> = (0..len).map(|i| (i * 37 + 11) as u8).collect();
+            assert_eq!(checksum_sliced(&[&data]), expected, "length={len}");
+            assert_eq!(checksum_bitwise(&[&data]), expected, "length={len}");
+            assert_eq!(checksum(&[&data]), expected);
+        }
+    }
+    #[test]
+    fn ieee_every_split_alignment_empty_fragment_and_byte_value() {
+        let bytes: Vec<u8> = (0..1050).map(|i| i as u8).collect();
+        for alignment in 0..16 {
+            for len in [
+                0, 1, 2, 7, 8, 9, 15, 16, 17, 31, 32, 33, 63, 64, 65, 255, 256, 511, 1024,
+            ] {
+                let data = &bytes[alignment..alignment + len];
+                let expected = checksum_bitwise(&[data]);
+                assert_eq!(checksum_sliced(&[data]), expected);
+                for split in 0..=len {
+                    assert_eq!(
+                        checksum_sliced(&[&[], &data[..split], &[], &data[split..], &[]]),
+                        expected,
+                        "alignment={alignment} len={len} split={split}"
+                    );
+                }
+            }
+        }
+        for value in 0..=255u8 {
+            assert_eq!(
+                checksum_sliced(&[&[value; 65]]),
+                checksum_bitwise(&[&[value; 65]])
+            );
+        }
+        assert_eq!(std::mem::size_of_val(&CRC_TABLES), 8192);
+    }
+    #[test]
+    fn ieee_page_and_max_overflow_with_irregular_fragments() {
+        let data: Vec<u8> = (0..MAX_VALUE + 33)
+            .map(|i| ((i * 71) ^ (i >> 9)) as u8)
+            .collect();
+        for len in [
+            4095, 4096, 4097, 16383, 16384, 16385, 65535, 65536, 65537, MAX_VALUE,
+        ] {
+            let part = &data[3..3 + len];
+            let expected = checksum_bitwise(&[part]);
+            assert_eq!(checksum_sliced(&[part]), expected);
+            let fragments: Vec<&[u8]> = part.chunks(1009).collect();
+            assert_eq!(checksum_sliced(&fragments), expected);
+        }
     }
 }

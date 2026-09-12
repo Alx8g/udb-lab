@@ -53,6 +53,9 @@ def validate_build_info(
         raise IdentityError("missing diagnostic-profile identity; rebuild it")
     if profile_enabled and not allow_profile:
         raise IdentityError("diagnostic-profile binary rejected for performance campaign")
+    crc32 = info.get("crc32_implementation")
+    if crc32 not in ("ieee-bitwise", "ieee-slicing8"):
+        raise IdentityError("missing or unknown CRC implementation identity; rebuild it")
     compiled_engines = info.get("engines")
     if not isinstance(compiled_engines, list) or any(
         not isinstance(engine, str) for engine in compiled_engines
@@ -88,6 +91,7 @@ def validate_build_info(
         "benchmark_schema": BENCHMARK_SCHEMA,
         "debug_assertions": False,
         "profile_enabled": profile_enabled,
+        "crc32_implementation": crc32,
         "compiled_engines": compiled_engines,
         "source_sha256": hashes,
         "limitations": "Source-byte identity is checked. Build flags beyond debug assertions and external dependencies are recorded separately, not attested by this protocol.",

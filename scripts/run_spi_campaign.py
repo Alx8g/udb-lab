@@ -101,6 +101,7 @@ def validate_record(record: dict, engine: str, rows: int, seed: int, value_bytes
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--binary", type=Path, required=True)
+    parser.add_argument("--expected-crc", choices=["ieee-bitwise", "ieee-slicing8"])
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--rows", type=int, default=5000)
     parser.add_argument("--value-bytes", type=int, default=64)
@@ -114,6 +115,8 @@ def main() -> None:
         identity = inspect_binary(binary, root, args.engines)
     except IdentityError as exc:
         parser.error(str(exc))
+    if args.expected_crc and identity["crc32_implementation"] != args.expected_crc:
+        parser.error("binary CRC implementation does not match requested control")
     out = args.out.resolve()
     if args.rows < 100 or not 1 <= args.value_bytes <= 4096 or args.cache_bytes < 1024:
         parser.error("rows >= 100, 1 <= value-bytes <= 4096, cache-bytes >= 1024 required")
@@ -169,6 +172,8 @@ def main() -> None:
                 raise RuntimeError(f"{engine} seed {seed} failed: {result.stderr}")
             record = json.loads((destination / "result.json").read_text(encoding="utf-8"))
             validate_record(record, engine, args.rows, seed, args.value_bytes, args.cache_bytes)
+            if record.get("crc32_implementation") != identity["crc32_implementation"]:
+                raise RuntimeError("result CRC identity differs from binary")
             records.append(record)
     check_unchanged_inputs()
     summary = {"trials": len(records), "all_full_outputs_match": True,

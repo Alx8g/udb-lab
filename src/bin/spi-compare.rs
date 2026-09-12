@@ -17,6 +17,7 @@ fn build_info() -> Value {
         "benchmark_schema": BENCHMARK_SCHEMA,
         "debug_assertions": cfg!(debug_assertions),
         "profile_enabled": cfg!(feature = "spi-profile"),
+        "crc32_implementation": if cfg!(feature = "spi-crc-bitwise") { "ieee-bitwise" } else { "ieee-slicing8" },
         "engines": if cfg!(feature = "rusqlite") {
             vec!["spi", "spi-value-cache", "spi-unbuffered", "spi-grouped", "spi-packed", "sqlite"]
         } else {
@@ -783,6 +784,11 @@ fn main() -> Result<()> {
         _ => return Err("unknown engine or SQLite feature not enabled".into()),
     };
     let mut report = run(engine.as_mut(), rows, seed, size)?;
+    report["crc32_implementation"] = json!(if cfg!(feature = "spi-crc-bitwise") {
+        "ieee-bitwise"
+    } else {
+        "ieee-slicing8"
+    });
     report["benchmark_schema"] = json!(BENCHMARK_SCHEMA);
     report["engine"] = json!(kind);
     report["rows"] = json!(rows);

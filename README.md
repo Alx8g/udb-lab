@@ -242,6 +242,20 @@ SQLite remained faster on general scans, ranges, updates and durable commits.
 No across-workload, CPU or total-memory superiority is established. Diagnostic
 attribution of packed cache misses is the next gate before further optimization.
 
+## Checksum implementation controls
+
+The native checksum uses exact IEEE CRC32 with slicing-by-eight processing.
+It preserves the polynomial, initial/final complement and serialized byte coverage.
+The old bitwise implementation remains selectable with `spi-crc-bitwise` for
+matched release controls. Both identify themselves in the comparison binary and
+result record. This is not CRC32C and does not weaken integrity checks.
+
+The slicing tables add 8 KiB of static read-only data per process and require no
+per-call allocation. Tests compare independent zlib-generated vectors, all short
+split/alignment cases and irregular fragments through 16 MiB. Runtime performance
+acceptance awaits paired bitwise/slicing campaigns. Existing diagnostic profiles
+identify repeated page checksumming as the main tiny-cache packed CPU cost.
+
 ## Diagnostic attribution
 
 The optional `spi-profile` build records phase-level storage work, nested wall
