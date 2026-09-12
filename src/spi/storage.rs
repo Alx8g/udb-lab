@@ -87,6 +87,12 @@ pub struct Stats {
     pub physical_bytes: u64,
     pub cache_bytes: usize,
     pub cache_entries: usize,
+    /// Usable container slots, not allocated bytes or process RSS.
+    pub cache_map_capacity: usize,
+    pub cache_order_capacity: usize,
+    /// Sum of container capacities across pinned retired epochs.
+    pub retired_cache_map_capacity: usize,
+    pub retired_cache_order_capacity: usize,
     pub reads: u64,
     pub bytes_read: u64,
     pub bytes_written: u64,
@@ -118,6 +124,14 @@ struct Cache {
     limit: usize,
 }
 impl Cache {
+    fn retire(&mut self) {
+        // Ordinary clear keeps capacity for reuse. Retired epochs will never
+        // admit nodes again, so release the actual container ownership here.
+        self.map = HashMap::new();
+        self.order = VecDeque::new();
+        self.bytes = 0;
+        self.limit = 0;
+    }
     fn insert(&mut self, at: u64, n: Arc<Node>) {
         let size = n.key.len() + 192;
         if size > self.limit || self.map.contains_key(&at) {
@@ -553,6 +567,12 @@ impl Database {
         let s = self.inner.state.lock().unwrap();
         let e = &s.view.epoch;
         let c = e.cache.lock().unwrap();
+        let (mut retired_map_capacity, mut retired_order_capacity) = (0, 0);
+        for epoch in &s.retired {
+            let cache = epoch.cache.lock().unwrap();
+            retired_map_capacity += cache.map.capacity();
+            retired_order_capacity += cache.order.capacity();
+        }
         let mut physical = 0;
         for f in fs::read_dir(&self.inner.dir)? {
             let f = f?;
@@ -567,6 +587,10 @@ impl Database {
             physical_bytes: physical,
             cache_bytes: c.bytes,
             cache_entries: c.map.len(),
+            cache_map_capacity: c.map.capacity(),
+            cache_order_capacity: c.order.capacity(),
+            retired_cache_map_capacity: retired_map_capacity,
+            retired_cache_order_capacity: retired_order_capacity,
             reads: e.reads.load(Ordering::Relaxed),
             bytes_read: e.bytes_read.load(Ordering::Relaxed),
             bytes_written: e.bytes_written.load(Ordering::Relaxed),
@@ -665,8 +689,7 @@ impl Database {
             Ok(view) => {
                 // Historical readers retain the file, not a second full node cache.
                 let mut cache = old.epoch.cache.lock().unwrap();
-                cache.clear();
-                cache.limit = 0;
+                cache.retire();
                 drop(cache);
                 view.epoch.cache.lock().unwrap().limit = self.inner.options.cache_bytes;
                 s.retired.push(old.epoch.clone());

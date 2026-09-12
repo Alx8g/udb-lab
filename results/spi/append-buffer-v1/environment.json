@@ -1,0 +1,53 @@
+{
+  "created_utc": "2026-09-12T06:26:29.366234+00:00",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "machine": "AMD64",
+  "processor": "Intel64 Family 6 Model 154 Stepping 3, GenuineIntel",
+  "logical_cpus": 20,
+  "rustc": "rustc 1.96.0 (ac68faa20 2026-05-25)\nbinary: rustc\ncommit-hash: ac68faa20c58cbccd01ee7208bf3b6e93a7d7f96\ncommit-date: 2026-05-25\nhost: x86_64-pc-windows-msvc\nrelease: 1.96.0\nLLVM version: 22.1.2",
+  "git_head": "fb721a47e1467da87b5d9c1faf40daaf241a31c5",
+  "git_status": "M .github/workflows/spi.yml\n M .gitignore\n M scripts/run_spi_campaign.py\n M src/bin/spi-compare.rs\n M src/spi/mod.rs\n M src/spi/storage.rs\n M tests/spi-process.rs\n M tests/spi-storage.rs\n?? scripts/spi_benchmark_identity.py\n?? scripts/test_spi_benchmark_identity.py\n?? src/spi/append_buffer.rs",
+  "binary_sha256": "3594cb36824c611e93588d006257edd23ddf8a85dab83d13dc021971b275311b",
+  "binary_identity": {
+    "identity_schema": 1,
+    "benchmark_schema": 2,
+    "debug_assertions": false,
+    "compiled_engines": [
+      "spi",
+      "spi-unbuffered",
+      "sqlite"
+    ],
+    "source_sha256": {
+      "Cargo.lock": "ef34c9bcf85b089be5d206da18e1844752301ccbecf39f51389b8a3c27ce18ae",
+      "Cargo.toml": "d7cbde8c48a91abaf4173c148cb4781aba35f662f6cd8324350e226f6a114dbe",
+      "src/bin/spi-compare.rs": "47649c2cc600709cec3ba46bae570616d1c913dca34a149b8d8c640c22826390",
+      "src/lib.rs": "1f2fd1f3ef60ec9ba5381059ed54d9068991b57543903090c3bf3c663c2f5f02",
+      "src/spi/append_buffer.rs": "e7861eebad447ca3ff5ecdbb882d6e19e891548c42ee82f4f3623bd8c4d17721",
+      "src/spi/mod.rs": "e326fa65a6f054839260d15355c1f7ad0f0bf8c398eb7da37e625e122c04d8af",
+      "src/spi/storage.rs": "1b18006c6f613b76091935897933691771f0d66180597ba5b50e31b8b816f7e2",
+      "src/spi/transaction.rs": "3dad44332cafee50ae7e77cd30c4fc28dff945eaaaaed138382b8f7227e6f860"
+    },
+    "limitations": "Source-byte identity is checked. Build flags beyond debug assertions and external dependencies are recorded separately, not attested by this protocol."
+  },
+  "source_sha256": {
+    "Cargo.toml": "d7cbde8c48a91abaf4173c148cb4781aba35f662f6cd8324350e226f6a114dbe",
+    "Cargo.lock": "ef34c9bcf85b089be5d206da18e1844752301ccbecf39f51389b8a3c27ce18ae",
+    "src/spi/append_buffer.rs": "e7861eebad447ca3ff5ecdbb882d6e19e891548c42ee82f4f3623bd8c4d17721",
+    "src/spi/mod.rs": "e326fa65a6f054839260d15355c1f7ad0f0bf8c398eb7da37e625e122c04d8af",
+    "src/spi/storage.rs": "1b18006c6f613b76091935897933691771f0d66180597ba5b50e31b8b816f7e2",
+    "src/spi/transaction.rs": "3dad44332cafee50ae7e77cd30c4fc28dff945eaaaaed138382b8f7227e6f860",
+    "src/lib.rs": "1f2fd1f3ef60ec9ba5381059ed54d9068991b57543903090c3bf3c663c2f5f02",
+    "src/bin/spi-compare.rs": "47649c2cc600709cec3ba46bae570616d1c913dca34a149b8d8c640c22826390",
+    "scripts/spi_benchmark_identity.py": "0209982afaebc467c56bfcf8f45283e4b243d3047da81d1ef1c395f556ac7987",
+    "scripts/run_spi_campaign.py": "14f5d0ed94ba6bf5487cc38234288041589a91bb0ee689aaafe9908559b38498"
+  },
+  "rows": 2000,
+  "value_bytes": 64,
+  "cache_bytes": 8388608,
+  "seeds": [
+    17,
+    29,
+    43
+  ],
+  "method": "Sequential engines with rotating order by seed. Complete output checks inside native adapter. No OS-cache purge or CPU affinity setting."
+}

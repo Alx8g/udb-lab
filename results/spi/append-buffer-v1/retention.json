@@ -1,0 +1,26 @@
+{
+  "status": "historical experiment, not final selected default",
+  "interpretation": "Buffer reduced write calls with identical arena bytes but read latency regressed. Retain raw samples before cache-admission correction. SQLite arena counters were unmeasured, not zero.",
+  "sha256": {
+    "command-spi-17.json": "5e6463304dccd889ecd1ebe430aa21b99a09822be2182199fb6770eb5d45942b",
+    "command-spi-29.json": "bd39363c9519ab80b884857a3995dee7e61fd40770cdc090cd0c54d25591df16",
+    "command-spi-43.json": "07dc5b0bad72de733700a442240056159b0d3d0aada50fac456e2c3b273827d0",
+    "command-spi-unbuffered-17.json": "2b13780d3c05ccb9e0a357f8906b08820075a91685e42004dd30cb72fa5f8074",
+    "command-spi-unbuffered-29.json": "6f7de2fd481adb6c56d1d7dc8576dceccca03122e5bed4a55d4f41a166839dfd",
+    "command-spi-unbuffered-43.json": "5b9feaa56e39c4303a1eab0d3aeada2f7795f7c880196c35e3452b7fa6519f69",
+    "command-sqlite-17.json": "61ffe272d1f361e4814ddd2b2196e942cbb21854efec3cca7a8bf1e0ee01e8f1",
+    "command-sqlite-29.json": "102a60470edcc273b1c4494d127da56593b762248dfe1b8eeb207803951b7f6a",
+    "command-sqlite-43.json": "47dc0c044d29d26fbb41f6bf33fde300d6afd165333913cf8e4596b5a8f44d84",
+    "environment.json": "f712205d524d48a28ea776cd5f12cc654ac0fda04bd954429277141d7991b42a",
+    "summary.json": "61cc81c40f57819abde27c6d3186e04b187563950c0bdf86a9de45f41218196b",
+    "spi-seed-17/result.json": "89db1704a30b772c826e5b4164e0a5cddef2f672123bf149da48c193bd95179f",
+    "spi-seed-29/result.json": "9ebe95bfb2cf8e8684f626a423c548ed6b0bb3adcd304e6377a4314b2a62bcc0",
+    "spi-seed-43/result.json": "22c4b81aa5f7571e6f494f968acad9f79b14ab8eedf6b8553ba3f8af2a13eb0e",
+    "spi-unbuffered-seed-17/result.json": "7b0cbd792059343838189582526189d2067d3ffde0bca9acc5ebbeb2c0b15257",
+    "spi-unbuffered-seed-29/result.json": "bf77ff170184e3266f30c131f672e41abd8eaffab10a65c41a8d588b8b781704",
+    "spi-unbuffered-seed-43/result.json": "3cda02488fb2f0a25a998a7fc7fae68c01e45b597212a8ecf9cdaac7d58b462e",
+    "sqlite-seed-17/result.json": "360709887d6ca85e04dc0f3724fc526b8ee8df07a86ce97b23449e70c1e1ff1b",
+    "sqlite-seed-29/result.json": "0e84aff6c52235f998242de18d076b11c62c03eaa6ea7c9140661adfdfe26d6d",
+    "sqlite-seed-43/result.json": "e09f78d46f86cafac955ce2417300d90900475a73f4cbf5ba25a9163636f091e"
+  }
+}

@@ -556,3 +556,96 @@ fn buffered_publication_preserves_post_commit_node_cache() {
         assert!(db.stats().unwrap().cache_bytes <= 4 * 1024 * 1024);
     }
 }
+
+#[test]
+fn retired_epoch_cache_releases_container_capacity() {
+    let p = path("retired-cache");
+    let db = Database::create(
+        &p,
+        Options {
+            cache_bytes: 4 * 1024 * 1024,
+            ..Options::default()
+        },
+    )
+    .unwrap();
+    let mut t = db.begin().unwrap();
+    for i in 0..500u64 {
+        t.set(i.to_be_bytes(), i.to_le_bytes()).unwrap();
+    }
+    t.commit().unwrap();
+    for i in 0..500u64 {
+        assert!(db.get(&i.to_be_bytes()).unwrap().is_some());
+    }
+    let old = db.snapshot().unwrap();
+    let warm = db.stats().unwrap();
+    assert!(warm.cache_map_capacity > 0 || warm.cache_order_capacity > 0);
+    db.compact().unwrap();
+    let retired = db.stats().unwrap();
+    assert_eq!(retired.retired_cache_map_capacity, 0);
+    assert_eq!(retired.retired_cache_order_capacity, 0);
+    assert_eq!(retired.cache_map_capacity, 0);
+    assert_eq!(retired.cache_order_capacity, 0);
+    assert_eq!(
+        old.get(&0u64.to_be_bytes()).unwrap(),
+        Some(0u64.to_le_bytes().to_vec())
+    );
+    assert!(db.get(&0u64.to_be_bytes()).unwrap().is_some());
+    let current = db.stats().unwrap();
+    assert!(current.cache_map_capacity > 0 || current.cache_order_capacity > 0);
+    drop(old);
+    db.collect().unwrap();
+}
+
+#[test]
+fn repeated_pinned_retirements_release_capacity_and_stay_readable() {
+    let db = Database::create(
+        path("repeated-retirement"),
+        Options {
+            cache_bytes: 2 * 1024 * 1024,
+            ..Options::default()
+        },
+    )
+    .unwrap();
+    let mut pins = Vec::new();
+    for generation in 0..5u64 {
+        let mut tx = db.begin().unwrap();
+        for i in 0..300u64 {
+            tx.set(i.to_be_bytes(), (generation * 1000 + i).to_le_bytes())
+                .unwrap();
+        }
+        tx.commit().unwrap();
+        for i in 0..300u64 {
+            db.get(&i.to_be_bytes()).unwrap().unwrap();
+        }
+        let warmed = db.stats().unwrap();
+        assert!(warmed.cache_map_capacity > 0);
+        assert!(warmed.cache_order_capacity > 0);
+        // A normal cache clear should preserve capacity for later reuse.
+        db.clear_cache();
+        let cleared = db.stats().unwrap();
+        assert_eq!(cleared.cache_map_capacity, warmed.cache_map_capacity);
+        assert_eq!(cleared.cache_order_capacity, warmed.cache_order_capacity);
+        assert_eq!(cleared.cache_entries, 0);
+        for i in 0..300u64 {
+            db.get(&i.to_be_bytes()).unwrap().unwrap();
+        }
+        pins.push((db.snapshot().unwrap(), generation));
+        db.compact().unwrap();
+        assert_eq!(db.collect().unwrap(), 0);
+        for (snapshot, version) in &pins {
+            for i in 0..300u64 {
+                assert_eq!(
+                    snapshot.get(&i.to_be_bytes()).unwrap(),
+                    Some((version * 1000 + i).to_le_bytes().to_vec())
+                );
+            }
+        }
+        let stats = db.stats().unwrap();
+        assert_eq!(stats.retained_epochs, pins.len());
+        assert_eq!(stats.retired_cache_map_capacity, 0);
+        assert_eq!(stats.retired_cache_order_capacity, 0);
+    }
+    drop(pins);
+    assert_eq!(db.collect().unwrap(), 5);
+    db.verify().unwrap();
+}

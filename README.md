@@ -89,6 +89,28 @@ Cache, staging and scan budgets are accounting estimates, not a whole-machine
 RAM limit. Windows uses file flushes and write-through manifest replacement.
 Neither that path nor the Unix sync/rename path has been device-power-loss tested.
 
+Small arena records now share a writer-private 64 KiB append buffer. The buffer
+flushes before the unchanged data and manifest sync barriers. Set
+`Options::append_buffer` to `false` for the direct-write control. Buffering changes
+write-call count, not arena bytes or the persistent format.
+
+[The measured buffer comparison](results/spi/append-buffer-v2/summary.json) and
+[small-cache control](results/spi/append-buffer-small-cache-v2/summary.json) retain
+complete samples, source identities, and output checks. SQLite still wins most
+operations. These are local KV experiments, not production latency or power-loss
+validation. [Track A remains unfinished](docs/track-a-status.json).
+
+Run an isolated comparison into a new directory:
+
+```
+cargo build --release --locked --features rusqlite --bin spi-compare
+uv run --no-project scripts/run_spi_campaign.py --binary target/release/spi-compare.exe --out .working/tmp/my-new-campaign --rows 2000 --engines spi spi-unbuffered sqlite
+```
+
+On Unix omit `.exe`. The runner rejects stale source or missing engine adapters
+before creating output. Build and test first, then benchmark without competing
+local jobs. Never delete an existing evidence directory merely to reuse its name.
+
 ## Run
 
 ```
