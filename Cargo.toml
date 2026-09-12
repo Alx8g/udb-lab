@@ -2,6 +2,8 @@
 name = "udb-lab"
 version = "0.1.0"
 edition = "2021"
+rust-version = "1.89"
+default-run = "udb-lab"
 description = "Kernel laboratory for universal database architecture research"
 license = "MIT"
 publish = false
@@ -14,5 +16,9 @@ panic = "abort"
 
 [dependencies]
 rand = { version = "0.8", features = ["small_rng"] }
+rusqlite = { version = "0.40", features = ["bundled"], optional = true }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+
+[features]
+rusqlite = ["dep:rusqlite"]

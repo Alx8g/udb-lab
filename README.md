@@ -11,9 +11,25 @@ The goal is both halves, designed together:
 Neither a caching trick on an ordinary engine, nor a fast engine that still
 reads everything, is the target.
 
-This repo is a kernel lab, not a database. Each experiment isolates one
-mechanism, compares it against the strongest simple alternative on the same
-machine, and includes a case that should lose. Correctness is exact.
+This repo contains two layers:
+
+1. The original kernel laboratory. Each experiment isolates one mechanism,
+   compares it against a simple or specialist control, and includes a case
+   that should lose. Historical results are not a correctness certificate.
+   Known ranking and numeric edge cases remain in the separate lab branches.
+2. The native SPI embedded database. It is a small durable binary key/value
+   store and Track A substrate, not yet a general SQL database.
+
+The database API supports arbitrary binary keys and values, ordered scans,
+prefix scans, immutable snapshots, optimistic serializable transactions,
+checksummed copy-on-write index records, manifest publication exercised by
+process-crash tests, streaming epoch compaction, and explicit integrity verification.
+Keys are limited to 4 KiB and values to 16 MiB. This is an experimental format.
+Do not store irreplaceable data in this implementation.
+
+It does not yet claim SQL, distributed transactions, full power-loss testing,
+version-interval page reuse, or 200 TB operation under a 50 GB total-memory
+limit. Those remain Track A work.
 
 Public repo: https://github.com/Alx8g/udb-lab
 
@@ -36,6 +52,42 @@ Public repo: https://github.com/Alx8g/udb-lab
 | Full run JSON | [results/full/records.json](results/full/records.json) |
 | Full run CSV | [results/full/records.csv](results/full/records.csv) |
 | Quick run JSON | [results/quick/records.json](results/quick/records.json) |
+
+## Native SPI database
+
+Initialize and use the embedded database with hexadecimal keys and values:
+
+```
+cargo run --release --bin spi -- init target/example-db
+cargo run --release --bin spi -- set target/example-db 6b6579 76616c7565
+cargo run --release --bin spi -- get target/example-db 6b6579
+cargo run --release --bin spi -- scan-prefix target/example-db 6b
+cargo run --release --bin spi -- verify target/example-db
+cargo run --release --bin spi -- compact target/example-db
+cargo run --release --bin spi -- collect target/example-db
+```
+
+Use `batch` for one durable transaction containing several operations. Its
+JSON file uses `{"op":"set","key":"...","value":"..."}` or
+`{"op":"delete","key":"..."}`. The library API is in
+[`src/spi`](src/spi), and storage regressions are in
+[`tests/spi-storage.rs`](tests/spi-storage.rs) and
+[`tests/spi-process.rs`](tests/spi-process.rs).
+
+The storage contract is deliberately narrow. One process owns a database at
+a time. A failed write or publication poisons the handle and requires reopen.
+Transactions validate logical key versions and a bounded logical mutation journal,
+including predicate changes and missing-key insert/delete cycles. An old transaction
+aborts when its validation history expires. Physical node offsets are not conflict
+identities. Snapshots pin arena files and do not survive process restart.
+
+The authoritative commit is a copy-on-write root, not a separate WAL. Recovery
+opens the committed root without replaying a full log or rebuilding a key dictionary.
+Compaction publishes a new arena before collection. Whole-epoch retention is a
+conservative baseline, not Round 9's fine version-interval page reclamation.
+Cache, staging and scan budgets are accounting estimates, not a whole-machine
+RAM limit. Windows uses file flushes and write-through manifest replacement.
+Neither that path nor the Unix sync/rename path has been device-power-loss tested.
 
 ## Run
 

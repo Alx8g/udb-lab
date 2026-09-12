@@ -1,0 +1,35 @@
+name: SPI native storage
+
+on:
+  push:
+    branches: [main, feat/spi-native-store]
+  pull_request:
+    paths:
+      - 'src/spi/**'
+      - 'src/lib.rs'
+      - 'src/bin/spi*'
+      - 'tests/spi*'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - '.github/workflows/spi.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  native:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Test local storage, transactions and process crashes
+        run: cargo test --locked --all-targets --features rusqlite -- --test-threads=1
+      - name: Test optimized storage and process-crash paths
+        run: cargo test --locked --release --test spi-storage --test spi-process -- --test-threads=1
+      - name: Build native comparison adapter
+        run: cargo build --locked --release --features rusqlite --bin spi-compare
