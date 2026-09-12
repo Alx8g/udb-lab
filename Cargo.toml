@@ -26,3 +26,5 @@ rusqlite = ["dep:rusqlite"]
 spi-profile = []
 # Byte-identical legacy checksum control for matched implementation campaigns.
 spi-crc-bitwise = []
+# Direct packed-page scan control. Default uses direct base-record iteration.
+spi-scan-materialized = []

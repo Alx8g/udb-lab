@@ -32,6 +32,8 @@ def inspect_pair(bitwise: Path, sliced: Path, root: Path) -> dict:
             raise ValueError(f'incorrect control binary for {name}')
     if identities['ieee-bitwise']['source_sha256'] != identities['ieee-slicing8']['source_sha256']:
         raise ValueError('CRC controls are not compiled from identical source bytes')
+    if identities['ieee-bitwise']['packed_scan_implementation'] != identities['ieee-slicing8']['packed_scan_implementation']:
+        raise ValueError('CRC controls have different scan implementations')
     return identities
 
 

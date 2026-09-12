@@ -8,6 +8,8 @@ from test_spi_campaign import result
 def profile_result(engine='spi'):
     record = result(engine)
     record['diagnostic_only'] = True
+    record['packed_scan_implementation'] = 'direct-base'
+    record['crc32_implementation'] = 'ieee-slicing8'
     counters = dict.fromkeys(('read_calls', 'read_bytes', 'read_ns', 'write_calls', 'write_bytes',
         'write_ns', 'checksum_calls', 'checksum_bytes', 'checksum_ns', 'node_cache_hits',
         'node_cache_misses', 'value_cache_hits', 'value_cache_misses', 'node_saves', 'value_records',

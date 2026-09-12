@@ -163,7 +163,7 @@ impl Record {
         let b = &self.data[self.offsets[i] as usize..];
         &b[24..24 + get32(b, 0) as usize]
     }
-    fn row(&self, i: usize) -> Row {
+    fn row_at(&self, i: usize) -> Row {
         let b = &self.data[self.offsets[i] as usize..];
         let kl = get32(b, 0) as usize;
         let len = get32(b, 4);
@@ -184,15 +184,21 @@ impl Record {
             value,
         }
     }
-    fn find(&self, key: &[u8]) -> Option<Row> {
-        let i = self.offsets.partition_point(|off| {
+    fn lower_bound(&self, key: &[u8]) -> usize {
+        self.offsets.partition_point(|off| {
             let b = &self.data[*off as usize..];
             &b[24..24 + get32(b, 0) as usize] < key
-        });
-        (i < self.offsets.len() && self.key(i) == key).then(|| self.row(i))
+        })
+    }
+    fn find(&self, key: &[u8]) -> Option<Row> {
+        let i = self.lower_bound(key);
+        (i < self.offsets.len() && self.key(i) == key).then(|| self.row_at(i))
+    }
+    fn row_count(&self) -> usize {
+        self.offsets.len()
     }
     fn rows(&self) -> Vec<Row> {
-        (0..self.offsets.len()).map(|i| self.row(i)).collect()
+        (0..self.offsets.len()).map(|i| self.row_at(i)).collect()
     }
 }
 struct Materialized {
@@ -200,14 +206,22 @@ struct Materialized {
     depth: u32,
     delta_bytes: usize,
 }
-fn load(view: &Snapshot, mut at: u64, admit: bool) -> Result<Materialized> {
+fn load(view: &Snapshot, at: u64, admit: bool) -> Result<Materialized> {
+    load_record(
+        view,
+        view.epoch.packed_record(at, view.root.end, admit)?,
+        admit,
+    )
+}
+// Accept the already checked head so direct scans do not issue a second read
+// before taking the exact delta-materialization fallback.
+fn load_record(view: &Snapshot, mut record: Arc<Record>, admit: bool) -> Result<Materialized> {
     let mut deltas = Vec::new();
     let mut expected = None;
     let mut head_depth = 0;
     let mut head_bytes = 0;
     let base;
     loop {
-        let record = view.epoch.packed_record(at, view.root.end, admit)?;
         if record.generation > view.root.generation
             || expected.is_some_and(|(d, n, g)| {
                 record.depth != d || record.delta_bytes != n || record.generation > g
@@ -228,8 +242,9 @@ fn load(view: &Snapshot, mut at: u64, admit: bool) -> Result<Materialized> {
             record.delta_bytes - record.data.len(),
             record.generation,
         ));
-        at = record.prev;
+        let at = record.prev;
         deltas.push(record.rows());
+        record = view.epoch.packed_record(at, view.root.end, admit)?;
     }
     let rows = if deltas.is_empty() {
         base
@@ -323,20 +338,29 @@ pub(super) fn find(view: &Snapshot, key: &[u8]) -> Result<Option<Row>> {
 pub(crate) struct Cursor {
     view: Snapshot,
     fences: super::Cursor,
-    page: std::vec::IntoIter<Row>,
+    page_record: Option<Arc<Record>>,
+    page_index: usize,
+    page_rows: std::vec::IntoIter<Row>,
+    direct: bool,
     start: Vec<u8>,
     end: Option<Vec<u8>>,
     failed: bool,
 }
 impl Cursor {
     pub fn new(view: &Snapshot, start: &[u8], end: Option<&[u8]>) -> Result<Self> {
+        Self::with_mode(view, start, end, !cfg!(feature = "spi-scan-materialized"))
+    }
+    fn with_mode(view: &Snapshot, start: &[u8], end: Option<&[u8]>, direct: bool) -> Result<Self> {
         let from = floor(view, start)?
             .map(|n| n.key.clone())
             .unwrap_or_default();
         Ok(Self {
             view: view.clone(),
             fences: view.cursor(&from, end)?,
-            page: Vec::new().into_iter(),
+            page_record: None,
+            page_index: 0,
+            page_rows: Vec::new().into_iter(),
+            direct,
             start: start.to_vec(),
             end: end.map(Vec::from),
             failed: false,
@@ -350,7 +374,26 @@ impl Iterator for Cursor {
             return None;
         }
         loop {
-            if let Some(row) = self.page.next() {
+            if let Some(record) = self.page_record.as_ref() {
+                if self.page_index < record.row_count() {
+                    // The start offset was selected before allocating any rows.
+                    // Check the upper bound on borrowed bytes for the same reason.
+                    if self
+                        .end
+                        .as_ref()
+                        .is_some_and(|end| record.key(self.page_index) >= end.as_slice())
+                    {
+                        self.failed = true;
+                        self.page_record = None;
+                        return None;
+                    }
+                    let row = record.row_at(self.page_index);
+                    self.page_index += 1;
+                    return Some(Ok(row));
+                }
+                self.page_record = None;
+            }
+            if let Some(row) = self.page_rows.next() {
                 if row.key < self.start {
                     continue;
                 }
@@ -365,25 +408,65 @@ impl Iterator for Cursor {
                     self.failed = true;
                     return Some(Err(e));
                 }
-                Ok(n) => match load(&self.view, n.value, false) {
-                    Ok(p) => {
-                        self.page = p.rows.into_iter();
-                    }
-                    Err(e) => {
+                Ok(n) => {
+                    let next = (|| -> Result<()> {
+                        if !self.direct {
+                            self.page_rows = load(&self.view, n.value, false)?.rows.into_iter();
+                            return Ok(());
+                        }
+                        let record =
+                            self.view
+                                .epoch
+                                .packed_record(n.value, self.view.root.end, false)?;
+                        if record.generation > self.view.root.generation {
+                            return Err(Error::Corrupt("packed scan generation".into()));
+                        }
+                        if record.kind == 3 {
+                            self.page_index = record.lower_bound(&self.start);
+                            self.page_record = Some(record);
+                        } else {
+                            self.page_rows =
+                                load_record(&self.view, record, false)?.rows.into_iter();
+                        }
+                        Ok(())
+                    })();
+                    if let Err(e) = next {
                         self.failed = true;
                         return Some(Err(e));
                     }
-                },
+                }
             }
         }
     }
 }
 pub(super) fn scan(view: &Snapshot, start: &[u8], end: Option<&[u8]>) -> Result<Vec<Entry>> {
+    scan_with_mode(view, start, end, !cfg!(feature = "spi-scan-materialized"))
+}
+fn scan_with_mode(
+    view: &Snapshot,
+    start: &[u8],
+    end: Option<&[u8]>,
+    direct: bool,
+) -> Result<Vec<Entry>> {
     let mut out = Vec::new();
     let mut bytes = 0;
-    for row in Cursor::new(view, start, end)? {
+    for row in Cursor::with_mode(view, start, end, direct)? {
         let row = row?;
-        let value = row.value(view)?;
+        let value = if !direct {
+            row.value(view)?
+        } else {
+            match row.value {
+                Value::Inline(value) => value,
+                Value::Overflow { at, len } => {
+                    let value = view.epoch.value(at, view.root.end)?;
+                    if value.len() != len {
+                        return Err(Error::Corrupt("packed overflow length".into()));
+                    }
+                    value
+                }
+                Value::Deleted => return Err(Error::Corrupt("visible tombstone".into())),
+            }
+        };
         bytes += row.key.len() + value.len() + 64;
         if bytes > view.scan_budget {
             return Err(Error::Budget(
@@ -711,5 +794,161 @@ mod codec_tests {
             }]);
             assert!(Record::parse(3, bad, 10000, 1).is_err());
         }
+    }
+}
+// Private seams compare direct and materialized execution on identical snapshots.
+#[cfg(test)]
+mod direct_scan_tests {
+    use super::*;
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    fn database() -> Database {
+        static ID: AtomicU64 = AtomicU64::new(0);
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(".working/tmp/direct-scan-tests");
+        fs::create_dir_all(&root).unwrap();
+        let path = root.join(format!(
+            "{}-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos(),
+            ID.fetch_add(1, Ordering::Relaxed)
+        ));
+        let db = Database::create(
+            path,
+            Options {
+                packed_pages: true,
+                cache_bytes: 0,
+                ..Options::default()
+            },
+        )
+        .unwrap();
+        let mut tx = db.begin().unwrap();
+        for i in 0..100u16 {
+            tx.set(i.to_be_bytes(), vec![i as u8; 64]).unwrap();
+        }
+        tx.commit().unwrap();
+        db
+    }
+
+    fn compare(view: &Snapshot, start: &[u8], end: Option<&[u8]>) {
+        let before = view.epoch.reads.load(Ordering::Relaxed);
+        let direct = scan_with_mode(view, start, end, true).unwrap();
+        let after = view.epoch.reads.load(Ordering::Relaxed);
+        let control = scan_with_mode(view, start, end, false).unwrap();
+        let last = view.epoch.reads.load(Ordering::Relaxed);
+        assert_eq!(direct, control);
+        assert_eq!(
+            after - before,
+            last - after,
+            "direct scan must not reread delta head"
+        );
+    }
+
+    #[test]
+    fn direct_base_ranges_seek_without_materializing_unreturned_rows() {
+        let db = database();
+        let view = db.snapshot().unwrap();
+        let start = 90u16.to_be_bytes();
+        let end = 92u16.to_be_bytes();
+        let mut direct = Cursor::with_mode(&view, &start, Some(&end), true).unwrap();
+        assert_eq!(direct.next().unwrap().unwrap().key, start);
+        assert_eq!(direct.page_index, 91);
+        assert_eq!(
+            direct.page_rows.len(),
+            0,
+            "base page must remain serialized"
+        );
+        assert_eq!(direct.next().unwrap().unwrap().key, 91u16.to_be_bytes());
+        assert!(direct.next().is_none());
+        assert!(direct.next().is_none());
+        compare(&view, &start, Some(&end));
+        compare(&view, &start, Some(&start));
+        compare(&view, &[], None);
+        compare(&view, &[255], None);
+        // Each returned row charges 2 key bytes + 64 value bytes + 64 metadata bytes.
+        let limited = Snapshot {
+            scan_budget: 260,
+            ..view.clone()
+        };
+        assert_eq!(
+            scan_with_mode(&limited, &start, Some(&end), true)
+                .unwrap()
+                .len(),
+            2
+        );
+        let limited = Snapshot {
+            scan_budget: 259,
+            ..view
+        };
+        assert!(matches!(
+            scan_with_mode(&limited, &start, Some(&end), true),
+            Err(Error::Budget(_))
+        ));
+        assert!(matches!(
+            scan_with_mode(&limited, &start, Some(&end), false),
+            Err(Error::Budget(_))
+        ));
+    }
+
+    #[test]
+    fn direct_and_materialized_scans_reject_future_base_and_delta_generations() {
+        let db = database();
+        let mut old = db.snapshot().unwrap();
+        old.root.generation = 0;
+        for direct in [false, true] {
+            assert!(matches!(
+                scan_with_mode(&old, &[], None, direct),
+                Err(Error::Corrupt(_))
+            ));
+        }
+        let before = db.snapshot().unwrap();
+        let mut tx = db.begin().unwrap();
+        tx.set(50u16.to_be_bytes(), b"updated").unwrap();
+        tx.commit().unwrap();
+        let mut stale = db.snapshot().unwrap();
+        stale.root.generation = before.root.generation;
+        for direct in [false, true] {
+            assert!(matches!(
+                scan_with_mode(&stale, &[], None, direct),
+                Err(Error::Corrupt(_))
+            ));
+        }
+    }
+
+    #[test]
+    fn direct_delta_fallback_has_equal_reads_visibility_and_output_ownership() {
+        let db = database();
+        let pinned = db.snapshot().unwrap();
+        for generation in 0..12u16 {
+            let mut tx = db.begin().unwrap();
+            tx.set(50u16.to_be_bytes(), generation.to_le_bytes())
+                .unwrap();
+            if generation % 2 == 0 {
+                tx.delete(20u16.to_be_bytes()).unwrap();
+            } else {
+                tx.set(20u16.to_be_bytes(), b"reinserted").unwrap();
+            }
+            tx.commit().unwrap();
+            let view = db.snapshot().unwrap();
+            compare(&view, &[], None);
+            compare(&view, &19u16.to_be_bytes(), Some(&52u16.to_be_bytes()));
+            compare(&pinned, &[], None);
+        }
+        // Overflow rows remain output-owned and use the existing checked read.
+        let mut tx = db.begin().unwrap();
+        tx.set(b"overflow", vec![7; 4096]).unwrap();
+        tx.commit().unwrap();
+        let view = db.snapshot().unwrap();
+        compare(&view, b"overflow", None);
+        let mut found = scan_with_mode(&view, b"overflow", None, true).unwrap();
+        found[0].value[0] = 99;
+        assert_eq!(view.get(b"overflow").unwrap(), Some(vec![7; 4096]));
+        db.compact().unwrap();
+        compare(&db.snapshot().unwrap(), &[], None);
+        compare(&pinned, &[], None);
+        assert_eq!(db.stats().unwrap().cache_page_entries, 0);
+        assert_eq!(db.stats().unwrap().retired_cache_page_capacity, 0);
     }
 }

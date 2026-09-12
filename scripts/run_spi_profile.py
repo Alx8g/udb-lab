@@ -14,7 +14,8 @@ from run_spi_campaign import command_output, sha256, validate_record, write_json
 from spi_benchmark_identity import IdentityError, inspect_binary
 
 PHASES = ('load', 'warm_hits', 'misses', 'cleared_hits', 'ranges', 'reuse',
-          'unique', 'scan', 'updates', 'single_commits', 'reopen', 'maintenance')
+          'unique', 'scan', 'updates', 'single_commits', 'reopen', 'maintenance',
+          'post_mutation_scan', 'post_mutation_ranges', 'post_compaction_scan')
 COUNTERS = frozenset(('read_calls', 'read_bytes', 'read_ns', 'write_calls', 'write_bytes',
     'write_ns', 'checksum_calls', 'checksum_bytes', 'checksum_ns', 'node_cache_hits',
     'node_cache_misses', 'value_cache_hits', 'value_cache_misses', 'node_saves', 'value_records',
@@ -111,6 +112,9 @@ def main() -> None:
                 raise RuntimeError(f'{engine} diagnostic failed: {result.stderr}')
             record = json.loads((destination / 'result.json').read_text(encoding='utf-8'))
             validate_profile(record, engine, args.rows, seed, args.value_bytes, args.cache_bytes)
+            for field in ('packed_scan_implementation', 'crc32_implementation'):
+                if record.get(field) != identity[field]:
+                    raise RuntimeError(f'profile binary/result mismatch: {field}')
             results.append({'engine': engine, 'seed': seed, 'phases': record['diagnostic_phases']})
             print(f'{engine} seed={seed} full-output and diagnostic-contract PASS', flush=True)
     check_inputs()

@@ -16,10 +16,10 @@ def result(engine="spi-value-cache", cache_bytes=8192):
              "cache_page_entries": 0}
     metric = {"samples_ns": [10, 20], "sample_count": 2, "total_ns": 30}
     return {"benchmark_schema": 2, "value_cache_workload_extension": 1, "diagnostic_only": False,
-            "grouped_write_workload_extension": 1,
+            "grouped_write_workload_extension": 1, "scan_workload_extension": 1,
             "engine": engine, "rows": 2000, "seed": 17, "value_bytes": 64,
             "cache_bytes": cache_bytes, "full_output_validation": "PASS",
-            **{name: copy.deepcopy(metric) for name in ["load_batches_256", "updates_batches_64", "single_row_commits", "warm_hits", "reused_16_key_hits", "unique_value_reads", "one_off_scan"]},
+            **{name: copy.deepcopy(metric) for name in ["load_batches_256", "updates_batches_64", "single_row_commits", "warm_hits", "reused_16_key_hits", "unique_value_reads", "one_off_scan", "post_mutation_scan", "post_mutation_ranges", "post_compaction_scan"]},
             **{name: copy.deepcopy(stats) for name in ["after_load", "after_updates", "cache_after_reused_hits", "cache_after_unique_reads", "before_maintenance"]},
             **{name: {**stats, "cache_value_entries": 0} for name in ["cache_after_one_off_scan", "after_maintenance"]}}
 
@@ -89,6 +89,21 @@ class CampaignResultTests(unittest.TestCase):
         record["after_load"]["cache_page_entries"] = 1
         with self.assertRaises(RuntimeError):
             self.check(record, "spi")
+
+    def test_post_mutation_and_compaction_scans_are_required(self):
+        record = result()
+        record.pop("scan_workload_extension")
+        with self.assertRaises(RuntimeError):
+            self.check(record)
+        for field in ("post_mutation_scan", "post_mutation_ranges", "post_compaction_scan"):
+            record = result()
+            record.pop(field)
+            with self.assertRaises(RuntimeError):
+                self.check(record)
+            record = result()
+            record[field]["total_ns"] += 1
+            with self.assertRaises(RuntimeError):
+                self.check(record)
 
     def test_invalid_samples_and_totals_rejected(self):
         for field, value in [("samples_ns", [-1]), ("samples_ns", []),

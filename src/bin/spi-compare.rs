@@ -18,6 +18,7 @@ fn build_info() -> Value {
         "debug_assertions": cfg!(debug_assertions),
         "profile_enabled": cfg!(feature = "spi-profile"),
         "crc32_implementation": if cfg!(feature = "spi-crc-bitwise") { "ieee-bitwise" } else { "ieee-slicing8" },
+        "packed_scan_implementation": if cfg!(feature = "spi-scan-materialized") { "materialized" } else { "direct-base" },
         "engines": if cfg!(feature = "rusqlite") {
             vec!["spi", "spi-value-cache", "spi-unbuffered", "spi-grouped", "spi-packed", "sqlite"]
         } else {
@@ -661,7 +662,36 @@ fn run(engine: &mut dyn Engine, rows: usize, seed: u64, size: usize) -> Result<V
     engine.reopen()?;
     report["reopen_ns"] = json!(t.elapsed().as_nanos() as u64);
     phase.finish(&mut report, "reopen");
+    let phase = Phase::start();
+    let t = Instant::now();
     let found = engine.range(&[], None)?;
+    let elapsed = t.elapsed().as_nanos() as u64;
+    phase.finish(&mut report, "post_mutation_scan");
+    report["post_mutation_scan"] = measure(vec![elapsed], rows);
+    // Narrow ranges after writes exercise mixed base/delta pages, including
+    // work near page boundaries. Every emitted row is checked independently.
+    let phase = Phase::start();
+    let mut samples = Vec::new();
+    for k in requests.iter().take(30) {
+        let i = u64::from_be_bytes(k.as_slice().try_into().unwrap());
+        let end = key((i + 2).min(rows as u64));
+        let t = Instant::now();
+        let actual = engine.range(k, Some(&end))?;
+        samples.push(t.elapsed().as_nanos() as u64);
+        let want: Vec<_> = expected
+            .range(k.clone()..end)
+            .map(|(key, value)| Entry {
+                key: key.clone(),
+                value: value.clone(),
+            })
+            .collect();
+        if actual != want {
+            return Err("post-mutation narrow range mismatch".into());
+        }
+    }
+    phase.finish(&mut report, "post_mutation_ranges");
+    report["post_mutation_ranges"] = measure(samples, 30);
+    report["scan_workload_extension"] = json!(1);
     let want: Vec<_> = expected
         .into_iter()
         .map(|(key, value)| Entry { key, value })
@@ -676,7 +706,13 @@ fn run(engine: &mut dyn Engine, rows: usize, seed: u64, size: usize) -> Result<V
     phase.finish(&mut report, "maintenance");
     report["after_maintenance"] = engine.stats()?;
     engine.reopen()?;
-    if engine.range(&[], None)? != want {
+    let phase = Phase::start();
+    let t = Instant::now();
+    let actual = engine.range(&[], None)?;
+    let elapsed = t.elapsed().as_nanos() as u64;
+    phase.finish(&mut report, "post_compaction_scan");
+    report["post_compaction_scan"] = measure(vec![elapsed], rows);
+    if actual != want {
         return Err("compacted/reopened state mismatch".into());
     }
     report["full_output_validation"] = json!("PASS");
@@ -788,6 +824,11 @@ fn main() -> Result<()> {
         "ieee-bitwise"
     } else {
         "ieee-slicing8"
+    });
+    report["packed_scan_implementation"] = json!(if cfg!(feature = "spi-scan-materialized") {
+        "materialized"
+    } else {
+        "direct-base"
     });
     report["benchmark_schema"] = json!(BENCHMARK_SCHEMA);
     report["engine"] = json!(kind);

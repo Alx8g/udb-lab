@@ -44,7 +44,7 @@ def validate_record(record: dict, engine: str, rows: int, seed: int, value_bytes
     if record.get("diagnostic_only") is not diagnostic:
         raise RuntimeError("diagnostic/performance result mismatch")
     expected = {"benchmark_schema": 2, "value_cache_workload_extension": 1,
-                "grouped_write_workload_extension": 1,
+                "grouped_write_workload_extension": 1, "scan_workload_extension": 1,
                 "engine": engine, "rows": rows, "seed": seed,
                 "value_bytes": value_bytes, "cache_bytes": cache_bytes,
                 "full_output_validation": "PASS"}
@@ -52,7 +52,8 @@ def validate_record(record: dict, engine: str, rows: int, seed: int, value_bytes
         if record.get(field) != value:
             raise RuntimeError(f"native result contract mismatch: {field}")
     for field in ("load_batches_256", "updates_batches_64", "single_row_commits",
-                  "warm_hits", "reused_16_key_hits", "unique_value_reads", "one_off_scan"):
+                  "warm_hits", "reused_16_key_hits", "unique_value_reads", "one_off_scan",
+                  "post_mutation_scan", "post_mutation_ranges", "post_compaction_scan"):
         metric = record.get(field, {})
         samples = metric.get("samples_ns")
         if not isinstance(samples, list) or not samples or any(type(n) is not int or n < 0 for n in samples):
@@ -102,6 +103,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--binary", type=Path, required=True)
     parser.add_argument("--expected-crc", choices=["ieee-bitwise", "ieee-slicing8"])
+    parser.add_argument("--expected-scan", choices=["direct-base", "materialized"])
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--rows", type=int, default=5000)
     parser.add_argument("--value-bytes", type=int, default=64)
@@ -117,6 +119,8 @@ def main() -> None:
         parser.error(str(exc))
     if args.expected_crc and identity["crc32_implementation"] != args.expected_crc:
         parser.error("binary CRC implementation does not match requested control")
+    if args.expected_scan and identity["packed_scan_implementation"] != args.expected_scan:
+        parser.error("binary scan implementation does not match requested control")
     out = args.out.resolve()
     if args.rows < 100 or not 1 <= args.value_bytes <= 4096 or args.cache_bytes < 1024:
         parser.error("rows >= 100, 1 <= value-bytes <= 4096, cache-bytes >= 1024 required")
@@ -174,6 +178,8 @@ def main() -> None:
             validate_record(record, engine, args.rows, seed, args.value_bytes, args.cache_bytes)
             if record.get("crc32_implementation") != identity["crc32_implementation"]:
                 raise RuntimeError("result CRC identity differs from binary")
+            if record.get("packed_scan_implementation") != identity["packed_scan_implementation"]:
+                raise RuntimeError("result scan identity differs from binary")
             records.append(record)
     check_unchanged_inputs()
     summary = {"trials": len(records), "all_full_outputs_match": True,
@@ -190,6 +196,9 @@ def main() -> None:
             "warm_hit_p99_us": [r["warm_hits"]["p99_ns"] / 1e3 for r in trials],
             "cleared_app_cache_p50_us": [r["application_cache_cleared_hits_not_storage_cold"]["p50_ns"] / 1e3 for r in trials],
             "range_p50_us": [r["ranges_up_to_100_keys"]["p50_ns"] / 1e3 for r in trials],
+            "post_mutation_scan_ms": [r["post_mutation_scan"]["total_ns"] / 1e6 for r in trials],
+            "post_mutation_range_p50_us": [r["post_mutation_ranges"]["p50_ns"] / 1e3 for r in trials],
+            "post_compaction_scan_ms": [r["post_compaction_scan"]["total_ns"] / 1e6 for r in trials],
             "updates_ms": [r["updates_batches_64"]["total_ns"] / 1e6 for r in trials],
             "durable_mutation_p50_us": [r["single_row_commits"]["p50_ns"] / 1e3 for r in trials],
             "reopen_ms": [r["reopen_ns"] / 1e6 for r in trials],

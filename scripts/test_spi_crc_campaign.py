@@ -9,14 +9,17 @@ from run_spi_crc_campaign import check_physical_pair, inspect_pair
 class CrcCampaignTests(unittest.TestCase):
     @patch('run_spi_crc_campaign.inspect_binary')
     def test_implementation_and_source_identity_required(self, inspect):
-        a = {'crc32_implementation': 'ieee-bitwise', 'source_sha256': {'storage': 'same'}}
-        b = {'crc32_implementation': 'ieee-slicing8', 'source_sha256': {'storage': 'same'}}
+        a = {'crc32_implementation': 'ieee-bitwise', 'source_sha256': {'storage': 'same'}, 'packed_scan_implementation': 'direct-base'}
+        b = {'crc32_implementation': 'ieee-slicing8', 'source_sha256': {'storage': 'same'}, 'packed_scan_implementation': 'direct-base'}
         inspect.side_effect = [a, b]
         self.assertEqual(len(inspect_pair(Path('a'), Path('b'), Path('.'))), 2)
         inspect.side_effect = [b, a]
         with self.assertRaises(ValueError):
             inspect_pair(Path('a'), Path('b'), Path('.'))
         inspect.side_effect = [a, {**b, 'source_sha256': {'storage': 'other'}}]
+        with self.assertRaises(ValueError):
+            inspect_pair(Path('a'), Path('b'), Path('.'))
+        inspect.side_effect = [a, {**b, 'packed_scan_implementation': 'materialized'}]
         with self.assertRaises(ValueError):
             inspect_pair(Path('a'), Path('b'), Path('.'))
 

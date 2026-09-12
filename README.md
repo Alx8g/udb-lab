@@ -278,6 +278,29 @@ storage, grouped writes and value admission remain disabled by default. The
 0.4-microsecond cached-point result is below the lab's reporting threshold and
 must not be used for a precise latency ratio.
 
+## Packed scan execution controls
+
+Packed base pages can be scanned directly from validated serialized records.
+The cursor seeks the lower key bound before allocating rows and checks the upper
+bound on borrowed key bytes. Snapshot scan results take ownership of inline
+values rather than copying them twice. Delta chains still use the bounded
+materialized merge, without rereading their head record. Generation checks,
+checksums, cache admission rules, output budgets and publication are unchanged.
+
+`spi-scan-materialized` retains the materialized scan implementation as a build
+control. Both modes report `packed_scan_implementation` in binary identity and
+results. `scripts/run_spi_scan_campaign.py` compares identical committed source
+and checksum implementations across normal cache, 1 KiB cache and 4 KiB values.
+It measures all workload phases, adds fully checked post-mutation and
+post-compaction scans, and requires identical persistent bytes between modes.
+These new phases change the benchmark stream, so older campaigns remain
+historical controls rather than interchangeable timing baselines.
+
+This is not a zero-copy output API or automatic expert routing. Base pages still
+require checked reads and output allocation. Delta merging and transactional
+output assembly still allocate. Performance and allocation acceptance for this
+execution change are pending the paired campaign.
+
 ## Diagnostic attribution
 
 The optional `spi-profile` build records phase-level storage work, nested wall

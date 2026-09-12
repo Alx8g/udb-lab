@@ -42,6 +42,7 @@ class BenchmarkIdentityTests(unittest.TestCase):
             "debug_assertions": False,
             "profile_enabled": False,
             "crc32_implementation": "ieee-slicing8",
+            "packed_scan_implementation": "direct-base",
             "engines": ["spi", "sqlite"],
             "sources": dict(self.sources),
         }
@@ -103,6 +104,17 @@ class BenchmarkIdentityTests(unittest.TestCase):
             info = self.info()
             info["crc32_implementation"] = name
             with self.assertRaisesRegex(IdentityError, "CRC implementation"):
+                validate_build_info(info, self.root, ["spi"])
+
+    def test_scan_identity_is_explicit(self):
+        for name in ("direct-base", "materialized"):
+            info = self.info()
+            info["packed_scan_implementation"] = name
+            self.assertEqual(validate_build_info(info, self.root, ["spi"])["packed_scan_implementation"], name)
+        for name in (None, False, "unknown"):
+            info = self.info()
+            info["packed_scan_implementation"] = name
+            with self.assertRaisesRegex(IdentityError, "packed scan implementation"):
                 validate_build_info(info, self.root, ["spi"])
 
     def test_missing_engine_is_rejected(self) -> None:

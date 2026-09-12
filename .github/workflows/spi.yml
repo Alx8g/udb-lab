@@ -34,6 +34,8 @@ jobs:
         run: cargo test --locked --release --lib --test spi-storage --test spi-concurrency --test spi-process --test spi-grouped --test spi-packed --test spi-profile -- --test-threads=1
       - name: Test legacy CRC interoperability control
         run: cargo test --locked --release --lib --test spi-packed --features spi-crc-bitwise -- --test-threads=1
+      - name: Test materialized packed-scan control
+        run: cargo test --locked --release --lib --test spi-packed --features spi-scan-materialized -- --test-threads=1
       - name: Test benchmark provenance validation
         run: python scripts/test_spi_benchmark_identity.py
       - name: Test benchmark result-contract validation
@@ -42,6 +44,8 @@ jobs:
         run: python scripts/test_spi_profile.py
       - name: Test paired checksum campaign contracts
         run: python scripts/test_spi_crc_campaign.py
+      - name: Test paired scan campaign contracts
+        run: python scripts/test_spi_scan_campaign.py
       - name: Test diagnostic-only implementation
         run: cargo test --locked --lib --bin spi-compare --test spi-profile --features "rusqlite spi-profile" -- --test-threads=1
       - name: Build native comparison adapter
