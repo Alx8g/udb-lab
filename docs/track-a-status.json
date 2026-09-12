@@ -2,6 +2,16 @@
   "schema": 1,
   "track_a_complete": false,
   "production_ready": false,
+  "target_architecture": "One coherent logical database with compact shared authoritative state and selectively activated exact physical/execution experts. Make ordinary state implicit where useful, represent sparse deviations, and choose durable, reconstructable or ephemeral lifetimes by measured whole-system cost. Seek joint speed, CPU and memory improvements rather than separate full specialist copies.",
+  "integrated_expert_routing": false,
+  "architecture_integration_boundary": "The native library exports spi storage and transactions. Factorization, certificates, shared arrangements and other research kernels are in the separate historical executable, not dispatched by the native comparison adapter. Explicit value-cache/grouped-update controls are not the research's automatic admission, routing or lifecycle controller. Shared logical correctness is partially implemented, but compact pages, implicit extent mapping, bounded sparse overlays, fine version reuse and resource-governed expert integration remain incomplete. SQLite losses describe this native baseline, not an integrated mixture-of-experts result. They remain real deficiencies to address.",
+  "next_integration": [
+    "Attribute baseline costs using phase CPU, I/O calls/bytes, allocations and publication timing. Existing elapsed-time trials do not establish CPU or RSS improvements.",
+    "Integrate scan-friendly arbitrary-key pages, fixed-extent implicit mapping and bounded sparse updates under the same logical transaction and recovery API, retaining the AVL control.",
+    "Specify expert semantic eligibility, snapshot coverage, state lifetime and admission/retirement cost. Reject stale or incomplete expert coverage rather than filter only existing candidates.",
+    "Connect eligible research mechanisms through shared state with explicit typed query/update contracts where required. Do not infer arithmetic semantics from arbitrary binary values.",
+    "Measure full lifecycle resource vectors and no-expert fallback overhead, with predeclared tolerances, uncertainty and adversarial workload shifts. No universal superiority claim without matched specialist evidence."
+  ],
   "implemented": [
     "Native embedded binary key/value API and CLI",
     "Checksummed immutable copy-on-write AVL index, no full resident key map",
@@ -17,6 +27,8 @@
     "Committed-source grouped-update campaigns with complete output checks and normal/1 KiB controls"
   ],
   "remaining": [
+    "Integrated cost-aware expert routing, admission, retirement and shared candidate state",
+    "Compact scan-friendly physical representation and implicit extent mapping",
     "Fine physical page incarnation/version-interval reuse",
     "Sparse delta overlays and bounded durable replay, or evidence that the COW baseline meets those objectives",
     "Resource-governed maintenance with foreground p99 and bounded writer stalls",

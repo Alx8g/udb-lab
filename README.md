@@ -20,6 +20,25 @@ This repo contains two layers:
 2. The native SPI embedded database. It is a small durable binary key/value
    store and Track A substrate, not yet a general SQL database.
 
+The target is one logical database with a compact shared core and selectively
+activated physical and execution experts, not one universal AVL tree. Ordinary
+state should be implicit where possible, deviations sparse, and derived state
+retained only while its measured savings repay construction and maintenance.
+
+The native benchmark does not yet exercise that integrated architecture. The
+specialist kernels remain in the separate laboratory executable. Native cache
+and grouped-write switches are limited experiments, not an automatic expert
+controller. SQLite's lead is a real gap in the current implementation, neither
+proof against the research nor something expert routing alone will fix.
+
+The next storage integration combines scan-friendly pages, implicit extent
+mapping and bounded sparse updates under the existing logical transaction and
+recovery contract. Preserve the AVL control while measuring the replacement.
+Expert eligibility, snapshot coverage, admission and retirement must then share
+that foundation. Compare total latency, CPU, memory, storage and lifecycle costs,
+including structureless workloads, rather than multiply isolated kernel wins.
+[The support ledger](docs/track-a-status.json) separates this target from what runs.
+
 The database API supports arbitrary binary keys and values, ordered scans,
 prefix scans, immutable snapshots, optimistic serializable transactions,
 checksummed copy-on-write index records, manifest publication exercised by
