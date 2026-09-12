@@ -1,0 +1,16 @@
+{
+  "command": [
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\spi-compare-slicing8.exe",
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\crc-paired-v1\\large-43-ieee-slicing8\\spi-packed-seed-43",
+    "spi-packed",
+    "1000",
+    "43",
+    "4096",
+    "8388608"
+  ],
+  "started_utc": "2026-09-12T11:31:36.114333+00:00",
+  "finished_utc": "2026-09-12T11:31:36.742775+00:00",
+  "exit_code": 0,
+  "stdout": "{\"engine\":\"spi-packed\",\"load_ms\":57.891,\"result\":\"C:\\\\Users\\\\verom\\\\.treehouse\\\\dbs-5593e8\\\\4\\\\dbs\\\\.working\\\\tmp\\\\crc-paired-v1\\\\large-43-ieee-slicing8\\\\spi-packed-seed-43\\\\result.json\",\"rows\":1000,\"single_commit_p50_us\":8904.5,\"validation\":\"PASS\",\"warm_read_ms\":9.7979}\n",
+  "stderr": ""
+}

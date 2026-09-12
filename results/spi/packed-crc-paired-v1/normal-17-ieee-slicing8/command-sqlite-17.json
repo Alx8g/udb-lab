@@ -1,0 +1,16 @@
+{
+  "command": [
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\spi-compare-slicing8.exe",
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\crc-paired-v1\\normal-17-ieee-slicing8\\sqlite-seed-17",
+    "sqlite",
+    "2000",
+    "17",
+    "64",
+    "8388608"
+  ],
+  "started_utc": "2026-09-12T11:30:55.633578+00:00",
+  "finished_utc": "2026-09-12T11:30:55.877138+00:00",
+  "exit_code": 0,
+  "stdout": "{\"engine\":\"sqlite\",\"load_ms\":23.9095,\"result\":\"C:\\\\Users\\\\verom\\\\.treehouse\\\\dbs-5593e8\\\\4\\\\dbs\\\\.working\\\\tmp\\\\crc-paired-v1\\\\normal-17-ieee-slicing8\\\\sqlite-seed-17\\\\result.json\",\"rows\":2000,\"single_commit_p50_us\":2644.2,\"validation\":\"PASS\",\"warm_read_ms\":6.0477}\n",
+  "stderr": ""
+}

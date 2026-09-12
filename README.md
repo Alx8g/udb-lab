@@ -239,8 +239,10 @@ These results do not justify enabling packed storage by default. With a 1 KiB
 cache, point medians regressed from 46.6 to 86.7 microseconds and update time
 from 150.66 to 186.97 ms. With 4 KiB values, ranges regressed from 2.38 to 2.66 ms.
 SQLite remained faster on general scans, ranges, updates and durable commits.
-No across-workload, CPU or total-memory superiority is established. Diagnostic
-attribution of packed cache misses is the next gate before further optimization.
+These are the pre-acceleration results, retained as negative controls. The paired
+checksum campaign below addresses the tiny-cache latency regression without
+changing persistent bytes. Across-workload CPU and total-memory superiority
+remain unproven.
 
 ## Checksum implementation controls
 
@@ -252,9 +254,29 @@ result record. This is not CRC32C and does not weaken integrity checks.
 
 The slicing tables add 8 KiB of static read-only data per process and require no
 per-call allocation. Tests compare independent zlib-generated vectors, all short
-split/alignment cases and irregular fragments through 16 MiB. Runtime performance
-acceptance awaits paired bitwise/slicing campaigns. Existing diagnostic profiles
-identify repeated page checksumming as the main tiny-cache packed CPU cost.
+split/alignment cases and irregular fragments through 16 MiB. The
+[paired release campaign](results/spi/packed-crc-paired-v1/summary.json) passed
+54 trials from identical source bytes and 18 post-maintenance persistent-file
+comparisons. Engine order rotates and checksum-build order alternates by seed.
+
+At 1 KiB, packed point medians fell from 92.3 to 22.5 microseconds, unique reads
+from 163.45 to 29.90 ms, and update batches from 200.12 to 125.79 ms. The sliced
+legacy control took 48.9 microseconds for points and 162.26 ms for updates. With
+normal cache, packed scans fell from 1.456 to 0.615 ms, close to SQLite's 0.617 ms
+in that arm, and ranges fell from 117.0 to 47.3 microseconds. With 4 KiB values,
+packed scans fell from 25.51 to 8.00 ms and ranges from 2.60 to 0.80 ms.
+
+Not every phase improved. Normal-cache packed updates measured 87.11 versus
+85.33 ms, and large-value single-row commits measured 9.53 versus 9.36 ms.
+The SQLite negative controls also varied, so small changes are not evidence of
+causality. SQLite still leads on general updates, durable commits and most ranges.
+Three seeds do not establish statistical equivalence or service latency.
+
+CRC acceleration changes compute cost, not page-miss read bytes or allocation
+volume. The earlier diagnostic byte-amplification findings remain open. Packed
+storage, grouped writes and value admission remain disabled by default. The
+0.4-microsecond cached-point result is below the lab's reporting threshold and
+must not be used for a precise latency ratio.
 
 ## Diagnostic attribution
 
