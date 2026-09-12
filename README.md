@@ -338,7 +338,28 @@ not a claim about total RSS. Requested read calls and bytes must match the contr
 are set. The paired scan runner accepts an optional third `--delta` binary and
 verifies source, checksum and execution-mode identity before output creation.
 All three modes rotate through execution order and must produce identical
-persistent bytes. Latency and allocation acceptance for delta views remain pending.
+persistent bytes. The [three-mode campaign](results/spi/packed-delta-view-three-mode-v1/summary.json)
+passed all 81 release trials and 36 persistent-byte comparisons. Against direct-base,
+normal-cache packed post-mutation ranges measured 17.3 versus 36.7 microseconds,
+and full post-mutation scans measured 0.537 versus 0.635 ms. At 1 KiB, post-mutation
+ranges measured 28.1 versus 45.8 microseconds. With 4 KiB values, narrow
+post-mutation ranges measured 53.9 versus 85.9 microseconds, while full-scan
+gains were small.
+
+The [direct-delta diagnostics](results/spi/packed-delta-profile-direct-delta-normal-v1/summary.json)
+and [direct-base control](results/spi/packed-delta-profile-direct-base-normal-v1/summary.json)
+passed 18 trials across normal cache, 1 KiB cache and 4 KiB values. Normal packed
+post-mutation allocation requests fell from 1,216,444 to 574,924 bytes for the
+full scan and from 2,419,964 to 598,012 bytes for narrow ranges. Corresponding
+read calls and bytes were identical. No-delta scan allocation requests were
+unchanged. These one-seed diagnostics measure allocation traffic, not retained
+RAM, RSS or a precise CPU/op improvement.
+
+Not every release metric improved. Normal packed pre-mutation ranges increased
+from 17.4 to 19.2 microseconds and durable commits from 8.86 to 9.21 ms. Large-value
+post-compaction scans increased from 6.39 to 7.02 ms. Unchanged engine controls
+also varied. These small trials support a targeted post-mutation scan improvement,
+not an across-workload win, automatic expert routing or production readiness.
 
 ## Diagnostic attribution
 

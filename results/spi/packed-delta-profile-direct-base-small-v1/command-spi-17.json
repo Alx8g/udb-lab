@@ -1,0 +1,14 @@
+{
+  "command": [
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\delta-view-profile-binaries-v1\\direct-base.exe",
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\packed-delta-profile-direct-base-small-v1\\spi-seed-17",
+    "spi",
+    "2000",
+    "17",
+    "64",
+    "1024"
+  ],
+  "exit_code": 0,
+  "stdout": "{\"engine\":\"spi\",\"load_ms\":268.3523,\"result\":\"C:\\\\Users\\\\verom\\\\.treehouse\\\\dbs-5593e8\\\\4\\\\dbs\\\\.working\\\\tmp\\\\packed-delta-profile-direct-base-small-v1\\\\spi-seed-17\\\\result.json\",\"rows\":2000,\"single_commit_p50_us\":8999.2,\"validation\":\"PASS\",\"warm_read_ms\":89.4509}\n",
+  "stderr": ""
+}

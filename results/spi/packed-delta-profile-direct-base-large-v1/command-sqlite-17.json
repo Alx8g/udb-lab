@@ -1,0 +1,14 @@
+{
+  "command": [
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\delta-view-profile-binaries-v1\\direct-base.exe",
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\packed-delta-profile-direct-base-large-v1\\sqlite-seed-17",
+    "sqlite",
+    "1000",
+    "17",
+    "4096",
+    "8388608"
+  ],
+  "exit_code": 0,
+  "stdout": "{\"engine\":\"sqlite\",\"load_ms\":58.8555,\"result\":\"C:\\\\Users\\\\verom\\\\.treehouse\\\\dbs-5593e8\\\\4\\\\dbs\\\\.working\\\\tmp\\\\packed-delta-profile-direct-base-large-v1\\\\sqlite-seed-17\\\\result.json\",\"rows\":1000,\"single_commit_p50_us\":2571.9,\"validation\":\"PASS\",\"warm_read_ms\":29.6257}\n",
+  "stderr": ""
+}
