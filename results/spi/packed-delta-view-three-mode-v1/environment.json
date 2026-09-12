@@ -1,0 +1,136 @@
+{
+  "git_head": "4f39349a31db5ce25b0feefea756e8c994550080",
+  "source_sha256": {
+    "Cargo.lock": "ef34c9bcf85b089be5d206da18e1844752301ccbecf39f51389b8a3c27ce18ae",
+    "Cargo.toml": "99888ebc4dbbd11cb5a2bfc63dce477ad0629390b47fac02c70a9c2ec6da8c0d",
+    "src/bin/spi-compare.rs": "5e294dd77b905bc9b5507fe480c45cf101d7977b1d58f13cd6cbbf48db1063f2",
+    "src/lib.rs": "1f2fd1f3ef60ec9ba5381059ed54d9068991b57543903090c3bf3c663c2f5f02",
+    "src/spi/append_buffer.rs": "e7861eebad447ca3ff5ecdbb882d6e19e891548c42ee82f4f3623bd8c4d17721",
+    "src/spi/mod.rs": "70cb78964e38b0c07763f5aab89c48c9b8c70499889b97ba8abb4afec271cdf8",
+    "src/spi/packed.rs": "57467c3212626e92078411558a2c79b44a92c29a8b37faab57d386f06d770db2",
+    "src/spi/profile.rs": "4ea1f516231abe2b179d32a50bfffe47d6f03496880260eac123a101cd7f2fe6",
+    "src/spi/storage.rs": "4ac6f7c711d953dc129e28abad6b5fb3a5932740002eb2c52986bc9978518ea1",
+    "src/spi/transaction.rs": "5c116bda409684a001ac234691b59da6e2099f4d04beb0d1ed311cc662f67ff0",
+    "scripts/run_spi_scan_campaign.py": "7a119f24ca0ddc91adeeafdd4bee0f9db743b52323727847bdef5226376df08a",
+    "scripts/run_spi_crc_campaign.py": "1108662442bc3cb2eec0950296ea912c176aa361971afb1c5521902e834b985b",
+    "scripts/run_spi_campaign.py": "6f6258fb5510e6898eff5b5d23b87db3e3dc84c2d05533a5c76146da44755b27",
+    "scripts/spi_benchmark_identity.py": "15d9d74319b425491113595c1877b7c8de72cbdce972d956c6ebef8d49fdec0b"
+  },
+  "binary_sha256": {
+    "materialized": "2ed467fa263b27efdc7e60d1c02462822f4257c091a44c5d385890b18006ed09",
+    "direct-base": "dc3d9bea139a4213249b2bb0cb8695f7b2d3b3085af4c7b37a8da9d3a71bcf3a",
+    "direct-delta": "cdd05adc425a0e4075a0bf3e4a81f80c1963138fd3b136a252d27328cf9b0e42"
+  },
+  "identities": {
+    "materialized": {
+      "identity_schema": 1,
+      "benchmark_schema": 2,
+      "debug_assertions": false,
+      "profile_enabled": false,
+      "crc32_implementation": "ieee-slicing8",
+      "packed_scan_implementation": "materialized",
+      "compiled_engines": [
+        "spi",
+        "spi-value-cache",
+        "spi-unbuffered",
+        "spi-grouped",
+        "spi-packed",
+        "sqlite"
+      ],
+      "source_sha256": {
+        "Cargo.lock": "ef34c9bcf85b089be5d206da18e1844752301ccbecf39f51389b8a3c27ce18ae",
+        "Cargo.toml": "99888ebc4dbbd11cb5a2bfc63dce477ad0629390b47fac02c70a9c2ec6da8c0d",
+        "src/bin/spi-compare.rs": "5e294dd77b905bc9b5507fe480c45cf101d7977b1d58f13cd6cbbf48db1063f2",
+        "src/lib.rs": "1f2fd1f3ef60ec9ba5381059ed54d9068991b57543903090c3bf3c663c2f5f02",
+        "src/spi/append_buffer.rs": "e7861eebad447ca3ff5ecdbb882d6e19e891548c42ee82f4f3623bd8c4d17721",
+        "src/spi/mod.rs": "70cb78964e38b0c07763f5aab89c48c9b8c70499889b97ba8abb4afec271cdf8",
+        "src/spi/packed.rs": "57467c3212626e92078411558a2c79b44a92c29a8b37faab57d386f06d770db2",
+        "src/spi/profile.rs": "4ea1f516231abe2b179d32a50bfffe47d6f03496880260eac123a101cd7f2fe6",
+        "src/spi/storage.rs": "4ac6f7c711d953dc129e28abad6b5fb3a5932740002eb2c52986bc9978518ea1",
+        "src/spi/transaction.rs": "5c116bda409684a001ac234691b59da6e2099f4d04beb0d1ed311cc662f67ff0"
+      },
+      "limitations": "Source-byte identity is checked. Build flags beyond debug assertions and external dependencies are recorded separately, not attested by this protocol."
+    },
+    "direct-base": {
+      "identity_schema": 1,
+      "benchmark_schema": 2,
+      "debug_assertions": false,
+      "profile_enabled": false,
+      "crc32_implementation": "ieee-slicing8",
+      "packed_scan_implementation": "direct-base",
+      "compiled_engines": [
+        "spi",
+        "spi-value-cache",
+        "spi-unbuffered",
+        "spi-grouped",
+        "spi-packed",
+        "sqlite"
+      ],
+      "source_sha256": {
+        "Cargo.lock": "ef34c9bcf85b089be5d206da18e1844752301ccbecf39f51389b8a3c27ce18ae",
+        "Cargo.toml": "99888ebc4dbbd11cb5a2bfc63dce477ad0629390b47fac02c70a9c2ec6da8c0d",
+        "src/bin/spi-compare.rs": "5e294dd77b905bc9b5507fe480c45cf101d7977b1d58f13cd6cbbf48db1063f2",
+        "src/lib.rs": "1f2fd1f3ef60ec9ba5381059ed54d9068991b57543903090c3bf3c663c2f5f02",
+        "src/spi/append_buffer.rs": "e7861eebad447ca3ff5ecdbb882d6e19e891548c42ee82f4f3623bd8c4d17721",
+        "src/spi/mod.rs": "70cb78964e38b0c07763f5aab89c48c9b8c70499889b97ba8abb4afec271cdf8",
+        "src/spi/packed.rs": "57467c3212626e92078411558a2c79b44a92c29a8b37faab57d386f06d770db2",
+        "src/spi/profile.rs": "4ea1f516231abe2b179d32a50bfffe47d6f03496880260eac123a101cd7f2fe6",
+        "src/spi/storage.rs": "4ac6f7c711d953dc129e28abad6b5fb3a5932740002eb2c52986bc9978518ea1",
+        "src/spi/transaction.rs": "5c116bda409684a001ac234691b59da6e2099f4d04beb0d1ed311cc662f67ff0"
+      },
+      "limitations": "Source-byte identity is checked. Build flags beyond debug assertions and external dependencies are recorded separately, not attested by this protocol."
+    },
+    "direct-delta": {
+      "identity_schema": 1,
+      "benchmark_schema": 2,
+      "debug_assertions": false,
+      "profile_enabled": false,
+      "crc32_implementation": "ieee-slicing8",
+      "packed_scan_implementation": "direct-delta",
+      "compiled_engines": [
+        "spi",
+        "spi-value-cache",
+        "spi-unbuffered",
+        "spi-grouped",
+        "spi-packed",
+        "sqlite"
+      ],
+      "source_sha256": {
+        "Cargo.lock": "ef34c9bcf85b089be5d206da18e1844752301ccbecf39f51389b8a3c27ce18ae",
+        "Cargo.toml": "99888ebc4dbbd11cb5a2bfc63dce477ad0629390b47fac02c70a9c2ec6da8c0d",
+        "src/bin/spi-compare.rs": "5e294dd77b905bc9b5507fe480c45cf101d7977b1d58f13cd6cbbf48db1063f2",
+        "src/lib.rs": "1f2fd1f3ef60ec9ba5381059ed54d9068991b57543903090c3bf3c663c2f5f02",
+        "src/spi/append_buffer.rs": "e7861eebad447ca3ff5ecdbb882d6e19e891548c42ee82f4f3623bd8c4d17721",
+        "src/spi/mod.rs": "70cb78964e38b0c07763f5aab89c48c9b8c70499889b97ba8abb4afec271cdf8",
+        "src/spi/packed.rs": "57467c3212626e92078411558a2c79b44a92c29a8b37faab57d386f06d770db2",
+        "src/spi/profile.rs": "4ea1f516231abe2b179d32a50bfffe47d6f03496880260eac123a101cd7f2fe6",
+        "src/spi/storage.rs": "4ac6f7c711d953dc129e28abad6b5fb3a5932740002eb2c52986bc9978518ea1",
+        "src/spi/transaction.rs": "5c116bda409684a001ac234691b59da6e2099f4d04beb0d1ed311cc662f67ff0"
+      },
+      "limitations": "Source-byte identity is checked. Build flags beyond debug assertions and external dependencies are recorded separately, not attested by this protocol."
+    }
+  },
+  "cases": {
+    "normal": [
+      2000,
+      64,
+      8388608
+    ],
+    "small": [
+      2000,
+      64,
+      1024
+    ],
+    "large": [
+      1000,
+      4096,
+      8388608
+    ]
+  },
+  "seeds": [
+    17,
+    29,
+    43
+  ],
+  "method": "Sequential normal release controls. Two modes alternate, three modes rotate by case/seed. Engine order rotates. Base and post-mutation scans included."
+}

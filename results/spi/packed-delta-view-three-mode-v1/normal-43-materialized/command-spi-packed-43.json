@@ -1,0 +1,16 @@
+{
+  "command": [
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\delta-view-binaries-v1\\materialized.exe",
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\delta-view-three-mode-v1\\normal-43-materialized\\spi-packed-seed-43",
+    "spi-packed",
+    "2000",
+    "43",
+    "64",
+    "8388608"
+  ],
+  "started_utc": "2026-09-12T12:43:38.481320+00:00",
+  "finished_utc": "2026-09-12T12:43:39.031629+00:00",
+  "exit_code": 0,
+  "stdout": "{\"engine\":\"spi-packed\",\"load_ms\":94.6367,\"result\":\"C:\\\\Users\\\\verom\\\\.treehouse\\\\dbs-5593e8\\\\4\\\\dbs\\\\.working\\\\tmp\\\\delta-view-three-mode-v1\\\\normal-43-materialized\\\\spi-packed-seed-43\\\\result.json\",\"rows\":2000,\"single_commit_p50_us\":8759.1,\"validation\":\"PASS\",\"warm_read_ms\":0.9455}\n",
+  "stderr": ""
+}

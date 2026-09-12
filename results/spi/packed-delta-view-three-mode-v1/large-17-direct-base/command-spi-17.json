@@ -1,0 +1,16 @@
+{
+  "command": [
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\delta-view-binaries-v1\\direct-base.exe",
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\delta-view-three-mode-v1\\large-17-direct-base\\spi-seed-17",
+    "spi",
+    "1000",
+    "17",
+    "4096",
+    "8388608"
+  ],
+  "started_utc": "2026-09-12T12:44:05.314694+00:00",
+  "finished_utc": "2026-09-12T12:44:05.938035+00:00",
+  "exit_code": 0,
+  "stdout": "{\"engine\":\"spi\",\"load_ms\":72.7048,\"result\":\"C:\\\\Users\\\\verom\\\\.treehouse\\\\dbs-5593e8\\\\4\\\\dbs\\\\.working\\\\tmp\\\\delta-view-three-mode-v1\\\\large-17-direct-base\\\\spi-seed-17\\\\result.json\",\"rows\":1000,\"single_commit_p50_us\":8964.0,\"validation\":\"PASS\",\"warm_read_ms\":9.3702}\n",
+  "stderr": ""
+}

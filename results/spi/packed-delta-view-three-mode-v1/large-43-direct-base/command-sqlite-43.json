@@ -1,0 +1,16 @@
+{
+  "command": [
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\delta-view-binaries-v1\\direct-base.exe",
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\delta-view-three-mode-v1\\large-43-direct-base\\sqlite-seed-43",
+    "sqlite",
+    "1000",
+    "43",
+    "4096",
+    "8388608"
+  ],
+  "started_utc": "2026-09-12T12:44:13.608326+00:00",
+  "finished_utc": "2026-09-12T12:44:14.070360+00:00",
+  "exit_code": 0,
+  "stdout": "{\"engine\":\"sqlite\",\"load_ms\":71.3327,\"result\":\"C:\\\\Users\\\\verom\\\\.treehouse\\\\dbs-5593e8\\\\4\\\\dbs\\\\.working\\\\tmp\\\\delta-view-three-mode-v1\\\\large-43-direct-base\\\\sqlite-seed-43\\\\result.json\",\"rows\":1000,\"single_commit_p50_us\":2702.9,\"validation\":\"PASS\",\"warm_read_ms\":33.0158}\n",
+  "stderr": ""
+}
