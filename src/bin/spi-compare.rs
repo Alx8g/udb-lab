@@ -7,6 +7,32 @@ use serde_json::{json, Value};
 use std::path::Path;
 use std::{collections::BTreeMap, error::Error, fs, path::PathBuf, time::Instant};
 use udb_lab::spi::{Database, Entry, Options};
+
+const IDENTITY_SCHEMA: u64 = 1;
+const BENCHMARK_SCHEMA: u64 = 2;
+
+fn build_info() -> Value {
+    json!({
+        "identity_schema": IDENTITY_SCHEMA,
+        "benchmark_schema": BENCHMARK_SCHEMA,
+        "debug_assertions": cfg!(debug_assertions),
+        "engines": if cfg!(feature = "rusqlite") {
+            vec!["spi", "spi-unbuffered", "sqlite"]
+        } else {
+            vec!["spi", "spi-unbuffered"]
+        },
+        "sources": {
+            "Cargo.toml": include_str!("../../Cargo.toml"),
+            "Cargo.lock": include_str!("../../Cargo.lock"),
+            "src/lib.rs": include_str!("../lib.rs"),
+            "src/spi/mod.rs": include_str!("../spi/mod.rs"),
+            "src/spi/append_buffer.rs": include_str!("../spi/append_buffer.rs"),
+            "src/spi/storage.rs": include_str!("../spi/storage.rs"),
+            "src/spi/transaction.rs": include_str!("../spi/transaction.rs"),
+            "src/bin/spi-compare.rs": include_str!("spi-compare.rs"),
+        }
+    })
+}
 type Result<T> = std::result::Result<T, Box<dyn Error>>;
 trait Engine {
     fn batch(&mut self, rows: &[Entry]) -> Result<()>;
@@ -23,9 +49,10 @@ struct Spi {
     options: Options,
 }
 impl Spi {
-    fn new(path: PathBuf, cache: usize) -> Result<Self> {
+    fn new(path: PathBuf, cache: usize, append_buffer: bool) -> Result<Self> {
         let options = Options {
             cache_bytes: cache,
+            append_buffer,
             ..Options::default()
         };
         Ok(Self {
@@ -69,7 +96,11 @@ impl Engine for Spi {
         Ok(())
     }
     fn stats(&self) -> Result<Value> {
-        Ok(serde_json::to_value(self.db().stats()?)?)
+        let mut stats = serde_json::to_value(self.db().stats()?)?;
+        stats["append_buffer_enabled"] = json!(self.options.append_buffer);
+        stats["append_buffer_capacity_bytes"] =
+            json!(if self.options.append_buffer { 65536 } else { 0 });
+        Ok(stats)
     }
 }
 #[cfg(feature = "rusqlite")]
@@ -343,6 +374,33 @@ fn forced_mutation(key: &[u8], expected: &BTreeMap<Vec<u8>, Vec<u8>>) -> Entry {
 mod tests {
     use super::*;
     #[test]
+    fn build_info_matches_compiled_engines_and_complete_storage_inventory() {
+        let info = build_info();
+        assert_eq!(
+            info["engines"]
+                .as_array()
+                .unwrap()
+                .contains(&json!("sqlite")),
+            cfg!(feature = "rusqlite")
+        );
+        assert!(info["engines"]
+            .as_array()
+            .unwrap()
+            .contains(&json!("spi-unbuffered")));
+        let modules: Vec<_> = fs::read_dir(concat!(env!("CARGO_MANIFEST_DIR"), "/src/spi"))
+            .unwrap()
+            .map(|e| e.unwrap().file_name().into_string().unwrap())
+            .filter(|name| name.ends_with(".rs"))
+            .collect();
+        for name in modules {
+            assert!(info["sources"].get(format!("src/spi/{name}")).is_some());
+        }
+        assert_eq!(
+            info["sources"]["src/spi/append_buffer.rs"],
+            include_str!("../spi/append_buffer.rs")
+        );
+    }
+    #[test]
     fn single_commit_stream_changes_even_repeated_keys() {
         let key = vec![0, 255];
         let mut expected = BTreeMap::from([(key.clone(), vec![37])]);
@@ -356,8 +414,12 @@ mod tests {
 
 fn main() -> Result<()> {
     let args: Vec<_> = std::env::args().collect();
+    if args.get(1).is_some_and(|arg| arg == "--build-info") {
+        println!("{}", build_info());
+        return Ok(());
+    }
     if args.len() < 3 {
-        return Err("usage: spi-compare NEW_OUTPUT_DIR spi|sqlite [rows=5000] [seed=1] [value_bytes=64] [cache_bytes=8388608]".into());
+        return Err("usage: spi-compare NEW_OUTPUT_DIR spi|spi-unbuffered|sqlite [rows=5000] [seed=1] [value_bytes=64] [cache_bytes=8388608]".into());
     }
     let dir = PathBuf::from(&args[1]);
     let kind = &args[2];
@@ -372,18 +434,22 @@ fn main() -> Result<()> {
     if rows < 100 || size == 0 || size > 4096 {
         return Err("rows>=100 and value_bytes in 1..4096 required".into());
     }
-    if kind != "spi" && (kind != "sqlite" || !cfg!(feature = "rusqlite")) {
+    if kind != "spi"
+        && kind != "spi-unbuffered"
+        && (kind != "sqlite" || !cfg!(feature = "rusqlite"))
+    {
         return Err("unknown engine or SQLite feature not enabled".into());
     }
     fs::create_dir(&dir)?;
     let mut engine: Box<dyn Engine> = match kind.as_str() {
-        "spi" => Box::new(Spi::new(dir.join("db"), cache)?),
+        "spi" => Box::new(Spi::new(dir.join("db"), cache, true)?),
+        "spi-unbuffered" => Box::new(Spi::new(dir.join("db"), cache, false)?),
         #[cfg(feature = "rusqlite")]
         "sqlite" => Box::new(Sqlite::new(dir.join("db"), cache)?),
         _ => return Err("unknown engine or SQLite feature not enabled".into()),
     };
     let mut report = run(engine.as_mut(), rows, seed, size)?;
-    report["benchmark_schema"] = json!(2);
+    report["benchmark_schema"] = json!(BENCHMARK_SCHEMA);
     report["engine"] = json!(kind);
     report["rows"] = json!(rows);
     report["seed"] = json!(seed);

@@ -36,6 +36,8 @@ fn process_exit_at_every_commit_publication_stage() {
     for stage in [
         "record_header",
         "record_payload",
+        "append_flush_half",
+        "append_flush",
         "data_sync",
         "manifest_write",
         "manifest_sync",
@@ -54,7 +56,11 @@ fn process_exit_at_every_commit_publication_stage() {
         assert_eq!(output.status.code(), Some(86), "{stage}: {:?}", output);
         let db = Database::open(&p, Options::default()).unwrap();
         let a = db.get(b"a").unwrap().unwrap();
-        assert!(a == b"old" || a == b"new");
+        if matches!(stage, "manifest_replace" | "directory_sync") {
+            assert_eq!(a, b"new");
+        } else {
+            assert_eq!(a, b"old");
+        }
         assert_eq!(db.get(b"b").unwrap(), Some(a));
         db.verify().unwrap();
         let mut t = db.begin().unwrap();
@@ -67,6 +73,8 @@ fn process_exit_during_compaction_does_not_mix_epochs() {
     for stage in [
         "record_header",
         "record_payload",
+        "append_flush_half",
+        "append_flush",
         "compact_data_sync",
         "manifest_write",
         "manifest_sync",

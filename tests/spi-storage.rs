@@ -417,3 +417,142 @@ fn missing_key_aba_and_bounded_validation_history_abort_safely() {
     old.set(b"result", b"x").unwrap();
     assert!(matches!(old.commit(), Err(Error::Conflict)));
 }
+
+#[test]
+fn buffered_and_direct_arenas_match_with_zero_cache_large_values_and_rotations() {
+    let mut artifacts = Vec::new();
+    for buffered in [false, true] {
+        let p = path("buffer-control");
+        let options = Options {
+            cache_bytes: 0,
+            append_buffer: buffered,
+            ..Options::default()
+        };
+        let db = Database::create(&p, options.clone()).unwrap();
+        let empty = db.snapshot().unwrap();
+        let mut t = db.begin().unwrap();
+        // Permuted keys exercise both double rotations and repeated flushes.
+        for i in 0..600u64 {
+            let k = (i * 331 % 601).to_be_bytes();
+            let v = if i % 100 == 0 {
+                vec![(i % 251) as u8; 70000]
+            } else {
+                i.to_le_bytes().to_vec()
+            };
+            t.set(k, v).unwrap();
+        }
+        t.commit().unwrap();
+        let pinned = db.snapshot().unwrap();
+        let before = pinned.scan_prefix(&[]).unwrap();
+        let mut t = db.begin().unwrap();
+        for i in (0..600u64).step_by(3) {
+            t.delete((i * 331 % 601).to_be_bytes()).unwrap();
+        }
+        t.commit().unwrap();
+        let after = db.scan_prefix(&[]).unwrap();
+        assert_eq!(db.verify().unwrap(), 400);
+        assert!(empty.scan_prefix(&[]).unwrap().is_empty());
+        assert_eq!(pinned.scan_prefix(&[]).unwrap(), before);
+        let stats = db.stats().unwrap();
+        let arena = fs::read(p.join("arena-0.spi")).unwrap();
+        assert_eq!(stats.cache_bytes, 0);
+        assert_eq!(stats.bytes_written + 8, arena.len() as u64);
+        db.compact().unwrap();
+        assert_eq!(db.collect().unwrap(), 0);
+        assert_eq!(pinned.scan_prefix(&[]).unwrap(), before);
+        drop(pinned);
+        drop(empty);
+        db.collect().unwrap();
+        assert_eq!(db.scan_prefix(&[]).unwrap(), after);
+        db.verify().unwrap();
+        drop(db);
+        let db = Database::open(&p, options).unwrap();
+        assert_eq!(db.scan_prefix(&[]).unwrap(), after);
+        artifacts.push((arena, stats.arena_write_calls, stats.bytes_written));
+    }
+    assert_eq!(
+        artifacts[0].0, artifacts[1].0,
+        "buffering changed file bytes"
+    );
+    assert_eq!(artifacts[0].2, artifacts[1].2);
+    assert!(
+        artifacts[1].1 * 10 < artifacts[0].1,
+        "buffering did not reduce write calls"
+    );
+}
+
+#[test]
+fn half_flushed_buffer_is_not_published_and_short_writes_remain_complete() {
+    let p = path("half-flush");
+    let db = Database::create(&p, Options::default()).unwrap();
+    put(&db, b"k", b"old");
+    let committed = db.stats().unwrap().committed_bytes;
+    drop(db);
+    // A replacement emits one value and one node. Event 5 is the half flush.
+    let db = Database::open(
+        &p,
+        Options {
+            fail_at: Some(5),
+            write_chunk: Some(3),
+            ..Options::default()
+        },
+    )
+    .unwrap();
+    let mut t = db.begin().unwrap();
+    t.set(b"k", b"new").unwrap();
+    assert!(matches!(t.commit(), Err(Error::Io(_))));
+    assert!(fs::metadata(p.join("arena-0.spi")).unwrap().len() > committed);
+    assert!(matches!(db.get(b"k"), Err(Error::Poisoned)));
+    drop(db);
+    let db = Database::open(
+        &p,
+        Options {
+            write_chunk: Some(1),
+            ..Options::default()
+        },
+    )
+    .unwrap();
+    assert_eq!(db.get(b"k").unwrap(), Some(b"old".to_vec()));
+    put(&db, b"k", b"recovered");
+    db.verify().unwrap();
+    drop(db);
+    assert_eq!(
+        Database::open(&p, Options::default())
+            .unwrap()
+            .get(b"k")
+            .unwrap(),
+        Some(b"recovered".to_vec())
+    );
+}
+
+#[test]
+fn buffered_publication_preserves_post_commit_node_cache() {
+    for buffering in [false, true] {
+        let db = Database::create(
+            path("post-commit-cache"),
+            Options {
+                append_buffer: buffering,
+                cache_bytes: 4 * 1024 * 1024,
+                ..Options::default()
+            },
+        )
+        .unwrap();
+        let mut t = db.begin().unwrap();
+        for i in 0..250u64 {
+            t.set(i.to_be_bytes(), i.to_le_bytes()).unwrap();
+        }
+        t.commit().unwrap();
+        let before = db.stats().unwrap();
+        assert!(before.cache_entries >= 250);
+        for i in 0..250u64 {
+            assert_eq!(
+                db.get(&i.to_be_bytes()).unwrap(),
+                Some(i.to_le_bytes().to_vec())
+            );
+        }
+        // Values are uncached in both controls. No additional index reads
+        // should be necessary immediately after this small commit.
+        assert_eq!(db.stats().unwrap().reads - before.reads, 250);
+        assert!(db.stats().unwrap().cache_bytes <= 4 * 1024 * 1024);
+    }
+}

@@ -7,6 +7,7 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 
+use super::append_buffer::{AppendBuffer, APPEND_CAPACITY};
 use super::transaction::Transaction;
 
 const MAGIC: &[u8; 8] = b"SPIREC01";
@@ -61,6 +62,9 @@ pub struct Options {
     pub fail_at: Option<usize>,
     /// Fragment writes to exercise complete-transfer handling. None normally.
     pub write_chunk: Option<usize>,
+    /// Coalesce immutable records in a writer-private 64 KiB buffer.
+    /// False retains the unbuffered control with identical durable barriers.
+    pub append_buffer: bool,
 }
 impl Default for Options {
     fn default() -> Self {
@@ -71,6 +75,7 @@ impl Default for Options {
             conflict_bytes: 2 * 1024 * 1024,
             fail_at: None,
             write_chunk: None,
+            append_buffer: true,
         }
     }
 }
@@ -85,6 +90,8 @@ pub struct Stats {
     pub reads: u64,
     pub bytes_read: u64,
     pub bytes_written: u64,
+    /// Attempted arena positional writes, including partial transfers.
+    pub arena_write_calls: u64,
     pub retained_epochs: usize,
 }
 #[derive(Clone, Copy, Debug)]
@@ -146,6 +153,7 @@ pub(crate) struct Epoch {
     reads: AtomicU64,
     bytes_read: AtomicU64,
     bytes_written: AtomicU64,
+    write_calls: AtomicU64,
 }
 impl Epoch {
     fn open(
@@ -172,7 +180,18 @@ impl Epoch {
             reads: AtomicU64::new(0),
             bytes_read: AtomicU64::new(0),
             bytes_written: AtomicU64::new(0),
+            write_calls: AtomicU64::new(0),
         }))
+    }
+    fn write(&self, bytes: &[u8], at: u64, chunk: Option<usize>) -> Result<()> {
+        write_at_tracked(
+            &self.file,
+            bytes,
+            at,
+            chunk,
+            Some((&self.write_calls, &self.bytes_written)),
+        )?;
+        Ok(())
     }
     fn record(&self, at: u64, end: u64, kind: u8) -> Result<Vec<u8>> {
         if at < 8 || at.checked_add(HEADER as u64).is_none_or(|v| v > end) {
@@ -208,27 +227,7 @@ impl Epoch {
             return Ok(n);
         }
         let p = self.record(at, end, 1)?;
-        if p.len() < 40 || p.len() != 40 + get32(&p, 36) as usize {
-            return Err(Error::Corrupt("node shape".into()));
-        }
-        let n = Arc::new(Node {
-            left: get64(&p, 0),
-            right: get64(&p, 8),
-            value: get64(&p, 16),
-            revision: get64(&p, 24),
-            height: get32(&p, 32),
-            key: p[40..].to_vec(),
-        });
-        // Every child/value is written before its parent. This also forbids cycles.
-        if n.value < 8
-            || n.value >= at
-            || n.left >= at
-            || n.right >= at
-            || n.height == 0
-            || n.height > 128
-        {
-            return Err(Error::Corrupt("node links/height".into()));
-        }
+        let n = decode_node(&p, at)?;
         self.cache.lock().unwrap().insert(at, n.clone());
         Ok(n)
     }
@@ -571,6 +570,7 @@ impl Database {
             reads: e.reads.load(Ordering::Relaxed),
             bytes_read: e.bytes_read.load(Ordering::Relaxed),
             bytes_written: e.bytes_written.load(Ordering::Relaxed),
+            arena_write_calls: e.write_calls.load(Ordering::Relaxed),
             retained_epochs: s.retired.len(),
         })
     }
@@ -644,6 +644,7 @@ impl Database {
             let mut w =
                 ArenaWriter::new(epoch.clone(), 8, old.root.generation, &self.inner.options);
             let root_at = w.copy_tree(&old, old.root.root)?;
+            w.flush_append()?;
             epoch.file.sync_all()?;
             w.fault.hit("compact_data_sync")?;
             sync_directory(&self.inner.dir)?;
@@ -714,6 +715,7 @@ impl Database {
                     count -= 1;
                 }
             }
+            w.flush_append()?;
             w.epoch.file.sync_all()?;
             w.fault.hit("data_sync")?;
             let next = Root {
@@ -744,6 +746,8 @@ struct ArenaWriter {
     end: u64,
     generation: u64,
     fault: Fault,
+    append: AppendBuffer,
+    buffering: bool,
 }
 impl ArenaWriter {
     fn new(epoch: Arc<Epoch>, end: u64, generation: u64, options: &Options) -> Self {
@@ -752,7 +756,45 @@ impl ArenaWriter {
             end,
             generation,
             fault: Fault::new(options),
+            append: AppendBuffer::new(end, options.append_buffer),
+            buffering: options.append_buffer,
         }
+    }
+    fn flush_append(&mut self) -> Result<()> {
+        let epoch = &self.epoch;
+        let fault = &mut self.fault;
+        self.append.flush(|at, bytes| {
+            // Exercise a genuine partial buffered transfer in crash/fault tests.
+            let mid = bytes.len() / 2;
+            epoch.write(&bytes[..mid], at, fault.chunk)?;
+            fault.hit("append_flush_half")?;
+            epoch.write(&bytes[mid..], at + mid as u64, fault.chunk)?;
+            fault.hit("append_flush")?;
+            // Match direct-write cache admission, but only after the records
+            // exist on disk. Writer-private nodes never enter the shared cache.
+            // Reuse the bounded serialized buffer, not an extra per-key map.
+            let mut cache = epoch.cache.lock().unwrap();
+            if cache.limit != 0 {
+                let mut offset = 0;
+                while offset < bytes.len() {
+                    let record = &bytes[offset..];
+                    if record.len() < HEADER {
+                        return Err(Error::Corrupt("buffered record header".into()));
+                    }
+                    let end = HEADER + get32(record, 24) as usize;
+                    if end > record.len() {
+                        return Err(Error::Corrupt("buffered record length".into()));
+                    }
+                    if record[8] == 1 {
+                        let position = at + offset as u64;
+                        let node = decode_node(&record[HEADER..end], position)?;
+                        cache.insert(position, node);
+                    }
+                    offset += end;
+                }
+            }
+            Ok(())
+        })
     }
     fn record(&mut self, kind: u8, payload: &[u8]) -> Result<u64> {
         let mut h = [0; HEADER];
@@ -763,23 +805,53 @@ impl ArenaWriter {
         let crc = checksum(&[&h, payload]);
         put32(&mut h, 28, crc);
         let at = self.end;
-        write_at(&self.epoch.file, &h, at, self.fault.chunk)?;
-        self.fault.hit("record_header")?;
-        write_at(
-            &self.epoch.file,
-            payload,
-            at + HEADER as u64,
-            self.fault.chunk,
-        )?;
-        self.fault.hit("record_payload")?;
-        self.end += (HEADER + payload.len()) as u64;
-        self.epoch
-            .bytes_written
-            .fetch_add((HEADER + payload.len()) as u64, Ordering::Relaxed);
+        let total = HEADER + payload.len();
+        let end = at
+            .checked_add(total as u64)
+            .ok_or_else(|| Error::Budget("arena offset overflow".into()))?;
+        if self.buffering && total <= APPEND_CAPACITY {
+            if self.append.remaining() < total {
+                self.flush_append()?;
+            }
+            self.append.extend(&h);
+            self.fault.hit("record_header")?;
+            self.append.extend(payload);
+            self.fault.hit("record_payload")?;
+            self.end = end;
+        } else {
+            self.flush_append()?;
+            self.epoch.write(&h, at, self.fault.chunk)?;
+            self.fault.hit("record_header")?;
+            self.epoch
+                .write(payload, at + HEADER as u64, self.fault.chunk)?;
+            self.fault.hit("record_payload")?;
+            self.end = end;
+            self.append.advance_direct(end);
+        }
         Ok(at)
     }
     fn node(&self, at: u64) -> Result<Arc<Node>> {
-        self.epoch.node(at, self.end)
+        if let Some(bytes) = self.append.pending(at) {
+            if bytes.len() >= HEADER {
+                let len = get32(bytes, 24) as usize;
+                let total = HEADER
+                    .checked_add(len)
+                    .ok_or_else(|| Error::Corrupt("pending length".into()))?;
+                if bytes.len() >= total {
+                    let expected = get32(bytes, 28);
+                    let mut h = bytes[..HEADER].to_vec();
+                    h[28..32].fill(0);
+                    if &h[..8] != MAGIC
+                        || h[8] != 1
+                        || checksum(&[&h, &bytes[HEADER..total]]) != expected
+                    {
+                        return Err(Error::Corrupt("pending node checksum".into()));
+                    }
+                    return decode_node(&bytes[HEADER..total], at);
+                }
+            }
+        }
+        self.epoch.node(at, self.append.start())
     }
     fn height(&self, at: u64) -> Result<u32> {
         if at == 0 {
@@ -799,7 +871,9 @@ impl ArenaWriter {
         put32(&mut p, 36, n.key.len() as u32);
         p[40..].copy_from_slice(&n.key);
         let at = self.record(1, &p)?;
-        self.epoch.cache.lock().unwrap().insert(at, Arc::new(n));
+        if at < self.append.start() {
+            self.epoch.cache.lock().unwrap().insert(at, Arc::new(n));
+        }
         Ok(at)
     }
     fn balance(&mut self, mut n: Node) -> Result<u64> {
@@ -907,6 +981,34 @@ impl ArenaWriter {
         self.save(n)
     }
 }
+fn decode_node(payload: &[u8], at: u64) -> Result<Arc<Node>> {
+    if payload.len() < 40
+        || payload.len() != 40 + get32(payload, 36) as usize
+        || payload.len() > MAX_KEY + 40
+    {
+        return Err(Error::Corrupt("node shape".into()));
+    }
+    let n = Arc::new(Node {
+        left: get64(payload, 0),
+        right: get64(payload, 8),
+        value: get64(payload, 16),
+        revision: get64(payload, 24),
+        height: get32(payload, 32),
+        key: payload[40..].to_vec(),
+    });
+    // Every child/value precedes its parent, forbidding cycles in the format.
+    if n.value < 8
+        || n.value >= at
+        || n.left >= at
+        || n.right >= at
+        || n.height == 0
+        || n.height > 128
+    {
+        return Err(Error::Corrupt("node links/height".into()));
+    }
+    Ok(n)
+}
+
 pub(crate) fn prefix_end(prefix: &[u8]) -> Option<Vec<u8>> {
     let mut e = prefix.to_vec();
     while let Some(x) = e.pop() {
@@ -1072,9 +1174,21 @@ fn read_exact_at(f: &File, mut b: &mut [u8], mut off: u64) -> io::Result<()> {
     }
     Ok(())
 }
-fn write_at(f: &File, mut b: &[u8], mut off: u64, chunk: Option<usize>) -> io::Result<()> {
+fn write_at(f: &File, b: &[u8], off: u64, chunk: Option<usize>) -> io::Result<()> {
+    write_at_tracked(f, b, off, chunk, None)
+}
+fn write_at_tracked(
+    f: &File,
+    mut b: &[u8],
+    mut off: u64,
+    chunk: Option<usize>,
+    counters: Option<(&AtomicU64, &AtomicU64)>,
+) -> io::Result<()> {
     while !b.is_empty() {
         let part = &b[..b.len().min(chunk.unwrap_or(b.len()))];
+        if let Some((calls, _)) = counters {
+            calls.fetch_add(1, Ordering::Relaxed);
+        }
         #[cfg(unix)]
         let n = {
             use std::os::unix::fs::FileExt;
@@ -1088,6 +1202,9 @@ fn write_at(f: &File, mut b: &[u8], mut off: u64, chunk: Option<usize>) -> io::R
         match n {
             Ok(0) => return Err(io::Error::new(io::ErrorKind::WriteZero, "zero write")),
             Ok(n) => {
+                if let Some((_, written)) = counters {
+                    written.fetch_add(n as u64, Ordering::Relaxed);
+                }
                 off += n as u64;
                 b = &b[n..];
             }

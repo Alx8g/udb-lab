@@ -9,6 +9,7 @@ on:
       - 'src/lib.rs'
       - 'src/bin/spi*'
       - 'tests/spi*'
+      - 'scripts/*spi*'
       - 'Cargo.toml'
       - 'Cargo.lock'
       - '.github/workflows/spi.yml'
@@ -31,5 +32,12 @@ jobs:
         run: cargo test --locked --all-targets --features rusqlite -- --test-threads=1
       - name: Test optimized storage and process-crash paths
         run: cargo test --locked --release --test spi-storage --test spi-process -- --test-threads=1
+      - name: Test benchmark provenance validation
+        run: python scripts/test_spi_benchmark_identity.py
       - name: Build native comparison adapter
         run: cargo build --locked --release --features rusqlite --bin spi-compare
+      - name: Smoke-test identified comparison binary
+        shell: bash
+        run: |
+          mkdir -p .working/tmp/ci
+          python scripts/run_spi_campaign.py --binary "target/release/spi-compare${{ runner.os == 'Windows' && '.exe' || '' }}" --out .working/tmp/ci/identified-smoke --rows 100 --seeds 17 --engines spi sqlite

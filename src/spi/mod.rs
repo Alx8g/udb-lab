@@ -1,3 +1,4 @@
+mod append_buffer;
 pub mod storage;
 pub mod transaction;
 
