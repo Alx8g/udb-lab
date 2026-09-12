@@ -1,0 +1,2 @@
+# Preserve source-identified raw evidence byte-for-byte on every platform.
+results/spi/native-profile-*/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
