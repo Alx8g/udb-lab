@@ -36,6 +36,10 @@ jobs:
         run: python scripts/test_spi_benchmark_identity.py
       - name: Test benchmark result-contract validation
         run: python scripts/test_spi_campaign.py
+      - name: Test diagnostic-profile contract validation
+        run: python scripts/test_spi_profile.py
+      - name: Test diagnostic-only implementation
+        run: cargo test --locked --lib --bin spi-compare --test spi-profile --features "rusqlite spi-profile" -- --test-threads=1
       - name: Build native comparison adapter
         run: cargo build --locked --release --features rusqlite --bin spi-compare
       - name: Smoke-test identified comparison binary
@@ -43,3 +47,9 @@ jobs:
         run: |
           mkdir -p .working/tmp/ci
           python scripts/run_spi_campaign.py --binary "target/release/spi-compare${{ runner.os == 'Windows' && '.exe' || '' }}" --out .working/tmp/ci/identified-smoke --rows 100 --seeds 17 --engines spi spi-value-cache spi-grouped sqlite
+      - name: Build diagnostic-only adapter
+        run: cargo build --locked --release --features "rusqlite spi-profile" --bin spi-compare
+      - name: Smoke-test identified diagnostics
+        shell: bash
+        run: |
+          python scripts/run_spi_profile.py --binary "target/release/spi-compare${{ runner.os == 'Windows' && '.exe' || '' }}" --out .working/tmp/ci/identified-profile --rows 100 --seeds 17 --engines spi sqlite

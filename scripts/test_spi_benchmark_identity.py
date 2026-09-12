@@ -40,6 +40,7 @@ class BenchmarkIdentityTests(unittest.TestCase):
             "identity_schema": IDENTITY_SCHEMA,
             "benchmark_schema": BENCHMARK_SCHEMA,
             "debug_assertions": False,
+            "profile_enabled": False,
             "engines": ["spi", "sqlite"],
             "sources": dict(self.sources),
         }
@@ -79,6 +80,18 @@ class BenchmarkIdentityTests(unittest.TestCase):
                 info["debug_assertions"] = value
                 with self.assertRaisesRegex(IdentityError, "debug/instrumented"):
                     validate_build_info(info, self.root, ["spi"])
+
+    def test_diagnostic_profile_requires_explicit_permission(self) -> None:
+        info = self.info()
+        info["profile_enabled"] = True
+        with self.assertRaisesRegex(IdentityError, "diagnostic-profile"):
+            validate_build_info(info, self.root, ["spi"])
+        evidence = validate_build_info(info, self.root, ["spi"], allow_profile=True)
+        self.assertTrue(evidence["profile_enabled"])
+        for value in (None, 0, "false"):
+            info["profile_enabled"] = value
+            with self.assertRaisesRegex(IdentityError, "profile identity"):
+                validate_build_info(info, self.root, ["spi"], allow_profile=True)
 
     def test_missing_engine_is_rejected(self) -> None:
         info = self.info()

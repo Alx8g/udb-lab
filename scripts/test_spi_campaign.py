@@ -13,7 +13,7 @@ def result(engine="spi-value-cache", cache_bytes=8192):
              "append_buffer_enabled": engine != "spi-unbuffered",
              "bytes_written": 1000, "arena_write_calls": 10}
     metric = {"samples_ns": [10, 20], "sample_count": 2, "total_ns": 30}
-    return {"benchmark_schema": 2, "value_cache_workload_extension": 1,
+    return {"benchmark_schema": 2, "value_cache_workload_extension": 1, "diagnostic_only": False,
             "grouped_write_workload_extension": 1,
             "engine": engine, "rows": 2000, "seed": 17, "value_bytes": 64,
             "cache_bytes": cache_bytes, "full_output_validation": "PASS",
@@ -57,6 +57,13 @@ class CampaignResultTests(unittest.TestCase):
             self.check(record, "spi")
         with self.assertRaises(RuntimeError):
             self.check(result(cache_bytes=1024), cache=1024)
+
+    def test_diagnostic_output_is_not_performance_evidence(self):
+        for flag in (True, None, 0, "false"):
+            record = result()
+            record["diagnostic_only"] = flag
+            with self.assertRaisesRegex(RuntimeError, "diagnostic/performance"):
+                self.check(record)
 
     def test_grouped_control_and_counter_regressions_rejected(self):
         for field, value in [("grouped_updates_enabled", False), ("append_buffer_enabled", False),

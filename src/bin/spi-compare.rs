@@ -16,6 +16,7 @@ fn build_info() -> Value {
         "identity_schema": IDENTITY_SCHEMA,
         "benchmark_schema": BENCHMARK_SCHEMA,
         "debug_assertions": cfg!(debug_assertions),
+        "profile_enabled": cfg!(feature = "spi-profile"),
         "engines": if cfg!(feature = "rusqlite") {
             vec!["spi", "spi-value-cache", "spi-unbuffered", "spi-grouped", "sqlite"]
         } else {
@@ -26,6 +27,7 @@ fn build_info() -> Value {
             "Cargo.lock": include_str!("../../Cargo.lock"),
             "src/lib.rs": include_str!("../lib.rs"),
             "src/spi/mod.rs": include_str!("../spi/mod.rs"),
+            "src/spi/profile.rs": include_str!("../spi/profile.rs"),
             "src/spi/append_buffer.rs": include_str!("../spi/append_buffer.rs"),
             "src/spi/storage.rs": include_str!("../spi/storage.rs"),
             "src/spi/transaction.rs": include_str!("../spi/transaction.rs"),
@@ -105,6 +107,7 @@ impl Engine for Spi {
     }
     fn stats(&self) -> Result<Value> {
         let mut stats = serde_json::to_value(self.db().stats()?)?;
+        stats["profile"] = udb_lab::spi::profile::snapshot();
         stats["value_cache_enabled"] = json!(self.options.value_cache);
         stats["append_buffer_enabled"] = json!(self.options.append_buffer);
         stats["grouped_updates_enabled"] = json!(self.options.grouped_updates);
@@ -245,6 +248,220 @@ fn measure(samples: Vec<u64>, ops: usize) -> Value {
     let total: u64 = samples.iter().sum();
     json!({"samples_ns":samples,"operations":ops,"sample_count":sample_count,"percentile_unit":"one timed API call or transaction batch, not per row","total_ns":total,"p50_ns":q(0.5),"p95_ns":q(0.95),"p99_ns":q(0.99)})
 }
+// Candidate for the spi-compare executable only. Library callers keep their allocator.
+#[cfg(feature = "spi-profile")]
+mod diagnostic_metrics {
+    use serde_json::{json, Value};
+    use std::alloc::{GlobalAlloc, Layout, System};
+    use std::sync::atomic::{AtomicU64, Ordering};
+    use std::time::Instant;
+
+    pub struct TrackedAllocator;
+    static ALLOC_CALLS: AtomicU64 = AtomicU64::new(0);
+    static ALLOC_BYTES: AtomicU64 = AtomicU64::new(0);
+    static LIVE_BYTES: AtomicU64 = AtomicU64::new(0);
+    static PEAK_BYTES: AtomicU64 = AtomicU64::new(0);
+    fn admitted(n: usize) {
+        ALLOC_CALLS.fetch_add(1, Ordering::Relaxed);
+        ALLOC_BYTES.fetch_add(n as u64, Ordering::Relaxed);
+        let live = LIVE_BYTES.fetch_add(n as u64, Ordering::Relaxed) + n as u64;
+        PEAK_BYTES.fetch_max(live, Ordering::Relaxed);
+    }
+    unsafe impl GlobalAlloc for TrackedAllocator {
+        unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
+            let ptr = unsafe { System.alloc(layout) };
+            if !ptr.is_null() {
+                admitted(layout.size());
+            }
+            ptr
+        }
+        unsafe fn alloc_zeroed(&self, layout: Layout) -> *mut u8 {
+            let ptr = unsafe { System.alloc_zeroed(layout) };
+            if !ptr.is_null() {
+                admitted(layout.size());
+            }
+            ptr
+        }
+        unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
+            unsafe { System.dealloc(ptr, layout) };
+            LIVE_BYTES.fetch_sub(layout.size() as u64, Ordering::Relaxed);
+        }
+        unsafe fn realloc(&self, ptr: *mut u8, layout: Layout, size: usize) -> *mut u8 {
+            let next = unsafe { System.realloc(ptr, layout, size) };
+            if !next.is_null() {
+                LIVE_BYTES.fetch_sub(layout.size() as u64, Ordering::Relaxed);
+                admitted(size);
+            }
+            next
+        }
+    }
+
+    #[cfg(windows)]
+    fn cpu_ns() -> Option<u64> {
+        #[repr(C)]
+        #[derive(Default)]
+        struct FileTime {
+            low: u32,
+            high: u32,
+        }
+        #[link(name = "kernel32")]
+        unsafe extern "system" {
+            fn GetCurrentProcess() -> *mut std::ffi::c_void;
+            fn GetProcessTimes(
+                p: *mut std::ffi::c_void,
+                c: *mut FileTime,
+                e: *mut FileTime,
+                k: *mut FileTime,
+                u: *mut FileTime,
+            ) -> i32;
+        }
+        let (mut c, mut e, mut k, mut u) = (
+            FileTime::default(),
+            FileTime::default(),
+            FileTime::default(),
+            FileTime::default(),
+        );
+        let ok = unsafe { GetProcessTimes(GetCurrentProcess(), &mut c, &mut e, &mut k, &mut u) };
+        (ok != 0).then(|| {
+            (((k.high as u64) << 32 | k.low as u64) + ((u.high as u64) << 32 | u.low as u64)) * 100
+        })
+    }
+    #[cfg(target_os = "linux")]
+    fn cpu_ns() -> Option<u64> {
+        #[repr(C)]
+        struct Timespec {
+            sec: std::ffi::c_long,
+            nsec: std::ffi::c_long,
+        }
+        unsafe extern "C" {
+            fn clock_gettime(id: i32, t: *mut Timespec) -> i32;
+        }
+        let mut t = Timespec { sec: 0, nsec: 0 };
+        let ok = unsafe { clock_gettime(2, &mut t) }; // CLOCK_PROCESS_CPUTIME_ID on Linux.
+        (ok == 0).then(|| t.sec as u64 * 1_000_000_000 + t.nsec as u64)
+    }
+    #[cfg(not(any(windows, target_os = "linux")))]
+    fn cpu_ns() -> Option<u64> {
+        None
+    }
+
+    #[cfg(windows)]
+    fn memory() -> Value {
+        #[repr(C)]
+        #[derive(Default)]
+        struct Counters {
+            cb: u32,
+            faults: u32,
+            peak_working: usize,
+            working: usize,
+            peak_paged: usize,
+            paged: usize,
+            peak_nonpaged: usize,
+            nonpaged: usize,
+            pagefile: usize,
+            peak_pagefile: usize,
+            private: usize,
+        }
+        #[link(name = "kernel32")]
+        unsafe extern "system" {
+            fn GetCurrentProcess() -> *mut std::ffi::c_void;
+        }
+        #[link(name = "psapi")]
+        unsafe extern "system" {
+            fn GetProcessMemoryInfo(p: *mut std::ffi::c_void, c: *mut Counters, size: u32) -> i32;
+        }
+        let size = std::mem::size_of::<Counters>() as u32;
+        let mut c = Counters {
+            cb: size,
+            ..Counters::default()
+        };
+        if unsafe { GetProcessMemoryInfo(GetCurrentProcess(), &mut c, size) } == 0 {
+            return Value::Null;
+        }
+        json!({"working_set_bytes":c.working,"process_peak_working_set_bytes":c.peak_working,"private_commit_bytes":c.private})
+    }
+    #[cfg(target_os = "linux")]
+    fn memory() -> Value {
+        let Ok(text) = std::fs::read_to_string("/proc/self/status") else {
+            return Value::Null;
+        };
+        let get = |key: &str| {
+            text.lines()
+                .find_map(|line| line.strip_prefix(key))
+                .and_then(|v| v.split_whitespace().next())
+                .and_then(|v| v.parse::<u64>().ok())
+                .map(|n| n * 1024)
+        };
+        json!({"working_set_bytes":get("VmRSS:"),"process_peak_working_set_bytes":get("VmHWM:")})
+    }
+    #[cfg(not(any(windows, target_os = "linux")))]
+    fn memory() -> Value {
+        Value::Null
+    }
+
+    pub struct Phase {
+        cpu: Option<u64>,
+        calls: u64,
+        bytes: u64,
+        counters: Value,
+        start: Instant,
+    }
+    impl Phase {
+        pub fn start() -> Self {
+            let counters = udb_lab::spi::profile::snapshot();
+            Self {
+                counters,
+                calls: ALLOC_CALLS.load(Ordering::Relaxed),
+                bytes: ALLOC_BYTES.load(Ordering::Relaxed),
+                cpu: cpu_ns(),
+                start: Instant::now(),
+            }
+        }
+        pub fn finish(self, report: &mut Value, name: &str) {
+            let elapsed = self.start.elapsed().as_nanos() as u64;
+            let cpu = cpu_ns()
+                .zip(self.cpu)
+                .and_then(|(end, start)| end.checked_sub(start));
+            let calls = ALLOC_CALLS.load(Ordering::Relaxed) - self.calls;
+            let bytes = ALLOC_BYTES.load(Ordering::Relaxed) - self.bytes;
+            let live = LIVE_BYTES.load(Ordering::Relaxed);
+            let peak = PEAK_BYTES.load(Ordering::Relaxed);
+            let end = udb_lab::spi::profile::snapshot();
+            let mut delta = serde_json::Map::new();
+            for (k, v) in end.as_object().unwrap() {
+                delta.insert(
+                    k.clone(),
+                    json!(v.as_u64().unwrap() - self.counters[k].as_u64().unwrap()),
+                );
+            }
+            if report.get("diagnostic_phases").is_none() {
+                report["diagnostic_phases"] = json!({});
+            }
+            report["diagnostic_phases"][name] = json!({"phase_wall_ns_including_harness":elapsed,
+                "process_cpu_ns_including_harness":cpu, "rust_allocation_calls":calls,
+                "rust_requested_allocation_bytes":bytes,"rust_live_requested_bytes":live,
+                "process_peak_rust_requested_bytes":peak,"os_memory_after_phase":memory(),"storage":delta});
+        }
+    }
+}
+#[cfg(feature = "spi-profile")]
+#[global_allocator]
+static DIAGNOSTIC_ALLOCATOR: diagnostic_metrics::TrackedAllocator =
+    diagnostic_metrics::TrackedAllocator;
+#[cfg(feature = "spi-profile")]
+use diagnostic_metrics::Phase;
+#[cfg(not(feature = "spi-profile"))]
+struct Phase;
+#[cfg(not(feature = "spi-profile"))]
+impl Phase {
+    #[inline]
+    fn start() -> Self {
+        Self
+    }
+    #[inline]
+    fn finish(self, _report: &mut Value, _name: &str) {}
+}
+
 fn run(engine: &mut dyn Engine, rows: usize, seed: u64, size: usize) -> Result<Value> {
     let initial: Vec<_> = (0..rows as u64)
         .map(|i| Entry {
@@ -256,13 +473,15 @@ fn run(engine: &mut dyn Engine, rows: usize, seed: u64, size: usize) -> Result<V
         .iter()
         .map(|r| (r.key.clone(), r.value.clone()))
         .collect();
-    let mut report = json!({});
+    let mut report = json!({"diagnostic_only": cfg!(feature = "spi-profile")});
+    let phase = Phase::start();
     let mut samples = Vec::new();
     for batch in initial.chunks(256) {
         let t = Instant::now();
         engine.batch(batch)?;
         samples.push(t.elapsed().as_nanos() as u64);
     }
+    phase.finish(&mut report, "load");
     report["load_batches_256"] = measure(samples, rows);
     report["after_load"] = engine.stats()?;
     report["grouped_write_workload_extension"] = json!(1);
@@ -272,6 +491,7 @@ fn run(engine: &mut dyn Engine, rows: usize, seed: u64, size: usize) -> Result<V
         .collect();
     let mut samples = Vec::new();
     let mut outputs = Vec::new();
+    let phase = Phase::start();
     for k in &requests {
         let t = Instant::now();
         outputs.push(engine.get(k)?);
@@ -282,7 +502,9 @@ fn run(engine: &mut dyn Engine, rows: usize, seed: u64, size: usize) -> Result<V
             return Err("point output mismatch".into());
         }
     }
+    phase.finish(&mut report, "warm_hits");
     report["warm_hits"] = measure(samples, requests.len());
+    let phase = Phase::start();
     let mut samples = Vec::new();
     for i in 0..100 {
         let t = Instant::now();
@@ -292,7 +514,9 @@ fn run(engine: &mut dyn Engine, rows: usize, seed: u64, size: usize) -> Result<V
             return Err("missing key mismatch".into());
         }
     }
+    phase.finish(&mut report, "misses");
     report["misses"] = measure(samples, 100);
+    let phase = Phase::start();
     let mut samples = Vec::new();
     for k in requests.iter().take(100) {
         engine.clear()?;
@@ -303,7 +527,9 @@ fn run(engine: &mut dyn Engine, rows: usize, seed: u64, size: usize) -> Result<V
             return Err("cache-cleared mismatch".into());
         }
     }
+    phase.finish(&mut report, "cleared_hits");
     report["application_cache_cleared_hits_not_storage_cold"] = measure(samples, 100);
+    let phase = Phase::start();
     let mut samples = Vec::new();
     for _ in 0..30 {
         let i = next(&mut state) % rows as u64;
@@ -323,7 +549,9 @@ fn run(engine: &mut dyn Engine, rows: usize, seed: u64, size: usize) -> Result<V
             return Err("range mismatch".into());
         }
     }
+    phase.finish(&mut report, "ranges");
     report["ranges_up_to_100_keys"] = measure(samples, 30);
+    let phase = Phase::start();
     // Measure deliberate reuse independently from first-touch/streaming traffic.
     engine.clear()?;
     let reused_keys: Vec<_> = (0..16u64).map(key).collect();
@@ -347,6 +575,7 @@ fn run(engine: &mut dyn Engine, rows: usize, seed: u64, size: usize) -> Result<V
             return Err("reused value mismatch".into());
         }
     }
+    phase.finish(&mut report, "reuse");
     report["reused_16_key_hits"] = measure(samples, 1000);
     report["cache_after_reused_hits"] = engine.stats()?;
 
@@ -354,6 +583,7 @@ fn run(engine: &mut dyn Engine, rows: usize, seed: u64, size: usize) -> Result<V
     // not needed: every key appears exactly once, guaranteeing no value reuse.
     engine.clear()?;
     let mut samples = Vec::new();
+    let phase = Phase::start();
     for r in initial.iter().rev() {
         let t = Instant::now();
         let found = engine.get(&r.key)?;
@@ -362,13 +592,16 @@ fn run(engine: &mut dyn Engine, rows: usize, seed: u64, size: usize) -> Result<V
             return Err("one-touch value mismatch".into());
         }
     }
+    phase.finish(&mut report, "unique");
     report["unique_value_reads"] = measure(samples, rows);
     report["cache_after_unique_reads"] = engine.stats()?;
 
     engine.clear()?;
     let t = Instant::now();
+    let phase = Phase::start();
     let scanned = engine.range(&[], None)?;
     let scan_elapsed = t.elapsed().as_nanos() as u64;
+    phase.finish(&mut report, "scan");
     let want: Vec<_> = expected
         .iter()
         .map(|(key, value)| Entry {
@@ -393,6 +626,7 @@ fn run(engine: &mut dyn Engine, rows: usize, seed: u64, size: usize) -> Result<V
         })
         .collect();
     let mut samples = Vec::new();
+    let phase = Phase::start();
     for batch in updates.chunks(64) {
         let t = Instant::now();
         engine.batch(batch)?;
@@ -401,9 +635,11 @@ fn run(engine: &mut dyn Engine, rows: usize, seed: u64, size: usize) -> Result<V
             expected.insert(r.key.clone(), r.value.clone());
         }
     }
+    phase.finish(&mut report, "updates");
     report["updates_batches_64"] = measure(samples, updates.len());
     report["after_updates"] = engine.stats()?;
     let mut samples = Vec::new();
+    let phase = Phase::start();
     for r in updates.iter().take(30) {
         let mutation = forced_mutation(&r.key, &expected);
         let t = Instant::now();
@@ -411,13 +647,16 @@ fn run(engine: &mut dyn Engine, rows: usize, seed: u64, size: usize) -> Result<V
         samples.push(t.elapsed().as_nanos() as u64);
         expected.insert(mutation.key.clone(), mutation.value.clone());
     }
+    phase.finish(&mut report, "single_commits");
     report["single_row_commits"] = measure(samples, 30);
     report["single_row_commit_contract"] =
         json!("every transaction flips a bit of the currently stored value");
     report["before_maintenance"] = engine.stats()?;
+    let phase = Phase::start();
     let t = Instant::now();
     engine.reopen()?;
     report["reopen_ns"] = json!(t.elapsed().as_nanos() as u64);
+    phase.finish(&mut report, "reopen");
     let found = engine.range(&[], None)?;
     let want: Vec<_> = expected
         .into_iter()
@@ -426,9 +665,11 @@ fn run(engine: &mut dyn Engine, rows: usize, seed: u64, size: usize) -> Result<V
     if found != want {
         return Err("full reopened state mismatch".into());
     }
+    let phase = Phase::start();
     let t = Instant::now();
     engine.maintain()?;
     report["maintenance_with_integrity_check_ns"] = json!(t.elapsed().as_nanos() as u64);
+    phase.finish(&mut report, "maintenance");
     report["after_maintenance"] = engine.stats()?;
     engine.reopen()?;
     if engine.range(&[], None)? != want {
@@ -478,6 +719,10 @@ mod tests {
         assert_eq!(
             info["sources"]["src/spi/append_buffer.rs"],
             include_str!("../spi/append_buffer.rs")
+        );
+        assert_eq!(
+            info["sources"]["src/spi/profile.rs"],
+            include_str!("../spi/profile.rs")
         );
     }
     #[test]

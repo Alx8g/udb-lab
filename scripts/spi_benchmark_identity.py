@@ -20,6 +20,7 @@ REQUIRED_SOURCES = frozenset({
     "Cargo.lock",
     "src/lib.rs",
     "src/spi/mod.rs",
+    "src/spi/profile.rs",
     "src/spi/append_buffer.rs",
     "src/spi/storage.rs",
     "src/spi/transaction.rs",
@@ -35,6 +36,8 @@ def validate_build_info(
     info: Any,
     root: Path,
     engines: list[str],
+    *,
+    allow_profile: bool = False,
 ) -> dict[str, Any]:
     if not isinstance(info, dict):
         raise IdentityError("benchmark build information must be an object")
@@ -44,6 +47,11 @@ def validate_build_info(
         raise IdentityError("binary uses an obsolete benchmark contract; rebuild it")
     if info.get("debug_assertions") is not False:
         raise IdentityError("debug/instrumented binary rejected; use a release build")
+    profile_enabled = info.get("profile_enabled")
+    if type(profile_enabled) is not bool:
+        raise IdentityError("missing diagnostic-profile identity; rebuild it")
+    if profile_enabled and not allow_profile:
+        raise IdentityError("diagnostic-profile binary rejected for performance campaign")
     compiled_engines = info.get("engines")
     if not isinstance(compiled_engines, list) or any(
         not isinstance(engine, str) for engine in compiled_engines
@@ -78,13 +86,14 @@ def validate_build_info(
         "identity_schema": IDENTITY_SCHEMA,
         "benchmark_schema": BENCHMARK_SCHEMA,
         "debug_assertions": False,
+        "profile_enabled": profile_enabled,
         "compiled_engines": compiled_engines,
         "source_sha256": hashes,
         "limitations": "Source-byte identity is checked. Build flags beyond debug assertions and external dependencies are recorded separately, not attested by this protocol.",
     }
 
 
-def inspect_binary(binary: Path, root: Path, engines: list[str]) -> dict[str, Any]:
+def inspect_binary(binary: Path, root: Path, engines: list[str], *, allow_profile: bool = False) -> dict[str, Any]:
     try:
         result = subprocess.run(
             [str(binary), "--build-info"],
@@ -103,4 +112,4 @@ def inspect_binary(binary: Path, root: Path, engines: list[str]) -> dict[str, An
         info = json.loads(result.stdout)
     except json.JSONDecodeError as exc:
         raise IdentityError("benchmark binary returned invalid build information") from exc
-    return validate_build_info(info, root, engines)
+    return validate_build_info(info, root, engines, allow_profile=allow_profile)

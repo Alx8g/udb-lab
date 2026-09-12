@@ -198,6 +198,22 @@ On Unix omit `.exe`. The runner rejects stale source or missing engine adapters
 before creating output. Build and test first, then benchmark without competing
 local jobs. Never delete an existing evidence directory merely to reuse its name.
 
+## Diagnostic attribution
+
+The optional `spi-profile` build records phase-level storage work, nested wall
+timers, process CPU time, Rust allocation requests and sampled process memory.
+It does not change the persistent format or publication order. Normal builds
+compile out detailed storage instrumentation and allocation tracking. The normal
+campaign runner rejects profile binaries and diagnostic result records.
+
+Build a diagnostic adapter separately before using `scripts/run_spi_profile.py`.
+That runner requires clean committed source and labels every result diagnostic-only.
+Its timings are not accepted speed measurements. CPU and allocation totals include
+benchmark work. Rust allocator counts exclude SQLite's native allocations, and
+process-memory samples include inputs and returned output buffers. Nested storage
+timers overlap and must not be added as independent elapsed-time components.
+The diagnostic runner is attribution machinery, not integrated expert routing.
+
 ## Run
 
 ```

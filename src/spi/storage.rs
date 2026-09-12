@@ -8,6 +8,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 
 use super::append_buffer::{AppendBuffer, APPEND_CAPACITY};
+use super::profile::{self, Event};
 use super::transaction::Transaction;
 
 const MAGIC: &[u8; 8] = b"SPIREC01";
@@ -305,8 +306,10 @@ impl Epoch {
     }
     pub(crate) fn node(&self, at: u64, end: u64) -> Result<Arc<Node>> {
         if let Some(n) = self.cache.lock().unwrap().node(at) {
+            profile::add(Event::NodeCacheHits, 1);
             return Ok(n);
         }
+        profile::add(Event::NodeCacheMisses, 1);
         let p = self.record(at, end, 1)?;
         let n = decode_node(&p, at)?;
         self.cache.lock().unwrap().insert_node(at, n.clone());
@@ -329,6 +332,7 @@ impl Epoch {
         // returned value outside it. Callers never mutate cached storage.
         let cached = { self.cache.lock().unwrap().value(at) };
         if let Some(value) = cached {
+            profile::add(Event::ValueCacheHits, 1);
             if at
                 .checked_add((HEADER + value.len()) as u64)
                 .is_none_or(|limit| limit > end)
@@ -337,6 +341,7 @@ impl Epoch {
             }
             return Ok((*value).clone());
         }
+        profile::add(Event::ValueCacheMisses, 1);
         let value = self.record(at, end, 2)?;
         if admit {
             let should_admit = {
@@ -856,6 +861,7 @@ impl Database {
             .checked_add(1)
             .ok_or_else(|| Error::Budget("generation overflow".into()))?;
         let result = (|| {
+            let build_timer = profile::scope(Event::BuildNs);
             let mut w = ArenaWriter::new(
                 s.view.epoch.clone(),
                 s.view.root.end,
@@ -890,7 +896,11 @@ impl Database {
                 }
             }
             w.flush_append()?;
-            w.epoch.file.sync_all()?;
+            drop(build_timer);
+            {
+                let _timer = profile::scope(Event::DataSyncNs);
+                w.epoch.file.sync_all()?;
+            }
             w.fault.hit("data_sync")?;
             let next = Root {
                 generation,
@@ -971,6 +981,9 @@ impl ArenaWriter {
         })
     }
     fn record(&mut self, kind: u8, payload: &[u8]) -> Result<u64> {
+        if kind == 2 {
+            profile::add(Event::ValueRecords, 1);
+        }
         let mut h = [0; HEADER];
         h[..8].copy_from_slice(MAGIC);
         h[8] = kind;
@@ -1035,6 +1048,7 @@ impl ArenaWriter {
         }
     }
     fn save(&mut self, mut n: Node) -> Result<u64> {
+        profile::add(Event::NodeSaves, 1);
         n.height = 1 + self.height(n.left)?.max(self.height(n.right)?);
         let mut p = vec![0; 40 + n.key.len()];
         put64(&mut p, 0, n.left);
@@ -1332,6 +1346,8 @@ impl Fault {
         }
     }
     fn hit(&mut self, stage: &str) -> Result<()> {
+        let _timer = profile::scope(Event::FaultCheckNs);
+        profile::add(Event::FaultChecks, 1);
         self.at += 1;
         if std::env::var("SPI_CRASH_AT").ok().as_deref() == Some(stage) {
             std::process::exit(86);
@@ -1355,19 +1371,30 @@ fn publish(dir: &Path, r: Root, f: &mut Fault) -> Result<()> {
     let c = checksum(&[&b]);
     put32(&mut b, 60, c);
     let tmp = dir.join("manifest.pending");
+    let write_timer = profile::scope(Event::ManifestWriteNs);
     let file = OpenOptions::new()
         .create(true)
         .truncate(true)
         .write(true)
         .open(&tmp)?;
     write_at(&file, &b, 0, f.chunk)?;
+    drop(write_timer);
     f.hit("manifest_write")?;
-    file.sync_all()?;
+    {
+        let _timer = profile::scope(Event::ManifestSyncNs);
+        file.sync_all()?;
+    }
     f.hit("manifest_sync")?;
     drop(file);
-    replace(&tmp, &dir.join("manifest.spi"))?;
+    {
+        let _timer = profile::scope(Event::ManifestReplaceNs);
+        replace(&tmp, &dir.join("manifest.spi"))?;
+    }
     f.hit("manifest_replace")?;
-    sync_directory(dir)?;
+    {
+        let _timer = profile::scope(Event::DirectorySyncNs);
+        sync_directory(dir)?;
+    }
     f.hit("directory_sync")?;
     Ok(())
 }
@@ -1424,7 +1451,9 @@ fn sync_directory(_p: &Path) -> io::Result<()> {
     Ok(())
 }
 fn read_exact_at(f: &File, mut b: &mut [u8], mut off: u64) -> io::Result<()> {
+    let _timer = profile::scope(Event::ReadNs);
     while !b.is_empty() {
+        profile::add(Event::ReadCalls, 1);
         #[cfg(unix)]
         let n = {
             use std::os::unix::fs::FileExt;
@@ -1438,6 +1467,7 @@ fn read_exact_at(f: &File, mut b: &mut [u8], mut off: u64) -> io::Result<()> {
         match n {
             Ok(0) => return Err(io::Error::new(io::ErrorKind::UnexpectedEof, "short read")),
             Ok(n) => {
+                profile::add(Event::ReadBytes, n as u64);
                 off += n as u64;
                 b = &mut b[n..];
             }
@@ -1457,7 +1487,9 @@ fn write_at_tracked(
     chunk: Option<usize>,
     counters: Option<(&AtomicU64, &AtomicU64)>,
 ) -> io::Result<()> {
+    let _timer = profile::scope(Event::WriteNs);
     while !b.is_empty() {
+        profile::add(Event::WriteCalls, 1);
         let part = &b[..b.len().min(chunk.unwrap_or(b.len()))];
         if let Some((calls, _)) = counters {
             calls.fetch_add(1, Ordering::Relaxed);
@@ -1475,6 +1507,7 @@ fn write_at_tracked(
         match n {
             Ok(0) => return Err(io::Error::new(io::ErrorKind::WriteZero, "zero write")),
             Ok(n) => {
+                profile::add(Event::WriteBytes, n as u64);
                 if let Some((_, written)) = counters {
                     written.fetch_add(n as u64, Ordering::Relaxed);
                 }
@@ -1500,6 +1533,13 @@ fn put64(b: &mut [u8], p: usize, v: u64) {
     b[p..p + 8].copy_from_slice(&v.to_le_bytes())
 }
 fn checksum(parts: &[&[u8]]) -> u32 {
+    let _timer = profile::scope(Event::ChecksumNs);
+    profile::add(Event::ChecksumCalls, 1);
+    #[cfg(feature = "spi-profile")]
+    profile::add(
+        Event::ChecksumBytes,
+        parts.iter().map(|p| p.len() as u64).sum(),
+    );
     let mut c = !0u32;
     for b in parts {
         for &v in *b {

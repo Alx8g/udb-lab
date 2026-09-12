@@ -39,8 +39,10 @@ def write_json(path: Path, content: object) -> None:
         stream.write("\n")
 
 
-def validate_record(record: dict, engine: str, rows: int, seed: int, value_bytes: int, cache_bytes: int) -> None:
+def validate_record(record: dict, engine: str, rows: int, seed: int, value_bytes: int, cache_bytes: int, *, diagnostic: bool = False) -> None:
     """Check the native result's operation and resource contract before acceptance."""
+    if record.get("diagnostic_only") is not diagnostic:
+        raise RuntimeError("diagnostic/performance result mismatch")
     expected = {"benchmark_schema": 2, "value_cache_workload_extension": 1,
                 "grouped_write_workload_extension": 1,
                 "engine": engine, "rows": rows, "seed": seed,

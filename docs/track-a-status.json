@@ -24,7 +24,8 @@
     "Native optional SQLite comparison adapter with complete output checks",
     "Committed-source value-cache campaigns with normal and 1 KiB adverse controls",
     "Opt-in grouped copy-on-write bulk construction and replacement paths with sequential fallback",
-    "Committed-source grouped-update campaigns with complete output checks and normal/1 KiB controls"
+    "Committed-source grouped-update campaigns with complete output checks and normal/1 KiB controls",
+    "Compile-time diagnostic attribution with explicit performance-evidence rejection and phase counters"
   ],
   "remaining": [
     "Integrated cost-aware expert routing, admission, retirement and shared candidate state",

@@ -1,4 +1,5 @@
 mod append_buffer;
+pub mod profile;
 pub mod storage;
 pub mod transaction;
 
