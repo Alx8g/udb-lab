@@ -42,13 +42,15 @@ def write_json(path: Path, content: object) -> None:
 def validate_record(record: dict, engine: str, rows: int, seed: int, value_bytes: int, cache_bytes: int) -> None:
     """Check the native result's operation and resource contract before acceptance."""
     expected = {"benchmark_schema": 2, "value_cache_workload_extension": 1,
+                "grouped_write_workload_extension": 1,
                 "engine": engine, "rows": rows, "seed": seed,
                 "value_bytes": value_bytes, "cache_bytes": cache_bytes,
                 "full_output_validation": "PASS"}
     for field, value in expected.items():
         if record.get(field) != value:
             raise RuntimeError(f"native result contract mismatch: {field}")
-    for field in ("warm_hits", "reused_16_key_hits", "unique_value_reads", "one_off_scan"):
+    for field in ("load_batches_256", "updates_batches_64", "single_row_commits",
+                  "warm_hits", "reused_16_key_hits", "unique_value_reads", "one_off_scan"):
         metric = record.get(field, {})
         samples = metric.get("samples_ns")
         if not isinstance(samples, list) or not samples or any(type(n) is not int or n < 0 for n in samples):
@@ -58,13 +60,17 @@ def validate_record(record: dict, engine: str, rows: int, seed: int, value_bytes
     if not engine.startswith("spi"):
         return
     snapshots = ("cache_after_reused_hits", "cache_after_unique_reads", "cache_after_one_off_scan",
-                 "before_maintenance", "after_maintenance")
+                 "after_load", "after_updates", "before_maintenance", "after_maintenance")
     for field in snapshots:
         stats = record[field]
         if not 0 <= stats["cache_bytes"] <= cache_bytes:
             raise RuntimeError(f"shared cache exceeds budget: {field}")
         if stats["value_cache_enabled"] != (engine == "spi-value-cache"):
             raise RuntimeError(f"incorrect cache control: {field}")
+        if stats["grouped_updates_enabled"] != (engine == "spi-grouped"):
+            raise RuntimeError(f"incorrect grouped-update control: {field}")
+        if stats["append_buffer_enabled"] != (engine != "spi-unbuffered"):
+            raise RuntimeError(f"incorrect append-buffer control: {field}")
         if stats["retired_cache_value_capacity"] != 0:
             raise RuntimeError(f"retired value cache retained capacity: {field}")
         if engine != "spi-value-cache" and stats["cache_value_entries"] != 0:
@@ -73,6 +79,13 @@ def validate_record(record: dict, engine: str, rows: int, seed: int, value_bytes
             raise RuntimeError(f"undersized cache admitted values: {field}")
     if record["cache_after_one_off_scan"]["cache_value_entries"] != 0:
         raise RuntimeError("one-off scan populated the value cache")
+    for counter in ("bytes_written", "arena_write_calls"):
+        previous = 0
+        for field in ("after_load", "after_updates", "before_maintenance"):
+            value = record[field].get(counter)
+            if type(value) is not int or value < previous:
+                raise RuntimeError(f"invalid cumulative arena counter: {counter} {field}")
+            previous = value
 
 
 def main() -> None:
@@ -83,7 +96,7 @@ def main() -> None:
     parser.add_argument("--value-bytes", type=int, default=64)
     parser.add_argument("--cache-bytes", type=int, default=8 * 1024 * 1024)
     parser.add_argument("--seeds", type=int, nargs="+", default=[17, 29, 43])
-    parser.add_argument("--engines", nargs="+", choices=["spi", "spi-value-cache", "spi-unbuffered", "sqlite"], default=["spi", "sqlite"])
+    parser.add_argument("--engines", nargs="+", choices=["spi", "spi-value-cache", "spi-unbuffered", "spi-grouped", "sqlite"], default=["spi", "sqlite"])
     args = parser.parse_args()
     binary = args.binary.resolve(strict=True)
     root = Path(__file__).resolve().parents[1]
@@ -149,7 +162,8 @@ def main() -> None:
             records.append(record)
     check_unchanged_inputs()
     summary = {"trials": len(records), "all_full_outputs_match": True,
-               "value_cache_workload_extension": 1, "cache_contract_checks": "PASS", "engines": {}}
+               "value_cache_workload_extension": 1, "grouped_write_workload_extension": 1,
+               "cache_contract_checks": "PASS", "engines": {}}
     for engine in args.engines:
         trials = [r for r in records if r["engine"] == engine]
         metrics = {
@@ -171,6 +185,9 @@ def main() -> None:
             metrics["arena_write_calls"] = [r["before_maintenance"]["arena_write_calls"] for r in trials]
             metrics["arena_bytes_written"] = [r["before_maintenance"]["bytes_written"] for r in trials]
         if engine.startswith("spi"):
+            metrics["load_arena_bytes"] = [r["after_load"]["bytes_written"] for r in trials]
+            metrics["update_arena_bytes"] = [r["after_updates"]["bytes_written"] - r["after_load"]["bytes_written"] for r in trials]
+            metrics["single_mutation_arena_bytes"] = [r["before_maintenance"]["bytes_written"] - r["after_updates"]["bytes_written"] for r in trials]
             metrics["cache_bytes_after_reuse"] = [r["cache_after_reused_hits"]["cache_bytes"] for r in trials]
             metrics["cache_values_after_reuse"] = [r["cache_after_reused_hits"]["cache_value_entries"] for r in trials]
             metrics["cache_values_after_unique_reads"] = [r["cache_after_unique_reads"]["cache_value_entries"] for r in trials]

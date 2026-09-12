@@ -68,6 +68,11 @@ pub struct Options {
     /// Admit small immutable values on point reads within the shared cache budget.
     /// Scans and compaction do not populate the value cache.
     pub value_cache: bool,
+    /// Opt-in bulk creation and replacement-only multi-key copy-on-write.
+    /// Mixed structural batches and single keys retain the sequential path.
+    /// Temporary borrowed-entry storage is capped at 64 KiB and one eighth of
+    /// transaction_bytes, separately from staging charge. No RSS bound implied.
+    pub grouped_updates: bool,
 }
 impl Default for Options {
     fn default() -> Self {
@@ -80,6 +85,7 @@ impl Default for Options {
             write_chunk: None,
             append_buffer: true,
             value_cache: false,
+            grouped_updates: false,
         }
     }
 }
@@ -858,17 +864,29 @@ impl Database {
             );
             let mut root = s.view.root.root;
             let mut count = s.view.root.count;
-            for (key, value) in writes {
-                let exists = w.find(root, key)?.is_some();
-                if let Some(value) = value {
-                    let v = w.record(2, value)?;
-                    root = w.insert(root, key, v, generation)?;
-                    if !exists {
-                        count += 1;
+            let grouped = if self.inner.options.grouped_updates {
+                w.try_grouped(root, writes, self.inner.options.transaction_bytes)?
+            } else {
+                None
+            };
+            if let Some(next) = grouped {
+                if root == 0 {
+                    count = writes.len() as u64;
+                }
+                root = next;
+            } else {
+                for (key, value) in writes {
+                    let exists = w.find(root, key)?.is_some();
+                    if let Some(value) = value {
+                        let v = w.record(2, value)?;
+                        root = w.insert(root, key, v, generation)?;
+                        if !exists {
+                            count += 1;
+                        }
+                    } else if exists {
+                        root = w.delete(root, key)?;
+                        count -= 1;
                     }
-                } else if exists {
-                    root = w.delete(root, key)?;
-                    count -= 1;
                 }
             }
             w.flush_append()?;
@@ -1128,6 +1146,101 @@ impl ArenaWriter {
             }
         }
         self.balance(n)
+    }
+    fn try_grouped(
+        &mut self,
+        root: u64,
+        writes: &std::collections::BTreeMap<Vec<u8>, Option<Vec<u8>>>,
+        transaction_budget: usize,
+    ) -> Result<Option<u64>> {
+        let entry_bytes = std::mem::size_of::<(&[u8], &[u8])>();
+        let scratch_limit = (transaction_budget / 8).min(64 * 1024);
+        if writes.len() < 2
+            || writes.len() > scratch_limit / entry_bytes
+            || writes.values().any(Option::is_none)
+        {
+            return Ok(None);
+        }
+        // Decide eligibility against the immutable root before emitting anything.
+        // One missing key makes the entire batch take the structural control.
+        if root != 0 {
+            for key in writes.keys() {
+                if self.find(root, key)?.is_none() {
+                    return Ok(None);
+                }
+            }
+        }
+        let mut entries = Vec::new();
+        if entries.try_reserve_exact(writes.len()).is_err()
+            || entries.capacity() > scratch_limit / entry_bytes
+        {
+            return Ok(None);
+        }
+        for (key, value) in writes {
+            // Every value was checked above. Borrow rather than clone payloads.
+            entries.push((key.as_slice(), value.as_ref().unwrap().as_slice()));
+        }
+        if root == 0 {
+            self.build_sorted(&entries, self.generation).map(Some)
+        } else {
+            self.replace_existing(root, &entries, self.generation)
+                .map(Some)
+        }
+    }
+    fn build_sorted(&mut self, entries: &[(&[u8], &[u8])], revision: u64) -> Result<u64> {
+        if entries.is_empty() {
+            return Ok(0);
+        }
+        let middle = entries.len() / 2;
+        let left = self.build_sorted(&entries[..middle], revision)?;
+        let right = self.build_sorted(&entries[middle + 1..], revision)?;
+        let value = self.record(2, entries[middle].1)?;
+        self.save(Node {
+            left,
+            right,
+            value,
+            revision,
+            height: 1,
+            key: entries[middle].0.to_vec(),
+        })
+    }
+    fn replace_existing(
+        &mut self,
+        at: u64,
+        entries: &[(&[u8], &[u8])],
+        revision: u64,
+    ) -> Result<u64> {
+        if entries.is_empty() {
+            return Ok(at);
+        }
+        if at == 0 {
+            return Err(Error::Corrupt("grouped replacement key missing".into()));
+        }
+        let mut node = (*self.node(at)?).clone();
+        let split = entries.partition_point(|(key, _)| *key < node.key.as_slice());
+        let (left_entries, at_or_right) = entries.split_at(split);
+        let (current_entries, right_entries) = if at_or_right
+            .first()
+            .is_some_and(|(key, _)| *key == node.key.as_slice())
+        {
+            (&at_or_right[..1], &at_or_right[1..])
+        } else {
+            (&at_or_right[..0], at_or_right)
+        };
+        let left = self.replace_existing(node.left, left_entries, revision)?;
+        let right = self.replace_existing(node.right, right_entries, revision)?;
+        let mut changed = left != node.left || right != node.right;
+        if let Some((_, value)) = current_entries.first() {
+            node.value = self.record(2, value)?;
+            node.revision = revision;
+            changed = true;
+        }
+        if !changed {
+            return Ok(at);
+        }
+        node.left = left;
+        node.right = right;
+        self.save(node)
     }
     fn copy_tree(&mut self, old: &Snapshot, at: u64) -> Result<u64> {
         if at == 0 {

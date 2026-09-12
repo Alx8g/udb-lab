@@ -12,7 +12,8 @@
     "Whole-epoch compaction with preparation outside the foreground state mutex and pinned-reader-aware collection",
     "Corruption, truncation, injected failures, fragmented writes, stale-compaction rejection, and process-exit regression tests",
     "Native optional SQLite comparison adapter with complete output checks",
-    "Committed-source value-cache campaigns with normal and 1 KiB adverse controls"
+    "Committed-source value-cache campaigns with normal and 1 KiB adverse controls",
+    "Opt-in grouped copy-on-write bulk construction and replacement paths with sequential fallback"
   ],
   "remaining": [
     "Fine physical page incarnation/version-interval reuse",
@@ -26,6 +27,7 @@
   ],
   "value_cache_boundary": "Disabled by default. Point reads alone admit values up to 4096 bytes and capacity-plus-metadata charge up to one eighth of the shared budget. Scans and compaction do not admit values. The committed-source trials support repeated-key reuse, not a general speedup. The reported 0.4-microsecond per-call median is below the lab's 1-microsecond reporting threshold and does not support a precise latency ratio. Unique reads and scans show no consistent benefit; 1 KiB-cache trials admit no values and show overhead. FIFO point admission may waste work or evict nodes under one-touch traffic. Cache charge and container capacities are not allocated-byte/RSS guarantees. No file format or durability barrier changes.",
   "compaction_boundary": "Preparation and data sync run outside the foreground state mutex. Publication still acquires it and syncs the manifest. Compaction and collection serialize through a maintenance lock. Any intervening commit invalidates the candidate, requiring explicit retry. No foreground latency bound, bounded retry cost, or bandwidth isolation is established.",
+  "grouped_update_boundary": "Disabled by default. Empty-tree insert batches and replacement-only batches may share immutable ancestors. Deletes, mixed structural batches, single-key writes, oversized scratch batches and allocation failure use the proven sequential path. Temporary borrowed-entry references are capped at 64 KiB and one eighth of transaction_bytes, separately from staging charge. The grouped path changes tree topology and serialized bytes, preserves publication barriers and logical revisions, and has correctness regression coverage. Performance acceptance is pending source-identified normal and 1 KiB campaigns. Arena counters measure application-written bytes, not device write amplification.",
   "benchmark_boundary": "Same local binary-key operation stream is not equivalent full database semantics. Cache-cleared API calls are not device-cold reads. Single-row mutation tests must actually change the stored value. Keep old benchmark schemas as historical evidence only.",
   "historical_lab": "Existing kernel results and known ranking/numeric defects are separate from this new storage baseline. A passing lab test does not establish arbitrary-input correctness or validate this engine."
 }

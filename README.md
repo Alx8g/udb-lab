@@ -130,6 +130,24 @@ and the value-cache results retain complete samples, source identities, and outp
 operations. These are local KV experiments, not production latency or power-loss
 validation. [Track A remains unfinished](docs/track-a-status.json).
 
+Grouped copy-on-write is a separate opt-in experiment, disabled by default.
+With `Options::grouped_updates`, a multi-key insertion batch into an empty tree
+builds a balanced tree directly. Replacement-only batches preserve topology and
+copy each affected ancestor once. Unchanged keys retain their logical revisions.
+Single-key writes, deletes, mixed structural batches, and batches over the scratch
+limit use the original sequential path. Eligibility checks add reads before
+replacement and fallback work, so fewer bytes need not mean faster commits.
+
+The temporary borrowed-entry array is limited to 64 KiB and one eighth of the
+transaction budget. This is additional to staging charge, excludes recursion and
+allocator overhead, and is not a process-memory guarantee. Payloads are borrowed,
+not cloned into the array. Allocation failure falls back to sequential updates.
+The record format and publication barriers are unchanged, but bulk construction
+changes topology and serialized bytes. `spi-grouped` selects this experiment in
+the comparison runner with value admission disabled. Per-phase arena counters
+measure application-written bytes, not filesystem or device write amplification.
+Performance acceptance remains pending the grouped-update campaigns.
+
 Run an isolated comparison into a new directory:
 
 ```

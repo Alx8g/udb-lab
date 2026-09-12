@@ -8,13 +8,17 @@ from run_spi_campaign import validate_record
 def result(engine="spi-value-cache", cache_bytes=8192):
     enabled = engine == "spi-value-cache"
     stats = {"cache_bytes": 512, "value_cache_enabled": enabled,
-             "retired_cache_value_capacity": 0, "cache_value_entries": 1 if enabled else 0}
+             "retired_cache_value_capacity": 0, "cache_value_entries": 1 if enabled else 0,
+             "grouped_updates_enabled": engine == "spi-grouped",
+             "append_buffer_enabled": engine != "spi-unbuffered",
+             "bytes_written": 1000, "arena_write_calls": 10}
     metric = {"samples_ns": [10, 20], "sample_count": 2, "total_ns": 30}
     return {"benchmark_schema": 2, "value_cache_workload_extension": 1,
+            "grouped_write_workload_extension": 1,
             "engine": engine, "rows": 2000, "seed": 17, "value_bytes": 64,
             "cache_bytes": cache_bytes, "full_output_validation": "PASS",
-            **{name: copy.deepcopy(metric) for name in ["warm_hits", "reused_16_key_hits", "unique_value_reads", "one_off_scan"]},
-            **{name: copy.deepcopy(stats) for name in ["cache_after_reused_hits", "cache_after_unique_reads", "before_maintenance"]},
+            **{name: copy.deepcopy(metric) for name in ["load_batches_256", "updates_batches_64", "single_row_commits", "warm_hits", "reused_16_key_hits", "unique_value_reads", "one_off_scan"]},
+            **{name: copy.deepcopy(stats) for name in ["after_load", "after_updates", "cache_after_reused_hits", "cache_after_unique_reads", "before_maintenance"]},
             **{name: {**stats, "cache_value_entries": 0} for name in ["cache_after_one_off_scan", "after_maintenance"]}}
 
 
@@ -23,7 +27,7 @@ class CampaignResultTests(unittest.TestCase):
         validate_record(record, engine, 2000, 17, 64, cache)
 
     def test_valid_control_and_cache_results(self):
-        for engine in ["spi", "spi-value-cache", "sqlite"]:
+        for engine in ["spi", "spi-value-cache", "spi-unbuffered", "spi-grouped", "sqlite"]:
             self.check(result(engine), engine)
 
     def test_old_or_mislabeled_contract_rejected(self):
@@ -53,6 +57,18 @@ class CampaignResultTests(unittest.TestCase):
             self.check(record, "spi")
         with self.assertRaises(RuntimeError):
             self.check(result(cache_bytes=1024), cache=1024)
+
+    def test_grouped_control_and_counter_regressions_rejected(self):
+        for field, value in [("grouped_updates_enabled", False), ("append_buffer_enabled", False),
+                             ("bytes_written", -1), ("arena_write_calls", True)]:
+            record = result("spi-grouped")
+            record["after_updates"][field] = value
+            with self.assertRaises(RuntimeError):
+                self.check(record, "spi-grouped")
+        record = result("spi-grouped")
+        record.pop("grouped_write_workload_extension")
+        with self.assertRaises(RuntimeError):
+            self.check(record, "spi-grouped")
 
     def test_invalid_samples_and_totals_rejected(self):
         for field, value in [("samples_ns", [-1]), ("samples_ns", []),

@@ -17,9 +17,9 @@ fn build_info() -> Value {
         "benchmark_schema": BENCHMARK_SCHEMA,
         "debug_assertions": cfg!(debug_assertions),
         "engines": if cfg!(feature = "rusqlite") {
-            vec!["spi", "spi-value-cache", "spi-unbuffered", "sqlite"]
+            vec!["spi", "spi-value-cache", "spi-unbuffered", "spi-grouped", "sqlite"]
         } else {
-            vec!["spi", "spi-value-cache", "spi-unbuffered"]
+            vec!["spi", "spi-value-cache", "spi-unbuffered", "spi-grouped"]
         },
         "sources": {
             "Cargo.toml": include_str!("../../Cargo.toml"),
@@ -49,11 +49,18 @@ struct Spi {
     options: Options,
 }
 impl Spi {
-    fn new(path: PathBuf, cache: usize, append_buffer: bool, value_cache: bool) -> Result<Self> {
+    fn new(
+        path: PathBuf,
+        cache: usize,
+        append_buffer: bool,
+        value_cache: bool,
+        grouped_updates: bool,
+    ) -> Result<Self> {
         let options = Options {
             cache_bytes: cache,
             append_buffer,
             value_cache,
+            grouped_updates,
             ..Options::default()
         };
         Ok(Self {
@@ -100,6 +107,12 @@ impl Engine for Spi {
         let mut stats = serde_json::to_value(self.db().stats()?)?;
         stats["value_cache_enabled"] = json!(self.options.value_cache);
         stats["append_buffer_enabled"] = json!(self.options.append_buffer);
+        stats["grouped_updates_enabled"] = json!(self.options.grouped_updates);
+        stats["grouped_scratch_limit_bytes"] = json!(if self.options.grouped_updates {
+            (self.options.transaction_bytes / 8).min(65536)
+        } else {
+            0
+        });
         stats["append_buffer_capacity_bytes"] =
             json!(if self.options.append_buffer { 65536 } else { 0 });
         Ok(stats)
@@ -251,6 +264,8 @@ fn run(engine: &mut dyn Engine, rows: usize, seed: u64, size: usize) -> Result<V
         samples.push(t.elapsed().as_nanos() as u64);
     }
     report["load_batches_256"] = measure(samples, rows);
+    report["after_load"] = engine.stats()?;
+    report["grouped_write_workload_extension"] = json!(1);
     let mut state = seed;
     let requests: Vec<_> = (0..rows)
         .map(|_| key(next(&mut state) % rows as u64))
@@ -387,6 +402,7 @@ fn run(engine: &mut dyn Engine, rows: usize, seed: u64, size: usize) -> Result<V
         }
     }
     report["updates_batches_64"] = measure(samples, updates.len());
+    report["after_updates"] = engine.stats()?;
     let mut samples = Vec::new();
     for r in updates.iter().take(30) {
         let mutation = forced_mutation(&r.key, &expected);
@@ -447,6 +463,10 @@ mod tests {
             .as_array()
             .unwrap()
             .contains(&json!("spi-unbuffered")));
+        assert!(info["engines"]
+            .as_array()
+            .unwrap()
+            .contains(&json!("spi-grouped")));
         let modules: Vec<_> = fs::read_dir(concat!(env!("CARGO_MANIFEST_DIR"), "/src/spi"))
             .unwrap()
             .map(|e| e.unwrap().file_name().into_string().unwrap())
@@ -479,7 +499,7 @@ fn main() -> Result<()> {
         return Ok(());
     }
     if args.len() < 3 {
-        return Err("usage: spi-compare NEW_OUTPUT_DIR spi|spi-value-cache|spi-unbuffered|sqlite [rows=5000] [seed=1] [value_bytes=64] [cache_bytes=8388608]".into());
+        return Err("usage: spi-compare NEW_OUTPUT_DIR spi|spi-value-cache|spi-unbuffered|spi-grouped|sqlite [rows=5000] [seed=1] [value_bytes=64] [cache_bytes=8388608]".into());
     }
     let dir = PathBuf::from(&args[1]);
     let kind = &args[2];
@@ -497,15 +517,17 @@ fn main() -> Result<()> {
     if kind != "spi"
         && kind != "spi-value-cache"
         && kind != "spi-unbuffered"
+        && kind != "spi-grouped"
         && (kind != "sqlite" || !cfg!(feature = "rusqlite"))
     {
         return Err("unknown engine or SQLite feature not enabled".into());
     }
     fs::create_dir(&dir)?;
     let mut engine: Box<dyn Engine> = match kind.as_str() {
-        "spi" => Box::new(Spi::new(dir.join("db"), cache, true, false)?),
-        "spi-value-cache" => Box::new(Spi::new(dir.join("db"), cache, true, true)?),
-        "spi-unbuffered" => Box::new(Spi::new(dir.join("db"), cache, false, false)?),
+        "spi" => Box::new(Spi::new(dir.join("db"), cache, true, false, false)?),
+        "spi-value-cache" => Box::new(Spi::new(dir.join("db"), cache, true, true, false)?),
+        "spi-unbuffered" => Box::new(Spi::new(dir.join("db"), cache, false, false, false)?),
+        "spi-grouped" => Box::new(Spi::new(dir.join("db"), cache, true, false, true)?),
         #[cfg(feature = "rusqlite")]
         "sqlite" => Box::new(Sqlite::new(dir.join("db"), cache)?),
         _ => return Err("unknown engine or SQLite feature not enabled".into()),

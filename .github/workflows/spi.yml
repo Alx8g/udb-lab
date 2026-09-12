@@ -31,7 +31,7 @@ jobs:
       - name: Test local storage, transactions and process crashes
         run: cargo test --locked --all-targets --features rusqlite -- --test-threads=1
       - name: Test optimized storage, concurrency and process-crash paths
-        run: cargo test --locked --release --lib --test spi-storage --test spi-concurrency --test spi-process -- --test-threads=1
+        run: cargo test --locked --release --lib --test spi-storage --test spi-concurrency --test spi-process --test spi-grouped -- --test-threads=1
       - name: Test benchmark provenance validation
         run: python scripts/test_spi_benchmark_identity.py
       - name: Test benchmark result-contract validation
@@ -42,4 +42,4 @@ jobs:
         shell: bash
         run: |
           mkdir -p .working/tmp/ci
-          python scripts/run_spi_campaign.py --binary "target/release/spi-compare${{ runner.os == 'Windows' && '.exe' || '' }}" --out .working/tmp/ci/identified-smoke --rows 100 --seeds 17 --engines spi spi-value-cache sqlite
+          python scripts/run_spi_campaign.py --binary "target/release/spi-compare${{ runner.os == 'Windows' && '.exe' || '' }}" --out .working/tmp/ci/identified-smoke --rows 100 --seeds 17 --engines spi spi-value-cache spi-grouped sqlite
