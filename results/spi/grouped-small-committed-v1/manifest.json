@@ -1,0 +1,52 @@
+{
+  "sha256": {
+    "command-spi-17.json": "e9a22c6d722c6c96e02fb05380804b0249e636fcda23062f84b8275fe5be8e0f",
+    "command-spi-29.json": "04f7e0825226f9fd168f0614b3a6abbeb086c4762c1e8136dc6e3df178a99635",
+    "command-spi-43.json": "07ee1f15e21c176285f71af2ecb051f884eea6c36432d461db0da083fe318368",
+    "command-spi-grouped-17.json": "54a42025b17ca2241df741d6cd3651544e67681735e71fed2aa8a4bb01b95395",
+    "command-spi-grouped-29.json": "265be37f87b7b66ede9e2bd955b6f5914cb68fa26490b234fc718579996393ef",
+    "command-spi-grouped-43.json": "7634b21589666a9e740b9d6ce294da5830eace76f39c5da1c7b738579edaaef1",
+    "command-sqlite-17.json": "04814eb44be287944dbff857d6ab30e6ad573eab032d2d361f55fea751a65f8d",
+    "command-sqlite-29.json": "563a8702907570fa9d6dfe7d731b6ecc3c6f4467f6a098a86942ae471c031029",
+    "command-sqlite-43.json": "8ccd7facf1c7d192cb95c00743a8271d0899e774631168383e61f7d8b708b6af",
+    "environment.json": "b60ef9b2e0ec4c60db18b69c1937dc87dd3bb1946ccadf63d2c2b394f31b27cd",
+    "spi-grouped-seed-17/result.json": "a40e085b1ade32d2bc3c9213e2feb9fd8f9530eb0fa7893caa277ac2da6d7f02",
+    "spi-grouped-seed-29/result.json": "d8288d9bebcd6e21f23dcd3066f32d3af359d5e7f533d5d7e0205be3d05dc3ea",
+    "spi-grouped-seed-43/result.json": "9c55cfed77fa93e706b64dff9d4e40e2b53cf7e25c7cc7c0a9a3502caa464f1f",
+    "spi-seed-17/result.json": "e53c7358b625d481253986b752d1bbb082957b0d4487f32f2958817d13eae6ec",
+    "spi-seed-29/result.json": "a689638f29b670ebb13118885ad4da1a1ed3c1ec2a5f2c9e3e391e27fa977a18",
+    "spi-seed-43/result.json": "291c56d14fdfc42907e1fb27c648aaaabc163319f9dea69fd157fe48d6d97e9f",
+    "sqlite-seed-17/result.json": "ee78958a38e1b23ce8fa1234e7ea96ccb673e5cf406beb9ee2c375819a6137c5",
+    "sqlite-seed-29/result.json": "6ee672e710be3841cb8876ed04c4ec3792565093d37630ba52ae1d0e44456e33",
+    "sqlite-seed-43/result.json": "3c9424b8809ba03895a0d7615f359889d51fd34a24a4fe7e12f2221ab04dcea7",
+    "summary.json": "12b91ddf7060e79929fe6c4468274c478d45c7da0426433909a5a60d9741d945"
+  },
+  "source_commit": "5e6de9d13171edbd75a9bfcf4e793261bdc5ead4",
+  "write_checks": [
+    {
+      "seed": 17,
+      "control_load_arena_bytes": 2107360,
+      "grouped_load_arena_bytes": 1970560,
+      "control_update_arena_bytes": 450384,
+      "grouped_update_arena_bytes": 219984,
+      "all_complete_outputs_validated": true
+    },
+    {
+      "seed": 29,
+      "control_load_arena_bytes": 2107360,
+      "grouped_load_arena_bytes": 1970560,
+      "control_update_arena_bytes": 451584,
+      "grouped_update_arena_bytes": 221424,
+      "all_complete_outputs_validated": true
+    },
+    {
+      "seed": 43,
+      "control_load_arena_bytes": 2107360,
+      "grouped_load_arena_bytes": 1970560,
+      "control_update_arena_bytes": 454672,
+      "grouped_update_arena_bytes": 223952,
+      "all_complete_outputs_validated": true
+    }
+  ],
+  "scope": "Complete logical output equality, not physical byte equality. Grouped bulk construction changes topology. Arena counters are application-written bytes, not device amplification. Local closed-loop Windows trials, no power-loss or service-latency proof."
+}

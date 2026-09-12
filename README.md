@@ -146,7 +146,27 @@ The record format and publication barriers are unchanged, but bulk construction
 changes topology and serialized bytes. `spi-grouped` selects this experiment in
 the comparison runner with value admission disabled. Per-phase arena counters
 measure application-written bytes, not filesystem or device write amplification.
-Performance acceptance remains pending the grouped-update campaigns.
+The [normal-cache campaign](results/spi/grouped-normal-committed-v1/summary.json)
+and [1 KiB campaign](results/spi/grouped-small-committed-v1/summary.json) each
+passed nine trials from the same clean committed source, using 2,000 rows,
+64-byte values, three seeds and rotating engine order. Median update-phase arena
+bytes fell from 451,584 to 221,424, a 51% reduction. Total pre-maintenance arena
+bytes fell 14%. These counters exclude manifest writes and device effects.
+
+At 8 MiB, median time for eight update batches fell from 101.97 ms to 87.29 ms.
+At 1 KiB, it fell from 174.38 ms to 164.42 ms. Normal-cache load time was nearly
+unchanged at 186.79 ms versus 185.23 ms, since only the first insertion batch
+qualifies for bulk construction. Normal-cache single-row commit medians were
+9.76 ms versus 9.77 ms, and ranges were 712.2 versus 724.0 microseconds.
+The single-key control still uses sequential updates, but prior bulk construction
+changes topology, so later path lengths can differ.
+
+SQLite remained faster: normal-cache update batches took 41.66 ms, single-row
+commits 2.77 ms, and ranges 27.7 microseconds. Three local trials per engine do
+not establish service latency, statistical significance or larger-than-RAM
+behavior. These measurements support a narrow byte-reduction experiment, not a
+general speedup or changing the default. Fine page reuse, durable overlays,
+resource governance and device-power-loss validation remain open.
 
 Run an isolated comparison into a new directory:
 
