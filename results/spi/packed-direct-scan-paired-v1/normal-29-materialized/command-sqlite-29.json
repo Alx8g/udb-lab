@@ -1,0 +1,16 @@
+{
+  "command": [
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\direct-scan-binaries-v1\\materialized.exe",
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\direct-scan-paired-v1\\normal-29-materialized\\sqlite-seed-29",
+    "sqlite",
+    "2000",
+    "29",
+    "64",
+    "8388608"
+  ],
+  "started_utc": "2026-09-12T12:12:14.435201+00:00",
+  "finished_utc": "2026-09-12T12:12:14.657040+00:00",
+  "exit_code": 0,
+  "stdout": "{\"engine\":\"sqlite\",\"load_ms\":25.0471,\"result\":\"C:\\\\Users\\\\verom\\\\.treehouse\\\\dbs-5593e8\\\\4\\\\dbs\\\\.working\\\\tmp\\\\direct-scan-paired-v1\\\\normal-29-materialized\\\\sqlite-seed-29\\\\result.json\",\"rows\":2000,\"single_commit_p50_us\":2491.1,\"validation\":\"PASS\",\"warm_read_ms\":5.298}\n",
+  "stderr": ""
+}

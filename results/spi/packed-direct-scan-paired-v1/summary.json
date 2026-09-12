@@ -1,0 +1,3512 @@
+{
+  "trials": 54,
+  "all_full_outputs_match": true,
+  "cases": {
+    "normal": {
+      "materialized": {
+        "spi": {
+          "load_ms": {
+            "samples": [
+              130.4404,
+              112.7679,
+              116.3952
+            ],
+            "median": 116.3952
+          },
+          "reused_16_key_p50_us": {
+            "samples": [
+              3.3,
+              3.0,
+              3.0
+            ],
+            "median": 3.0
+          },
+          "unique_reads_ms": {
+            "samples": [
+              14.0414,
+              13.0634,
+              13.0312
+            ],
+            "median": 13.0634
+          },
+          "one_off_scan_ms": {
+            "samples": [
+              13.4771,
+              12.3817,
+              12.3806
+            ],
+            "median": 12.3817
+          },
+          "warm_hit_p50_us": {
+            "samples": [
+              4.6,
+              3.9,
+              4.0
+            ],
+            "median": 4.0
+          },
+          "warm_hit_p99_us": {
+            "samples": [
+              13.5,
+              11.5,
+              16.8
+            ],
+            "median": 13.5
+          },
+          "cleared_app_cache_p50_us": {
+            "samples": [
+              44.5,
+              40.1,
+              39.7
+            ],
+            "median": 40.1
+          },
+          "range_p50_us": {
+            "samples": [
+              481.2,
+              477.6,
+              454.9
+            ],
+            "median": 477.6
+          },
+          "post_mutation_scan_ms": {
+            "samples": [
+              15.3307,
+              13.6187,
+              13.4669
+            ],
+            "median": 13.6187
+          },
+          "post_mutation_range_p50_us": {
+            "samples": [
+              8.8,
+              9.3,
+              9.0
+            ],
+            "median": 9.0
+          },
+          "post_compaction_scan_ms": {
+            "samples": [
+              12.7853,
+              12.9273,
+              13.2714
+            ],
+            "median": 12.9273
+          },
+          "updates_ms": {
+            "samples": [
+              88.204,
+              79.413,
+              79.8697
+            ],
+            "median": 79.8697
+          },
+          "durable_mutation_p50_us": {
+            "samples": [
+              9682.2,
+              8954.6,
+              9260.2
+            ],
+            "median": 9260.2
+          },
+          "reopen_ms": {
+            "samples": [
+              7.0079,
+              5.2284,
+              6.6514
+            ],
+            "median": 6.6514
+          },
+          "maintenance_ms": {
+            "samples": [
+              48.8177,
+              40.0353,
+              42.3519
+            ],
+            "median": 42.3519
+          },
+          "final_owned_file_bytes": {
+            "samples": [
+              352072,
+              352072,
+              352072
+            ],
+            "median": 352072
+          },
+          "arena_write_calls": {
+            "samples": [
+              150,
+              150,
+              150
+            ],
+            "median": 150
+          },
+          "arena_bytes_written": {
+            "samples": [
+              2584464,
+              2585984,
+              2588672
+            ],
+            "median": 2585984
+          },
+          "load_arena_bytes": {
+            "samples": [
+              2107360,
+              2107360,
+              2107360
+            ],
+            "median": 2107360
+          },
+          "update_arena_bytes": {
+            "samples": [
+              450384,
+              451584,
+              454672
+            ],
+            "median": 451584
+          },
+          "single_mutation_arena_bytes": {
+            "samples": [
+              26720,
+              27040,
+              26640
+            ],
+            "median": 26720
+          },
+          "cache_bytes_after_reuse": {
+            "samples": [
+              4400,
+              4400,
+              4400
+            ],
+            "median": 4400
+          },
+          "cache_values_after_reuse": {
+            "samples": [
+              0,
+              0,
+              0
+            ],
+            "median": 0
+          },
+          "cache_values_after_unique_reads": {
+            "samples": [
+              0,
+              0,
+              0
+            ],
+            "median": 0
+          },
+          "cache_values_after_scan": {
+            "samples": [
+              0,
+              0,
+              0
+            ],
+            "median": 0
+          }
+        },
+        "spi-packed": {
+          "load_ms": {
+            "samples": [
+              99.482,
+              77.3875,
+              75.6813
+            ],
+            "median": 77.3875
+          },
+          "reused_16_key_p50_us": {
+            "samples": [
+              0.4,
+              0.3,
+              0.3
+            ],
+            "median": 0.3
+          },
+          "unique_reads_ms": {
+            "samples": [
+              1.0568,
+              0.9562,
+              0.9654
+            ],
+            "median": 0.9654
+          },
+          "one_off_scan_ms": {
+            "samples": [
+              0.5654,
+              0.4928,
+              0.5386
+            ],
+            "median": 0.5386
+          },
+          "warm_hit_p50_us": {
+            "samples": [
+              0.4,
+              0.4,
+              0.4
+            ],
+            "median": 0.4
+          },
+          "warm_hit_p99_us": {
+            "samples": [
+              1.4,
+              1.5,
+              2.2
+            ],
+            "median": 1.5
+          },
+          "cleared_app_cache_p50_us": {
+            "samples": [
+              29.7,
+              26.2,
+              25.3
+            ],
+            "median": 26.2
+          },
+          "range_p50_us": {
+            "samples": [
+              38.2,
+              41.8,
+              58.3
+            ],
+            "median": 41.8
+          },
+          "post_mutation_scan_ms": {
+            "samples": [
+              1.0047,
+              0.7536,
+              1.0091
+            ],
+            "median": 1.0047
+          },
+          "post_mutation_range_p50_us": {
+            "samples": [
+              44.8,
+              47.5,
+              38.8
+            ],
+            "median": 44.8
+          },
+          "post_compaction_scan_ms": {
+            "samples": [
+              0.5684,
+              0.4959,
+              0.5437
+            ],
+            "median": 0.5437
+          },
+          "updates_ms": {
+            "samples": [
+              86.4928,
+              74.6261,
+              79.9927
+            ],
+            "median": 79.9927
+          },
+          "durable_mutation_p50_us": {
+            "samples": [
+              9659.0,
+              8496.4,
+              9046.8
+            ],
+            "median": 9046.8
+          },
+          "reopen_ms": {
+            "samples": [
+              8.3778,
+              8.3892,
+              8.3406
+            ],
+            "median": 8.3778
+          },
+          "maintenance_ms": {
+            "samples": [
+              23.449,
+              20.06,
+              19.605
+            ],
+            "median": 20.06
+          },
+          "final_owned_file_bytes": {
+            "samples": [
+              193600,
+              193600,
+              193600
+            ],
+            "median": 193600
+          },
+          "arena_write_calls": {
+            "samples": [
+              94,
+              92,
+              92
+            ],
+            "median": 92
+          },
+          "arena_bytes_written": {
+            "samples": [
+              495120,
+              494416,
+              511312
+            ],
+            "median": 495120
+          },
+          "load_arena_bytes": {
+            "samples": [
+              234288,
+              234288,
+              234288
+            ],
+            "median": 234288
+          },
+          "update_arena_bytes": {
+            "samples": [
+              171648,
+              155536,
+              172032
+            ],
+            "median": 171648
+          },
+          "single_mutation_arena_bytes": {
+            "samples": [
+              89184,
+              104592,
+              104992
+            ],
+            "median": 104592
+          },
+          "cache_bytes_after_reuse": {
+            "samples": [
+              18064,
+              18064,
+              18064
+            ],
+            "median": 18064
+          },
+          "cache_values_after_reuse": {
+            "samples": [
+              0,
+              0,
+              0
+            ],
+            "median": 0
+          },
+          "cache_values_after_unique_reads": {
+            "samples": [
+              0,
+              0,
+              0
+            ],
+            "median": 0
+          },
+          "cache_values_after_scan": {
+            "samples": [
+              0,
+              0,
+              0
+            ],
+            "median": 0
+          }
+        },
+        "sqlite": {
+          "load_ms": {
+            "samples": [
+              27.73,
+              25.0471,
+              22.4492
+            ],
+            "median": 25.0471
+          },
+          "reused_16_key_p50_us": {
+            "samples": [
+              2.5,
+              2.3,
+              2.5
+            ],
+            "median": 2.5
+          },
+          "unique_reads_ms": {
+            "samples": [
+              5.8365,
+              5.2901,
+              5.2692
+            ],
+            "median": 5.2901
+          },
+          "one_off_scan_ms": {
+            "samples": [
+              0.538,
+              0.4395,
+              0.5177
+            ],
+            "median": 0.5177
+          },
+          "warm_hit_p50_us": {
+            "samples": [
+              2.6,
+              2.4,
+              2.6
+            ],
+            "median": 2.6
+          },
+          "warm_hit_p99_us": {
+            "samples": [
+              4.8,
+              5.7,
+              5.8
+            ],
+            "median": 5.7
+          },
+          "cleared_app_cache_p50_us": {
+            "samples": [
+              8.4,
+              7.7,
+              8.1
+            ],
+            "median": 8.1
+          },
+          "range_p50_us": {
+            "samples": [
+              21.7,
+              21.4,
+              22.4
+            ],
+            "median": 21.7
+          },
+          "post_mutation_scan_ms": {
+            "samples": [
+              0.5578,
+              0.499,
+              0.5019
+            ],
+            "median": 0.5019
+          },
+          "post_mutation_range_p50_us": {
+            "samples": [
+              4.3,
+              4.1,
+              3.9
+            ],
+            "median": 4.1
+          },
+          "post_compaction_scan_ms": {
+            "samples": [
+              0.5218,
+              0.4632,
+              0.6348
+            ],
+            "median": 0.5218
+          },
+          "updates_ms": {
+            "samples": [
+              42.5478,
+              38.7438,
+              39.0479
+            ],
+            "median": 39.0479
+          },
+          "durable_mutation_p50_us": {
+            "samples": [
+              2759.9,
+              2491.1,
+              2513.7
+            ],
+            "median": 2513.7
+          },
+          "reopen_ms": {
+            "samples": [
+              8.237,
+              8.4795,
+              9.2751
+            ],
+            "median": 8.4795
+          },
+          "maintenance_ms": {
+            "samples": [
+              16.8751,
+              15.655,
+              16.1506
+            ],
+            "median": 16.1506
+          },
+          "final_owned_file_bytes": {
+            "samples": [
+              200704,
+              200704,
+              200704
+            ],
+            "median": 200704
+          },
+          "arena_write_calls": {
+            "samples": [
+              null,
+              null,
+              null
+            ],
+            "median": null
+          },
+          "arena_bytes_written": {
+            "samples": [
+              null,
+              null,
+              null
+            ],
+            "median": null
+          }
+        }
+      },
+      "direct-base": {
+        "spi": {
+          "load_ms": {
+            "samples": [
+              121.337,
+              113.4139,
+              119.2967
+            ],
+            "median": 119.2967
+          },
+          "reused_16_key_p50_us": {
+            "samples": [
+              3.2,
+              3.2,
+              3.2
+            ],
+            "median": 3.2
+          },
+          "unique_reads_ms": {
+            "samples": [
+              13.4015,
+              13.1112,
+              13.7524
+            ],
+            "median": 13.4015
+          },
+          "one_off_scan_ms": {
+            "samples": [
+              13.0867,
+              12.8482,
+              14.7479
+            ],
+            "median": 13.0867
+          },
+          "warm_hit_p50_us": {
+            "samples": [
+              4.0,
+              4.1,
+              4.4
+            ],
+            "median": 4.1
+          },
+          "warm_hit_p99_us": {
+            "samples": [
+              9.5,
+              11.1,
+              18.5
+            ],
+            "median": 11.1
+          },
+          "cleared_app_cache_p50_us": {
+            "samples": [
+              41.8,
+              41.7,
+              47.2
+            ],
+            "median": 41.8
+          },
+          "range_p50_us": {
+            "samples": [
+              445.3,
+              478.1,
+              459.6
+            ],
+            "median": 459.6
+          },
+          "post_mutation_scan_ms": {
+            "samples": [
+              14.021,
+              13.5927,
+              12.411
+            ],
+            "median": 13.5927
+          },
+          "post_mutation_range_p50_us": {
+            "samples": [
+              8.7,
+              9.1,
+              7.8
+            ],
+            "median": 8.7
+          },
+          "post_compaction_scan_ms": {
+            "samples": [
+              12.5947,
+              14.107,
+              14.7396
+            ],
+            "median": 14.107
+          },
+          "updates_ms": {
+            "samples": [
+              77.5123,
+              78.1359,
+              80.7952
+            ],
+            "median": 78.1359
+          },
+          "durable_mutation_p50_us": {
+            "samples": [
+              8441.3,
+              8586.1,
+              8572.1
+            ],
+            "median": 8572.1
+          },
+          "reopen_ms": {
+            "samples": [
+              6.3881,
+              4.8801,
+              4.8467
+            ],
+            "median": 4.8801
+          },
+          "maintenance_ms": {
+            "samples": [
+              44.8116,
+              41.422,
+              36.9657
+            ],
+            "median": 41.422
+          },
+          "final_owned_file_bytes": {
+            "samples": [
+              352072,
+              352072,
+              352072
+            ],
+            "median": 352072
+          },
+          "arena_write_calls": {
+            "samples": [
+              150,
+              150,
+              150
+            ],
+            "median": 150
+          },
+          "arena_bytes_written": {
+            "samples": [
+              2584464,
+              2585984,
+              2588672
+            ],
+            "median": 2585984
+          },
+          "load_arena_bytes": {
+            "samples": [
+              2107360,
+              2107360,
+              2107360
+            ],
+            "median": 2107360
+          },
+          "update_arena_bytes": {
+            "samples": [
+              450384,
+              451584,
+              454672
+            ],
+            "median": 451584
+          },
+          "single_mutation_arena_bytes": {
+            "samples": [
+              26720,
+              27040,
+              26640
+            ],
+            "median": 26720
+          },
+          "cache_bytes_after_reuse": {
+            "samples": [
+              4400,
+              4400,
+              4400
+            ],
+            "median": 4400
+          },
+          "cache_values_after_reuse": {
+            "samples": [
+              0,
+              0,
+              0
+            ],
+            "median": 0
+          },
+          "cache_values_after_unique_reads": {
+            "samples": [
+              0,
+              0,
+              0
+            ],
+            "median": 0
+          },
+          "cache_values_after_scan": {
+            "samples": [
+              0,
+              0,
+              0
+            ],
+            "median": 0
+          }
+        },
+        "spi-packed": {
+          "load_ms": {
+            "samples": [
+              77.0532,
+              75.761,
+              75.4138
+            ],
+            "median": 75.761
+          },
+          "reused_16_key_p50_us": {
+            "samples": [
+              0.3,
+              0.3,
+              0.3
+            ],
+            "median": 0.3
+          },
+          "unique_reads_ms": {
+            "samples": [
+              0.9452,
+              0.9412,
+              0.8803
+            ],
+            "median": 0.9412
+          },
+          "one_off_scan_ms": {
+            "samples": [
+              0.4184,
+              0.3979,
+              0.3699
+            ],
+            "median": 0.3979
+          },
+          "warm_hit_p50_us": {
+            "samples": [
+              0.4,
+              0.4,
+              0.3
+            ],
+            "median": 0.4
+          },
+          "warm_hit_p99_us": {
+            "samples": [
+              2.2,
+              1.3,
+              4.7
+            ],
+            "median": 2.2
+          },
+          "cleared_app_cache_p50_us": {
+            "samples": [
+              26.1,
+              25.7,
+              23.1
+            ],
+            "median": 25.7
+          },
+          "range_p50_us": {
+            "samples": [
+              22.6,
+              20.8,
+              30.9
+            ],
+            "median": 22.6
+          },
+          "post_mutation_scan_ms": {
+            "samples": [
+              0.7239,
+              0.7752,
+              0.6509
+            ],
+            "median": 0.7239
+          },
+          "post_mutation_range_p50_us": {
+            "samples": [
+              41.0,
+              48.9,
+              38.4
+            ],
+            "median": 41.0
+          },
+          "post_compaction_scan_ms": {
+            "samples": [
+              0.4872,
+              0.4425,
+              0.3849
+            ],
+            "median": 0.4425
+          },
+          "updates_ms": {
+            "samples": [
+              79.788,
+              75.7041,
+              76.2581
+            ],
+            "median": 76.2581
+          },
+          "durable_mutation_p50_us": {
+            "samples": [
+              8532.0,
+              8996.1,
+              8852.1
+            ],
+            "median": 8852.1
+          },
+          "reopen_ms": {
+            "samples": [
+              7.8597,
+              6.2554,
+              4.4684
+            ],
+            "median": 6.2554
+          },
+          "maintenance_ms": {
+            "samples": [
+              20.6773,
+              20.5884,
+              19.6369
+            ],
+            "median": 20.5884
+          },
+          "final_owned_file_bytes": {
+            "samples": [
+              193600,
+              193600,
+              193600
+            ],
+            "median": 193600
+          },
+          "arena_write_calls": {
+            "samples": [
+              94,
+              92,
+              92
+            ],
+            "median": 92
+          },
+          "arena_bytes_written": {
+            "samples": [
+              495120,
+              494416,
+              511312
+            ],
+            "median": 495120
+          },
+          "load_arena_bytes": {
+            "samples": [
+              234288,
+              234288,
+              234288
+            ],
+            "median": 234288
+          },
+          "update_arena_bytes": {
+            "samples": [
+              171648,
+              155536,
+              172032
+            ],
+            "median": 171648
+          },
+          "single_mutation_arena_bytes": {
+            "samples": [
+              89184,
+              104592,
+              104992
+            ],
+            "median": 104592
+          },
+          "cache_bytes_after_reuse": {
+            "samples": [
+              18064,
+              18064,
+              18064
+            ],
+            "median": 18064
+          },
+          "cache_values_after_reuse": {
+            "samples": [
+              0,
+              0,
+              0
+            ],
+            "median": 0
+          },
+          "cache_values_after_unique_reads": {
+            "samples": [
+              0,
+              0,
+              0
+            ],
+            "median": 0
+          },
+          "cache_values_after_scan": {
+            "samples": [
+              0,
+              0,
+              0
+            ],
+            "median": 0
+          }
+        },
+        "sqlite": {
+          "load_ms": {
+            "samples": [
+              22.3709,
+              22.0026,
+              22.6103
+            ],
+            "median": 22.3709
+          },
+          "reused_16_key_p50_us": {
+            "samples": [
+              2.4,
+              2.4,
+              2.4
+            ],
+            "median": 2.4
+          },
+          "unique_reads_ms": {
+            "samples": [
+              5.2002,
+              5.0151,
+              5.1419
+            ],
+            "median": 5.1419
+          },
+          "one_off_scan_ms": {
+            "samples": [
+              0.4502,
+              0.4472,
+              0.4765
+            ],
+            "median": 0.4502
+          },
+          "warm_hit_p50_us": {
+            "samples": [
+              2.5,
+              2.5,
+              2.5
+            ],
+            "median": 2.5
+          },
+          "warm_hit_p99_us": {
+            "samples": [
+              4.4,
+              4.9,
+              6.4
+            ],
+            "median": 4.9
+          },
+          "cleared_app_cache_p50_us": {
+            "samples": [
+              7.9,
+              7.9,
+              7.9
+            ],
+            "median": 7.9
+          },
+          "range_p50_us": {
+            "samples": [
+              20.9,
+              20.5,
+              20.9
+            ],
+            "median": 20.9
+          },
+          "post_mutation_scan_ms": {
+            "samples": [
+              0.581,
+              0.4873,
+              0.5316
+            ],
+            "median": 0.5316
+          },
+          "post_mutation_range_p50_us": {
+            "samples": [
+              4.2,
+              3.9,
+              4.0
+            ],
+            "median": 4.0
+          },
+          "post_compaction_scan_ms": {
+            "samples": [
+              0.4722,
+              0.5086,
+              0.513
+            ],
+            "median": 0.5086
+          },
+          "updates_ms": {
+            "samples": [
+              37.8289,
+              37.8255,
+              39.1069
+            ],
+            "median": 37.8289
+          },
+          "durable_mutation_p50_us": {
+            "samples": [
+              2403.1,
+              2416.8,
+              2613.8
+            ],
+            "median": 2416.8
+          },
+          "reopen_ms": {
+            "samples": [
+              8.2819,
+              8.8216,
+              8.5499
+            ],
+            "median": 8.5499
+          },
+          "maintenance_ms": {
+            "samples": [
+              15.3623,
+              16.0676,
+              17.0465
+            ],
+            "median": 16.0676
+          },
+          "final_owned_file_bytes": {
+            "samples": [
+              200704,
+              200704,
+              200704
+            ],
+            "median": 200704
+          },
+          "arena_write_calls": {
+            "samples": [
+              null,
+              null,
+              null
+            ],
+            "median": null
+          },
+          "arena_bytes_written": {
+            "samples": [
+              null,
+              null,
+              null
+            ],
+            "median": null
+          }
+        }
+      }
+    },
+    "small": {
+      "materialized": {
+        "spi": {
+          "load_ms": {
+            "samples": [
+              240.8789,
+              232.1535,
+              249.5987
+            ],
+            "median": 240.8789
+          },
+          "reused_16_key_p50_us": {
+            "samples": [
+              34.7,
+              35.4,
+              38.6
+            ],
+            "median": 35.4
+          },
+          "unique_reads_ms": {
+            "samples": [
+              77.9019,
+              79.3631,
+              87.5721
+            ],
+            "median": 79.3631
+          },
+          "one_off_scan_ms": {
+            "samples": [
+              13.6192,
+              13.6393,
+              14.8488
+            ],
+            "median": 13.6393
+          },
+          "warm_hit_p50_us": {
+            "samples": [
+              41.0,
+              43.0,
+              46.0
+            ],
+            "median": 43.0
+          },
+          "warm_hit_p99_us": {
+            "samples": [
+              78.5,
+              95.6,
+              102.0
+            ],
+            "median": 95.6
+          },
+          "cleared_app_cache_p50_us": {
+            "samples": [
+              43.4,
+              43.1,
+              46.6
+            ],
+            "median": 43.4
+          },
+          "range_p50_us": {
+            "samples": [
+              672.9,
+              682.2,
+              745.1
+            ],
+            "median": 682.2
+          },
+          "post_mutation_scan_ms": {
+            "samples": [
+              12.4707,
+              12.6348,
+              13.2681
+            ],
+            "median": 12.6348
+          },
+          "post_mutation_range_p50_us": {
+            "samples": [
+              44.1,
+              45.9,
+              48.8
+            ],
+            "median": 45.9
+          },
+          "post_compaction_scan_ms": {
+            "samples": [
+              11.724,
+              12.5429,
+              12.3567
+            ],
+            "median": 12.3567
+          },
+          "updates_ms": {
+            "samples": [
+              138.6198,
+              148.2358,
+              144.8626
+            ],
+            "median": 144.8626
+          },
+          "durable_mutation_p50_us": {
+            "samples": [
+              9031.6,
+              8977.3,
+              9292.4
+            ],
+            "median": 9031.6
+          },
+          "reopen_ms": {
+            "samples": [
+              5.2986,
+              8.2344,
+              4.9366
+            ],
+            "median": 5.2986
+          },
+          "maintenance_ms": {
+            "samples": [
+              45.5129,
+              44.3955,
+              46.9527
+            ],
+            "median": 45.5129
+          },
+          "final_owned_file_bytes": {
+            "samples": [
+              352072,
+              352072,
+              352072
+            ],
+            "median": 352072
+          },
+          "arena_write_calls": {
+            "samples": [
+              150,
+              150,
+              150
+            ],
+            "median": 150
+          },
+          "arena_bytes_written": {
+            "samples": [
+              2584464,
+              2585984,
+              2588672
+            ],
+            "median": 2585984
+          },
+          "load_arena_bytes": {
+            "samples": [
+              2107360,
+              2107360,
+              2107360
+            ],
+            "median": 2107360
+          },
+          "update_arena_bytes": {
+            "samples": [
+              450384,
+              451584,
+              454672
+            ],
+            "median": 451584
+          },
+          "single_mutation_arena_bytes": {
+            "samples": [
+              26720,
+              27040,
+              26640
+            ],
+            "median": 26720
+          },
+          "cache_bytes_after_reuse": {
+            "samples": [
+              1000,
+              1000,
+              1000
+            ],
+            "median": 1000
+          },
+          "cache_values_after_reuse": {
+            "samples": [
+              0,
+              0,
+              0
+            ],
+            "median": 0
+          },
+          "cache_values_after_unique_reads": {
+            "samples": [
+              0,
+              0,
+              0
+            ],
+            "median": 0
+          },
+          "cache_values_after_scan": {
+            "samples": [
+              0,
+              0,
+              0
+            ],
+            "median": 0
+          }
+        },
+        "spi-packed": {
+          "load_ms": {
+            "samples": [
+              113.6155,
+              115.8923,
+              116.4547
+            ],
+            "median": 115.8923
+          },
+          "reused_16_key_p50_us": {
+            "samples": [
+              13.2,
+              13.4,
+              12.9
+            ],
+            "median": 13.2
+          },
+          "unique_reads_ms": {
+            "samples": [
+              26.9685,
+              27.3125,
+              26.5897
+            ],
+            "median": 26.9685
+          },
+          "one_off_scan_ms": {
+            "samples": [
+              0.5647,
+              0.6575,
+              0.5016
+            ],
+            "median": 0.5647
+          },
+          "warm_hit_p50_us": {
+            "samples": [
+              20.2,
+              21.2,
+              19.7
+            ],
+            "median": 20.2
+          },
+          "warm_hit_p99_us": {
+            "samples": [
+              37.7,
+              38.3,
+              30.6
+            ],
+            "median": 37.7
+          },
+          "cleared_app_cache_p50_us": {
+            "samples": [
+              26.1,
+              26.3,
+              24.6
+            ],
+            "median": 26.1
+          },
+          "range_p50_us": {
+            "samples": [
+              54.5,
+              58.9,
+              60.8
+            ],
+            "median": 58.9
+          },
+          "post_mutation_scan_ms": {
+            "samples": [
+              0.823,
+              0.8119,
+              0.7443
+            ],
+            "median": 0.8119
+          },
+          "post_mutation_range_p50_us": {
+            "samples": [
+              53.1,
+              52.7,
+              46.8
+            ],
+            "median": 52.7
+          },
+          "post_compaction_scan_ms": {
+            "samples": [
+              0.5406,
+              0.5572,
+              0.4853
+            ],
+            "median": 0.5406
+          },
+          "updates_ms": {
+            "samples": [
+              116.9663,
+              118.1011,
+              116.9823
+            ],
+            "median": 116.9823
+          },
+          "durable_mutation_p50_us": {
+            "samples": [
+              9077.9,
+              9121.9,
+              9227.4
+            ],
+            "median": 9121.9
+          },
+          "reopen_ms": {
+            "samples": [
+              4.5705,
+              5.7808,
+              5.1294
+            ],
+            "median": 5.1294
+          },
+          "maintenance_ms": {
+            "samples": [
+              16.5718,
+              20.2231,
+              18.3727
+            ],
+            "median": 18.3727
+          },
+          "final_owned_file_bytes": {
+            "samples": [
+              193600,
+              193600,
+              193600
+            ],
+            "median": 193600
+          },
+          "arena_write_calls": {
+            "samples": [
+              94,
+              92,
+              92
+            ],
+            "median": 92
+          },
+          "arena_bytes_written": {
+            "samples": [
+              495120,
+              494416,
+              511312
+            ],
+            "median": 495120
+          },
+          "load_arena_bytes": {
+            "samples": [
+              234288,
+              234288,
+              234288
+            ],
+            "median": 234288
+          },
+          "update_arena_bytes": {
+            "samples": [
+              171648,
+              155536,
+              172032
+            ],
+            "median": 171648
+          },
+          "single_mutation_arena_bytes": {
+            "samples": [
+              89184,
+              104592,
+              104992
+            ],
+            "median": 104592
+          },
+          "cache_bytes_after_reuse": {
+            "samples": [
+              792,
+              792,
+              792
+            ],
+            "median": 792
+          },
+          "cache_values_after_reuse": {
+            "samples": [
+              0,
+              0,
+              0
+            ],
+            "median": 0
+          },
+          "cache_values_after_unique_reads": {
+            "samples": [
+              0,
+              0,
+              0
+            ],
+            "median": 0
+          },
+          "cache_values_after_scan": {
+            "samples": [
+              0,
+              0,
+              0
+            ],
+            "median": 0
+          }
+        },
+        "sqlite": {
+          "load_ms": {
+            "samples": [
+              24.2357,
+              24.3685,
+              23.9431
+            ],
+            "median": 24.2357
+          },
+          "reused_16_key_p50_us": {
+            "samples": [
+              7.4,
+              7.5,
+              7.7
+            ],
+            "median": 7.5
+          },
+          "unique_reads_ms": {
+            "samples": [
+              15.2125,
+              16.284,
+              15.5951
+            ],
+            "median": 15.5951
+          },
+          "one_off_scan_ms": {
+            "samples": [
+              0.4633,
+              0.4978,
+              0.471
+            ],
+            "median": 0.471
+          },
+          "warm_hit_p50_us": {
+            "samples": [
+              7.7,
+              7.5,
+              8.0
+            ],
+            "median": 7.7
+          },
+          "warm_hit_p99_us": {
+            "samples": [
+              18.0,
+              19.3,
+              12.1
+            ],
+            "median": 18.0
+          },
+          "cleared_app_cache_p50_us": {
+            "samples": [
+              7.6,
+              7.4,
+              7.9
+            ],
+            "median": 7.6
+          },
+          "range_p50_us": {
+            "samples": [
+              29.8,
+              26.0,
+              29.4
+            ],
+            "median": 29.4
+          },
+          "post_mutation_scan_ms": {
+            "samples": [
+              0.4913,
+              0.5023,
+              0.5095
+            ],
+            "median": 0.5023
+          },
+          "post_mutation_range_p50_us": {
+            "samples": [
+              8.7,
+              9.1,
+              9.1
+            ],
+            "median": 9.1
+          },
+          "post_compaction_scan_ms": {
+            "samples": [
+              0.4455,
+              0.4473,
+              0.4704
+            ],
+            "median": 0.4473
+          },
+          "updates_ms": {
+            "samples": [
+              43.671,
+              41.2873,
+              43.3096
+            ],
+            "median": 43.3096
+          },
+          "durable_mutation_p50_us": {
+            "samples": [
+              2591.0,
+              2650.4,
+              2540.4
+            ],
+            "median": 2591.0
+          },
+          "reopen_ms": {
+            "samples": [
+              8.572,
+              8.1295,
+              7.8175
+            ],
+            "median": 8.1295
+          },
+          "maintenance_ms": {
+            "samples": [
+              19.4806,
+              20.3885,
+              19.9686
+            ],
+            "median": 19.9686
+          },
+          "final_owned_file_bytes": {
+            "samples": [
+              200704,
+              200704,
+              200704
+            ],
+            "median": 200704
+          },
+          "arena_write_calls": {
+            "samples": [
+              null,
+              null,
+              null
+            ],
+            "median": null
+          },
+          "arena_bytes_written": {
+            "samples": [
+              null,
+              null,
+              null
+            ],
+            "median": null
+          }
+        }
+      },
+      "direct-base": {
+        "spi": {
+          "load_ms": {
+            "samples": [
+              238.3334,
+              237.5736,
+              238.0069
+            ],
+            "median": 238.0069
+          },
+          "reused_16_key_p50_us": {
+            "samples": [
+              34.3,
+              35.4,
+              35.8
+            ],
+            "median": 35.4
+          },
+          "unique_reads_ms": {
+            "samples": [
+              75.4685,
+              77.2624,
+              78.4436
+            ],
+            "median": 77.2624
+          },
+          "one_off_scan_ms": {
+            "samples": [
+              12.9095,
+              13.0195,
+              13.6094
+            ],
+            "median": 13.0195
+          },
+          "warm_hit_p50_us": {
+            "samples": [
+              41.4,
+              41.1,
+              42.7
+            ],
+            "median": 41.4
+          },
+          "warm_hit_p99_us": {
+            "samples": [
+              81.6,
+              66.5,
+              70.4
+            ],
+            "median": 70.4
+          },
+          "cleared_app_cache_p50_us": {
+            "samples": [
+              40.4,
+              41.5,
+              43.4
+            ],
+            "median": 41.5
+          },
+          "range_p50_us": {
+            "samples": [
+              688.2,
+              686.3,
+              698.0
+            ],
+            "median": 688.2
+          },
+          "post_mutation_scan_ms": {
+            "samples": [
+              12.8274,
+              12.4632,
+              13.2036
+            ],
+            "median": 12.8274
+          },
+          "post_mutation_range_p50_us": {
+            "samples": [
+              45.4,
+              47.0,
+              48.1
+            ],
+            "median": 47.0
+          },
+          "post_compaction_scan_ms": {
+            "samples": [
+              12.4318,
+              11.9533,
+              12.4599
+            ],
+            "median": 12.4318
+          },
+          "updates_ms": {
+            "samples": [
+              134.0428,
+              143.5963,
+              138.6178
+            ],
+            "median": 138.6178
+          },
+          "durable_mutation_p50_us": {
+            "samples": [
+              8986.1,
+              9059.6,
+              9000.7
+            ],
+            "median": 9000.7
+          },
+          "reopen_ms": {
+            "samples": [
+              7.0096,
+              5.99,
+              7.6213
+            ],
+            "median": 7.0096
+          },
+          "maintenance_ms": {
+            "samples": [
+              51.282,
+              43.3774,
+              48.7197
+            ],
+            "median": 48.7197
+          },
+          "final_owned_file_bytes": {
+            "samples": [
+              352072,
+              352072,
+              352072
+            ],
+            "median": 352072
+          },
+          "arena_write_calls": {
+            "samples": [
+              150,
+              150,
+              150
+            ],
+            "median": 150
+          },
+          "arena_bytes_written": {
+            "samples": [
+              2584464,
+              2585984,
+              2588672
+            ],
+            "median": 2585984
+          },
+          "load_arena_bytes": {
+            "samples": [
+              2107360,
+              2107360,
+              2107360
+            ],
+            "median": 2107360
+          },
+          "update_arena_bytes": {
+            "samples": [
+              450384,
+              451584,
+              454672
+            ],
+            "median": 451584
+          },
+          "single_mutation_arena_bytes": {
+            "samples": [
+              26720,
+              27040,
+              26640
+            ],
+            "median": 26720
+          },
+          "cache_bytes_after_reuse": {
+            "samples": [
+              1000,
+              1000,
+              1000
+            ],
+            "median": 1000
+          },
+          "cache_values_after_reuse": {
+            "samples": [
+              0,
+              0,
+              0
+            ],
+            "median": 0
+          },
+          "cache_values_after_unique_reads": {
+            "samples": [
+              0,
+              0,
+              0
+            ],
+            "median": 0
+          },
+          "cache_values_after_scan": {
+            "samples": [
+              0,
+              0,
+              0
+            ],
+            "median": 0
+          }
+        },
+        "spi-packed": {
+          "load_ms": {
+            "samples": [
+              117.1603,
+              113.6613,
+              115.4457
+            ],
+            "median": 115.4457
+          },
+          "reused_16_key_p50_us": {
+            "samples": [
+              13.8,
+              13.0,
+              13.8
+            ],
+            "median": 13.8
+          },
+          "unique_reads_ms": {
+            "samples": [
+              27.9695,
+              26.894,
+              27.8712
+            ],
+            "median": 27.8712
+          },
+          "one_off_scan_ms": {
+            "samples": [
+              0.4317,
+              0.3791,
+              0.439
+            ],
+            "median": 0.4317
+          },
+          "warm_hit_p50_us": {
+            "samples": [
+              21.5,
+              19.9,
+              20.8
+            ],
+            "median": 20.8
+          },
+          "warm_hit_p99_us": {
+            "samples": [
+              50.6,
+              34.7,
+              28.9
+            ],
+            "median": 34.7
+          },
+          "cleared_app_cache_p50_us": {
+            "samples": [
+              26.8,
+              24.8,
+              26.2
+            ],
+            "median": 26.2
+          },
+          "range_p50_us": {
+            "samples": [
+              37.1,
+              37.1,
+              41.6
+            ],
+            "median": 37.1
+          },
+          "post_mutation_scan_ms": {
+            "samples": [
+              0.7386,
+              0.671,
+              0.6706
+            ],
+            "median": 0.671
+          },
+          "post_mutation_range_p50_us": {
+            "samples": [
+              51.7,
+              54.1,
+              49.8
+            ],
+            "median": 51.7
+          },
+          "post_compaction_scan_ms": {
+            "samples": [
+              0.4799,
+              0.4039,
+              0.5435
+            ],
+            "median": 0.4799
+          },
+          "updates_ms": {
+            "samples": [
+              123.5206,
+              122.5615,
+              114.1564
+            ],
+            "median": 122.5615
+          },
+          "durable_mutation_p50_us": {
+            "samples": [
+              9179.2,
+              9733.3,
+              9182.2
+            ],
+            "median": 9182.2
+          },
+          "reopen_ms": {
+            "samples": [
+              7.99,
+              5.1036,
+              5.5274
+            ],
+            "median": 5.5274
+          },
+          "maintenance_ms": {
+            "samples": [
+              19.5404,
+              20.9057,
+              20.8381
+            ],
+            "median": 20.8381
+          },
+          "final_owned_file_bytes": {
+            "samples": [
+              193600,
+              193600,
+              193600
+            ],
+            "median": 193600
+          },
+          "arena_write_calls": {
+            "samples": [
+              94,
+              92,
+              92
+            ],
+            "median": 92
+          },
+          "arena_bytes_written": {
+            "samples": [
+              495120,
+              494416,
+              511312
+            ],
+            "median": 495120
+          },
+          "load_arena_bytes": {
+            "samples": [
+              234288,
+              234288,
+              234288
+            ],
+            "median": 234288
+          },
+          "update_arena_bytes": {
+            "samples": [
+              171648,
+              155536,
+              172032
+            ],
+            "median": 171648
+          },
+          "single_mutation_arena_bytes": {
+            "samples": [
+              89184,
+              104592,
+              104992
+            ],
+            "median": 104592
+          },
+          "cache_bytes_after_reuse": {
+            "samples": [
+              792,
+              792,
+              792
+            ],
+            "median": 792
+          },
+          "cache_values_after_reuse": {
+            "samples": [
+              0,
+              0,
+              0
+            ],
+            "median": 0
+          },
+          "cache_values_after_unique_reads": {
+            "samples": [
+              0,
+              0,
+              0
+            ],
+            "median": 0
+          },
+          "cache_values_after_scan": {
+            "samples": [
+              0,
+              0,
+              0
+            ],
+            "median": 0
+          }
+        },
+        "sqlite": {
+          "load_ms": {
+            "samples": [
+              23.5015,
+              24.8402,
+              23.7968
+            ],
+            "median": 23.7968
+          },
+          "reused_16_key_p50_us": {
+            "samples": [
+              7.4,
+              7.3,
+              7.9
+            ],
+            "median": 7.4
+          },
+          "unique_reads_ms": {
+            "samples": [
+              15.5558,
+              15.0074,
+              16.2936
+            ],
+            "median": 15.5558
+          },
+          "one_off_scan_ms": {
+            "samples": [
+              0.501,
+              0.5058,
+              0.4872
+            ],
+            "median": 0.501
+          },
+          "warm_hit_p50_us": {
+            "samples": [
+              7.6,
+              7.4,
+              8.3
+            ],
+            "median": 7.6
+          },
+          "warm_hit_p99_us": {
+            "samples": [
+              17.8,
+              12.1,
+              25.2
+            ],
+            "median": 17.8
+          },
+          "cleared_app_cache_p50_us": {
+            "samples": [
+              7.6,
+              7.7,
+              8.3
+            ],
+            "median": 7.7
+          },
+          "range_p50_us": {
+            "samples": [
+              27.3,
+              29.9,
+              35.9
+            ],
+            "median": 29.9
+          },
+          "post_mutation_scan_ms": {
+            "samples": [
+              0.6248,
+              0.4872,
+              0.5325
+            ],
+            "median": 0.5325
+          },
+          "post_mutation_range_p50_us": {
+            "samples": [
+              9.7,
+              8.9,
+              9.2
+            ],
+            "median": 9.2
+          },
+          "post_compaction_scan_ms": {
+            "samples": [
+              0.4407,
+              0.4662,
+              0.4921
+            ],
+            "median": 0.4662
+          },
+          "updates_ms": {
+            "samples": [
+              41.6938,
+              55.3676,
+              43.1903
+            ],
+            "median": 43.1903
+          },
+          "durable_mutation_p50_us": {
+            "samples": [
+              2658.4,
+              3032.6,
+              2562.0
+            ],
+            "median": 2658.4
+          },
+          "reopen_ms": {
+            "samples": [
+              8.5649,
+              8.9867,
+              8.2544
+            ],
+            "median": 8.5649
+          },
+          "maintenance_ms": {
+            "samples": [
+              20.3121,
+              21.7798,
+              19.067
+            ],
+            "median": 20.3121
+          },
+          "final_owned_file_bytes": {
+            "samples": [
+              200704,
+              200704,
+              200704
+            ],
+            "median": 200704
+          },
+          "arena_write_calls": {
+            "samples": [
+              null,
+              null,
+              null
+            ],
+            "median": null
+          },
+          "arena_bytes_written": {
+            "samples": [
+              null,
+              null,
+              null
+            ],
+            "median": null
+          }
+        }
+      }
+    },
+    "large": {
+      "materialized": {
+        "spi": {
+          "load_ms": {
+            "samples": [
+              72.267,
+              66.4791,
+              68.6297
+            ],
+            "median": 68.6297
+          },
+          "reused_16_key_p50_us": {
+            "samples": [
+              5.8,
+              5.6,
+              5.5
+            ],
+            "median": 5.6
+          },
+          "unique_reads_ms": {
+            "samples": [
+              10.2249,
+              9.6582,
+              9.7628
+            ],
+            "median": 9.7628
+          },
+          "one_off_scan_ms": {
+            "samples": [
+              10.9899,
+              10.1955,
+              9.9756
+            ],
+            "median": 10.1955
+          },
+          "warm_hit_p50_us": {
+            "samples": [
+              9.0,
+              9.0,
+              8.3
+            ],
+            "median": 9.0
+          },
+          "warm_hit_p99_us": {
+            "samples": [
+              58.1,
+              58.9,
+              51.4
+            ],
+            "median": 58.1
+          },
+          "cleared_app_cache_p50_us": {
+            "samples": [
+              43.1,
+              43.7,
+              39.7
+            ],
+            "median": 43.1
+          },
+          "range_p50_us": {
+            "samples": [
+              721.8,
+              654.5,
+              786.0
+            ],
+            "median": 721.8
+          },
+          "post_mutation_scan_ms": {
+            "samples": [
+              11.3886,
+              11.0079,
+              11.9214
+            ],
+            "median": 11.3886
+          },
+          "post_mutation_range_p50_us": {
+            "samples": [
+              17.6,
+              16.5,
+              16.3
+            ],
+            "median": 16.5
+          },
+          "post_compaction_scan_ms": {
+            "samples": [
+              10.555,
+              10.2324,
+              10.7283
+            ],
+            "median": 10.555
+          },
+          "updates_ms": {
+            "samples": [
+              99.7207,
+              96.745,
+              96.5102
+            ],
+            "median": 96.745
+          },
+          "durable_mutation_p50_us": {
+            "samples": [
+              8989.9,
+              8440.7,
+              8733.0
+            ],
+            "median": 8733.0
+          },
+          "reopen_ms": {
+            "samples": [
+              5.6187,
+              5.3784,
+              5.3973
+            ],
+            "median": 5.3973
+          },
+          "maintenance_ms": {
+            "samples": [
+              48.8597,
+              44.7682,
+              48.7956
+            ],
+            "median": 48.7956
+          },
+          "final_owned_file_bytes": {
+            "samples": [
+              4208072,
+              4208072,
+              4208072
+            ],
+            "median": 4208072
+          },
+          "arena_write_calls": {
+            "samples": [
+              300,
+              300,
+              300
+            ],
+            "median": 300
+          },
+          "arena_bytes_written": {
+            "samples": [
+              7575440,
+              7555168,
+              7577808
+            ],
+            "median": 7575440
+          },
+          "load_arena_bytes": {
+            "samples": [
+              5005360,
+              5005360,
+              5005360
+            ],
+            "median": 5005360
+          },
+          "update_arena_bytes": {
+            "samples": [
+              2424320,
+              2404768,
+              2427168
+            ],
+            "median": 2424320
+          },
+          "single_mutation_arena_bytes": {
+            "samples": [
+              145760,
+              145040,
+              145280
+            ],
+            "median": 145280
+          },
+          "cache_bytes_after_reuse": {
+            "samples": [
+              4200,
+              4200,
+              4200
+            ],
+            "median": 4200
+          },
+          "cache_values_after_reuse": {
+            "samples": [
+              0,
+              0,
+              0
+            ],
+            "median": 0
+          },
+          "cache_values_after_unique_reads": {
+            "samples": [
+              0,
+              0,
+              0
+            ],
+            "median": 0
+          },
+          "cache_values_after_scan": {
+            "samples": [
+              0,
+              0,
+              0
+            ],
+            "median": 0
+          }
+        },
+        "spi-packed": {
+          "load_ms": {
+            "samples": [
+              59.2871,
+              55.0221,
+              59.6006
+            ],
+            "median": 59.2871
+          },
+          "reused_16_key_p50_us": {
+            "samples": [
+              5.5,
+              5.6,
+              5.5
+            ],
+            "median": 5.5
+          },
+          "unique_reads_ms": {
+            "samples": [
+              6.5404,
+              6.6295,
+              6.433
+            ],
+            "median": 6.5404
+          },
+          "one_off_scan_ms": {
+            "samples": [
+              7.0796,
+              7.5609,
+              7.2678
+            ],
+            "median": 7.2678
+          },
+          "warm_hit_p50_us": {
+            "samples": [
+              7.9,
+              7.6,
+              7.6
+            ],
+            "median": 7.6
+          },
+          "warm_hit_p99_us": {
+            "samples": [
+              63.0,
+              53.3,
+              53.2
+            ],
+            "median": 53.3
+          },
+          "cleared_app_cache_p50_us": {
+            "samples": [
+              27.5,
+              27.6,
+              26.8
+            ],
+            "median": 27.5
+          },
+          "range_p50_us": {
+            "samples": [
+              736.7,
+              770.2,
+              745.3
+            ],
+            "median": 745.3
+          },
+          "post_mutation_scan_ms": {
+            "samples": [
+              8.9246,
+              7.9251,
+              8.2266
+            ],
+            "median": 8.2266
+          },
+          "post_mutation_range_p50_us": {
+            "samples": [
+              99.3,
+              94.2,
+              107.1
+            ],
+            "median": 99.3
+          },
+          "post_compaction_scan_ms": {
+            "samples": [
+              7.6463,
+              6.7274,
+              7.6856
+            ],
+            "median": 7.6463
+          },
+          "updates_ms": {
+            "samples": [
+              97.2049,
+              85.7395,
+              98.9909
+            ],
+            "median": 97.2049
+          },
+          "durable_mutation_p50_us": {
+            "samples": [
+              9395.7,
+              8539.0,
+              9376.1
+            ],
+            "median": 9376.1
+          },
+          "reopen_ms": {
+            "samples": [
+              6.3715,
+              4.686,
+              6.0294
+            ],
+            "median": 6.0294
+          },
+          "maintenance_ms": {
+            "samples": [
+              47.9343,
+              41.3087,
+              44.9268
+            ],
+            "median": 44.9268
+          },
+          "final_owned_file_bytes": {
+            "samples": [
+              4160320,
+              4160320,
+              4160320
+            ],
+            "median": 4160320
+          },
+          "arena_write_calls": {
+            "samples": [
+              280,
+              276,
+              280
+            ],
+            "median": 280
+          },
+          "arena_bytes_written": {
+            "samples": [
+              6467848,
+              6451480,
+              6487464
+            ],
+            "median": 6467848
+          },
+          "load_arena_bytes": {
+            "samples": [
+              4177288,
+              4177288,
+              4177288
+            ],
+            "median": 4177288
+          },
+          "update_arena_bytes": {
+            "samples": [
+              2112512,
+              2096064,
+              2132368
+            ],
+            "median": 2112512
+          },
+          "single_mutation_arena_bytes": {
+            "samples": [
+              178048,
+              178128,
+              177808
+            ],
+            "median": 178048
+          },
+          "cache_bytes_after_reuse": {
+            "samples": [
+              19060,
+              19060,
+              19060
+            ],
+            "median": 19060
+          },
+          "cache_values_after_reuse": {
+            "samples": [
+              0,
+              0,
+              0
+            ],
+            "median": 0
+          },
+          "cache_values_after_unique_reads": {
+            "samples": [
+              0,
+              0,
+              0
+            ],
+            "median": 0
+          },
+          "cache_values_after_scan": {
+            "samples": [
+              0,
+              0,
+              0
+            ],
+            "median": 0
+          }
+        },
+        "sqlite": {
+          "load_ms": {
+            "samples": [
+              70.3686,
+              57.439,
+              70.6565
+            ],
+            "median": 70.3686
+          },
+          "reused_16_key_p50_us": {
+            "samples": [
+              21.4,
+              20.9,
+              21.9
+            ],
+            "median": 21.4
+          },
+          "unique_reads_ms": {
+            "samples": [
+              24.7657,
+              25.4446,
+              25.0429
+            ],
+            "median": 25.0429
+          },
+          "one_off_scan_ms": {
+            "samples": [
+              3.8121,
+              4.5253,
+              4.0206
+            ],
+            "median": 4.0206
+          },
+          "warm_hit_p50_us": {
+            "samples": [
+              31.3,
+              29.6,
+              32.9
+            ],
+            "median": 31.3
+          },
+          "warm_hit_p99_us": {
+            "samples": [
+              84.9,
+              93.1,
+              97.6
+            ],
+            "median": 93.1
+          },
+          "cleared_app_cache_p50_us": {
+            "samples": [
+              43.8,
+              41.3,
+              43.5
+            ],
+            "median": 43.5
+          },
+          "range_p50_us": {
+            "samples": [
+              615.9,
+              578.8,
+              601.7
+            ],
+            "median": 601.7
+          },
+          "post_mutation_scan_ms": {
+            "samples": [
+              4.5127,
+              4.3491,
+              4.5774
+            ],
+            "median": 4.5127
+          },
+          "post_mutation_range_p50_us": {
+            "samples": [
+              41.6,
+              43.1,
+              42.0
+            ],
+            "median": 42.0
+          },
+          "post_compaction_scan_ms": {
+            "samples": [
+              4.7836,
+              4.5583,
+              4.2306
+            ],
+            "median": 4.5583
+          },
+          "updates_ms": {
+            "samples": [
+              51.5528,
+              46.9852,
+              49.5051
+            ],
+            "median": 49.5051
+          },
+          "durable_mutation_p50_us": {
+            "samples": [
+              2776.1,
+              2581.3,
+              2611.9
+            ],
+            "median": 2611.9
+          },
+          "reopen_ms": {
+            "samples": [
+              11.8039,
+              11.8307,
+              10.929
+            ],
+            "median": 11.8039
+          },
+          "maintenance_ms": {
+            "samples": [
+              55.8275,
+              59.8183,
+              59.8722
+            ],
+            "median": 59.8183
+          },
+          "final_owned_file_bytes": {
+            "samples": [
+              4657152,
+              4657152,
+              4657152
+            ],
+            "median": 4657152
+          },
+          "arena_write_calls": {
+            "samples": [
+              null,
+              null,
+              null
+            ],
+            "median": null
+          },
+          "arena_bytes_written": {
+            "samples": [
+              null,
+              null,
+              null
+            ],
+            "median": null
+          }
+        }
+      },
+      "direct-base": {
+        "spi": {
+          "load_ms": {
+            "samples": [
+              66.5881,
+              72.9162,
+              66.6248
+            ],
+            "median": 66.6248
+          },
+          "reused_16_key_p50_us": {
+            "samples": [
+              5.7,
+              5.4,
+              5.4
+            ],
+            "median": 5.4
+          },
+          "unique_reads_ms": {
+            "samples": [
+              10.0352,
+              9.5211,
+              9.6733
+            ],
+            "median": 9.6733
+          },
+          "one_off_scan_ms": {
+            "samples": [
+              11.8972,
+              9.9046,
+              10.2966
+            ],
+            "median": 10.2966
+          },
+          "warm_hit_p50_us": {
+            "samples": [
+              8.7,
+              9.3,
+              8.9
+            ],
+            "median": 8.9
+          },
+          "warm_hit_p99_us": {
+            "samples": [
+              56.2,
+              75.8,
+              60.1
+            ],
+            "median": 60.1
+          },
+          "cleared_app_cache_p50_us": {
+            "samples": [
+              42.1,
+              42.7,
+              39.6
+            ],
+            "median": 42.1
+          },
+          "range_p50_us": {
+            "samples": [
+              710.7,
+              632.7,
+              716.9
+            ],
+            "median": 710.7
+          },
+          "post_mutation_scan_ms": {
+            "samples": [
+              11.0751,
+              12.2948,
+              11.2802
+            ],
+            "median": 11.2802
+          },
+          "post_mutation_range_p50_us": {
+            "samples": [
+              16.2,
+              21.8,
+              14.9
+            ],
+            "median": 16.2
+          },
+          "post_compaction_scan_ms": {
+            "samples": [
+              10.0497,
+              10.4041,
+              10.0797
+            ],
+            "median": 10.0797
+          },
+          "updates_ms": {
+            "samples": [
+              104.9167,
+              106.7871,
+              98.1922
+            ],
+            "median": 104.9167
+          },
+          "durable_mutation_p50_us": {
+            "samples": [
+              9166.7,
+              9504.4,
+              8905.7
+            ],
+            "median": 9166.7
+          },
+          "reopen_ms": {
+            "samples": [
+              6.3253,
+              6.0134,
+              7.5055
+            ],
+            "median": 6.3253
+          },
+          "maintenance_ms": {
+            "samples": [
+              47.1725,
+              107.8477,
+              52.6641
+            ],
+            "median": 52.6641
+          },
+          "final_owned_file_bytes": {
+            "samples": [
+              4208072,
+              4208072,
+              4208072
+            ],
+            "median": 4208072
+          },
+          "arena_write_calls": {
+            "samples": [
+              300,
+              300,
+              300
+            ],
+            "median": 300
+          },
+          "arena_bytes_written": {
+            "samples": [
+              7575440,
+              7555168,
+              7577808
+            ],
+            "median": 7575440
+          },
+          "load_arena_bytes": {
+            "samples": [
+              5005360,
+              5005360,
+              5005360
+            ],
+            "median": 5005360
+          },
+          "update_arena_bytes": {
+            "samples": [
+              2424320,
+              2404768,
+              2427168
+            ],
+            "median": 2424320
+          },
+          "single_mutation_arena_bytes": {
+            "samples": [
+              145760,
+              145040,
+              145280
+            ],
+            "median": 145280
+          },
+          "cache_bytes_after_reuse": {
+            "samples": [
+              4200,
+              4200,
+              4200
+            ],
+            "median": 4200
+          },
+          "cache_values_after_reuse": {
+            "samples": [
+              0,
+              0,
+              0
+            ],
+            "median": 0
+          },
+          "cache_values_after_unique_reads": {
+            "samples": [
+              0,
+              0,
+              0
+            ],
+            "median": 0
+          },
+          "cache_values_after_scan": {
+            "samples": [
+              0,
+              0,
+              0
+            ],
+            "median": 0
+          }
+        },
+        "spi-packed": {
+          "load_ms": {
+            "samples": [
+              57.2494,
+              57.2726,
+              86.7421
+            ],
+            "median": 57.2726
+          },
+          "reused_16_key_p50_us": {
+            "samples": [
+              5.3,
+              5.5,
+              5.5
+            ],
+            "median": 5.5
+          },
+          "unique_reads_ms": {
+            "samples": [
+              6.1932,
+              6.7538,
+              6.4677
+            ],
+            "median": 6.4677
+          },
+          "one_off_scan_ms": {
+            "samples": [
+              7.9339,
+              7.1687,
+              7.128
+            ],
+            "median": 7.1687
+          },
+          "warm_hit_p50_us": {
+            "samples": [
+              7.3,
+              7.4,
+              7.6
+            ],
+            "median": 7.4
+          },
+          "warm_hit_p99_us": {
+            "samples": [
+              56.2,
+              54.8,
+              54.2
+            ],
+            "median": 54.8
+          },
+          "cleared_app_cache_p50_us": {
+            "samples": [
+              26.2,
+              26.4,
+              26.6
+            ],
+            "median": 26.4
+          },
+          "range_p50_us": {
+            "samples": [
+              666.0,
+              716.9,
+              703.9
+            ],
+            "median": 703.9
+          },
+          "post_mutation_scan_ms": {
+            "samples": [
+              8.1418,
+              8.3005,
+              8.0318
+            ],
+            "median": 8.1418
+          },
+          "post_mutation_range_p50_us": {
+            "samples": [
+              97.7,
+              107.5,
+              96.2
+            ],
+            "median": 97.7
+          },
+          "post_compaction_scan_ms": {
+            "samples": [
+              7.1919,
+              8.2833,
+              7.1876
+            ],
+            "median": 7.1919
+          },
+          "updates_ms": {
+            "samples": [
+              95.1163,
+              94.6387,
+              92.9008
+            ],
+            "median": 94.6387
+          },
+          "durable_mutation_p50_us": {
+            "samples": [
+              9107.2,
+              8823.0,
+              9001.8
+            ],
+            "median": 9001.8
+          },
+          "reopen_ms": {
+            "samples": [
+              6.1984,
+              5.6468,
+              4.992
+            ],
+            "median": 5.6468
+          },
+          "maintenance_ms": {
+            "samples": [
+              47.6769,
+              46.9374,
+              42.6129
+            ],
+            "median": 46.9374
+          },
+          "final_owned_file_bytes": {
+            "samples": [
+              4160320,
+              4160320,
+              4160320
+            ],
+            "median": 4160320
+          },
+          "arena_write_calls": {
+            "samples": [
+              280,
+              276,
+              280
+            ],
+            "median": 280
+          },
+          "arena_bytes_written": {
+            "samples": [
+              6467848,
+              6451480,
+              6487464
+            ],
+            "median": 6467848
+          },
+          "load_arena_bytes": {
+            "samples": [
+              4177288,
+              4177288,
+              4177288
+            ],
+            "median": 4177288
+          },
+          "update_arena_bytes": {
+            "samples": [
+              2112512,
+              2096064,
+              2132368
+            ],
+            "median": 2112512
+          },
+          "single_mutation_arena_bytes": {
+            "samples": [
+              178048,
+              178128,
+              177808
+            ],
+            "median": 178048
+          },
+          "cache_bytes_after_reuse": {
+            "samples": [
+              19060,
+              19060,
+              19060
+            ],
+            "median": 19060
+          },
+          "cache_values_after_reuse": {
+            "samples": [
+              0,
+              0,
+              0
+            ],
+            "median": 0
+          },
+          "cache_values_after_unique_reads": {
+            "samples": [
+              0,
+              0,
+              0
+            ],
+            "median": 0
+          },
+          "cache_values_after_scan": {
+            "samples": [
+              0,
+              0,
+              0
+            ],
+            "median": 0
+          }
+        },
+        "sqlite": {
+          "load_ms": {
+            "samples": [
+              71.2838,
+              74.4197,
+              70.4569
+            ],
+            "median": 71.2838
+          },
+          "reused_16_key_p50_us": {
+            "samples": [
+              21.1,
+              23.1,
+              20.5
+            ],
+            "median": 21.1
+          },
+          "unique_reads_ms": {
+            "samples": [
+              24.8152,
+              25.9414,
+              23.8809
+            ],
+            "median": 24.8152
+          },
+          "one_off_scan_ms": {
+            "samples": [
+              4.1053,
+              3.837,
+              4.1945
+            ],
+            "median": 4.1053
+          },
+          "warm_hit_p50_us": {
+            "samples": [
+              31.2,
+              33.4,
+              29.5
+            ],
+            "median": 31.2
+          },
+          "warm_hit_p99_us": {
+            "samples": [
+              97.1,
+              120.2,
+              98.5
+            ],
+            "median": 98.5
+          },
+          "cleared_app_cache_p50_us": {
+            "samples": [
+              44.0,
+              45.0,
+              44.4
+            ],
+            "median": 44.4
+          },
+          "range_p50_us": {
+            "samples": [
+              602.8,
+              641.5,
+              584.6
+            ],
+            "median": 602.8
+          },
+          "post_mutation_scan_ms": {
+            "samples": [
+              4.4155,
+              4.4688,
+              4.1415
+            ],
+            "median": 4.4155
+          },
+          "post_mutation_range_p50_us": {
+            "samples": [
+              40.7,
+              41.5,
+              38.6
+            ],
+            "median": 40.7
+          },
+          "post_compaction_scan_ms": {
+            "samples": [
+              4.3238,
+              4.7398,
+              4.0565
+            ],
+            "median": 4.3238
+          },
+          "updates_ms": {
+            "samples": [
+              54.9796,
+              53.5721,
+              50.1312
+            ],
+            "median": 53.5721
+          },
+          "durable_mutation_p50_us": {
+            "samples": [
+              2688.2,
+              2878.6,
+              2637.2
+            ],
+            "median": 2688.2
+          },
+          "reopen_ms": {
+            "samples": [
+              10.8685,
+              11.6391,
+              12.5963
+            ],
+            "median": 11.6391
+          },
+          "maintenance_ms": {
+            "samples": [
+              61.6797,
+              66.0933,
+              103.49
+            ],
+            "median": 66.0933
+          },
+          "final_owned_file_bytes": {
+            "samples": [
+              4657152,
+              4657152,
+              4657152
+            ],
+            "median": 4657152
+          },
+          "arena_write_calls": {
+            "samples": [
+              null,
+              null,
+              null
+            ],
+            "median": null
+          },
+          "arena_bytes_written": {
+            "samples": [
+              null,
+              null,
+              null
+            ],
+            "median": null
+          }
+        }
+      }
+    }
+  },
+  "physical_equivalence_checks": [
+    {
+      "case": "normal",
+      "seed": 17,
+      "engine": "spi",
+      "sha256": {
+        "arena-1.spi": "d6d4f54dc2f02b584f73fff66ade162c2c04fb7ddf7f12d801f393cf300271a5",
+        "lock.spi": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "manifest.spi": "2769b370d97a7bfbd7f6a8a2e056cee05ac0c2ae15adebc0c72b416b6f022668"
+      }
+    },
+    {
+      "case": "normal",
+      "seed": 17,
+      "engine": "spi-packed",
+      "sha256": {
+        "arena-1.spi": "21d312732c91bc637e85c9827f0e1695d4f83362e9c518b27c0369360295a316",
+        "lock.spi": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "manifest.spi": "95c8be9ffc39b7ca4df008e40f56e3ed93736b0600b00ef59f05b11a44ec3013"
+      }
+    },
+    {
+      "case": "normal",
+      "seed": 29,
+      "engine": "spi",
+      "sha256": {
+        "arena-1.spi": "f6c8d89f478d55f38feff16541137ae04dc8ae0cb970389f4b2947f6345cac0d",
+        "lock.spi": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "manifest.spi": "2769b370d97a7bfbd7f6a8a2e056cee05ac0c2ae15adebc0c72b416b6f022668"
+      }
+    },
+    {
+      "case": "normal",
+      "seed": 29,
+      "engine": "spi-packed",
+      "sha256": {
+        "arena-1.spi": "85ba3ab81a234777aa778af02956e5b2adf1021520308bf8a4f1998582117a28",
+        "lock.spi": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "manifest.spi": "95c8be9ffc39b7ca4df008e40f56e3ed93736b0600b00ef59f05b11a44ec3013"
+      }
+    },
+    {
+      "case": "normal",
+      "seed": 43,
+      "engine": "spi",
+      "sha256": {
+        "arena-1.spi": "7d8a58b21d76aad6bbf6f067f47e920abbe417ea6334fd5a528f483b73688cb1",
+        "lock.spi": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "manifest.spi": "2769b370d97a7bfbd7f6a8a2e056cee05ac0c2ae15adebc0c72b416b6f022668"
+      }
+    },
+    {
+      "case": "normal",
+      "seed": 43,
+      "engine": "spi-packed",
+      "sha256": {
+        "arena-1.spi": "6f13093125e60df717a23daa8d975690ddfaee2e8a850b8f79dc5cf60867f9ea",
+        "lock.spi": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "manifest.spi": "95c8be9ffc39b7ca4df008e40f56e3ed93736b0600b00ef59f05b11a44ec3013"
+      }
+    },
+    {
+      "case": "small",
+      "seed": 17,
+      "engine": "spi",
+      "sha256": {
+        "arena-1.spi": "d6d4f54dc2f02b584f73fff66ade162c2c04fb7ddf7f12d801f393cf300271a5",
+        "lock.spi": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "manifest.spi": "2769b370d97a7bfbd7f6a8a2e056cee05ac0c2ae15adebc0c72b416b6f022668"
+      }
+    },
+    {
+      "case": "small",
+      "seed": 17,
+      "engine": "spi-packed",
+      "sha256": {
+        "arena-1.spi": "21d312732c91bc637e85c9827f0e1695d4f83362e9c518b27c0369360295a316",
+        "lock.spi": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "manifest.spi": "95c8be9ffc39b7ca4df008e40f56e3ed93736b0600b00ef59f05b11a44ec3013"
+      }
+    },
+    {
+      "case": "small",
+      "seed": 29,
+      "engine": "spi",
+      "sha256": {
+        "arena-1.spi": "f6c8d89f478d55f38feff16541137ae04dc8ae0cb970389f4b2947f6345cac0d",
+        "lock.spi": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "manifest.spi": "2769b370d97a7bfbd7f6a8a2e056cee05ac0c2ae15adebc0c72b416b6f022668"
+      }
+    },
+    {
+      "case": "small",
+      "seed": 29,
+      "engine": "spi-packed",
+      "sha256": {
+        "arena-1.spi": "85ba3ab81a234777aa778af02956e5b2adf1021520308bf8a4f1998582117a28",
+        "lock.spi": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "manifest.spi": "95c8be9ffc39b7ca4df008e40f56e3ed93736b0600b00ef59f05b11a44ec3013"
+      }
+    },
+    {
+      "case": "small",
+      "seed": 43,
+      "engine": "spi",
+      "sha256": {
+        "arena-1.spi": "7d8a58b21d76aad6bbf6f067f47e920abbe417ea6334fd5a528f483b73688cb1",
+        "lock.spi": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "manifest.spi": "2769b370d97a7bfbd7f6a8a2e056cee05ac0c2ae15adebc0c72b416b6f022668"
+      }
+    },
+    {
+      "case": "small",
+      "seed": 43,
+      "engine": "spi-packed",
+      "sha256": {
+        "arena-1.spi": "6f13093125e60df717a23daa8d975690ddfaee2e8a850b8f79dc5cf60867f9ea",
+        "lock.spi": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "manifest.spi": "95c8be9ffc39b7ca4df008e40f56e3ed93736b0600b00ef59f05b11a44ec3013"
+      }
+    },
+    {
+      "case": "large",
+      "seed": 17,
+      "engine": "spi",
+      "sha256": {
+        "arena-1.spi": "69abf082ebc098ca4aa74640ec19d582fb58f0c0fb60a5bb5998d7cf74c9d538",
+        "lock.spi": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "manifest.spi": "2b2f4b125edd5063a4aa163db92b4ddeaf84c77028ea2ba32a7b88c887902666"
+      }
+    },
+    {
+      "case": "large",
+      "seed": 17,
+      "engine": "spi-packed",
+      "sha256": {
+        "arena-1.spi": "0380dea26bf86833fed5ea046b7ecb03473174d427618ffdde16580cb31547eb",
+        "lock.spi": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "manifest.spi": "0057611537b9ae841475912ebf1adf6645133384bb3d98db54d29da7b74dc595"
+      }
+    },
+    {
+      "case": "large",
+      "seed": 29,
+      "engine": "spi",
+      "sha256": {
+        "arena-1.spi": "eb2028723523b701a1358c3ef4f4e41c6bb08de4ffe931a6802ff8d9f6e09ba0",
+        "lock.spi": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "manifest.spi": "2b2f4b125edd5063a4aa163db92b4ddeaf84c77028ea2ba32a7b88c887902666"
+      }
+    },
+    {
+      "case": "large",
+      "seed": 29,
+      "engine": "spi-packed",
+      "sha256": {
+        "arena-1.spi": "9c7d41c2e8bf00492281d272e9b189afb62386b46dc5e71b7d6f857fc775407e",
+        "lock.spi": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "manifest.spi": "0057611537b9ae841475912ebf1adf6645133384bb3d98db54d29da7b74dc595"
+      }
+    },
+    {
+      "case": "large",
+      "seed": 43,
+      "engine": "spi",
+      "sha256": {
+        "arena-1.spi": "864d21a54aebadf21e34afb311002449f06b575b48d69077cf8b5d66c9b0c9c9",
+        "lock.spi": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "manifest.spi": "2b2f4b125edd5063a4aa163db92b4ddeaf84c77028ea2ba32a7b88c887902666"
+      }
+    },
+    {
+      "case": "large",
+      "seed": 43,
+      "engine": "spi-packed",
+      "sha256": {
+        "arena-1.spi": "1ae32554718c3e621495e8464fcc1e3b706cde3b219a32023ed9f52d686db4e4",
+        "lock.spi": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "manifest.spi": "0057611537b9ae841475912ebf1adf6645133384bb3d98db54d29da7b74dc595"
+      }
+    }
+  ],
+  "limits": [
+    "Only base pages use direct iteration. Delta chains retain bounded materialization.",
+    "Returned payload still requires copying, not zero-copy API.",
+    "Whole workload timings include negative controls; no service-latency or power-loss proof.",
+    "OS cache/CPU placement uncontrolled. Three seeds do not establish statistical equivalence."
+  ]
+}

@@ -1,0 +1,428 @@
+{
+  "trials": 3,
+  "all_full_outputs_match": true,
+  "value_cache_workload_extension": 1,
+  "grouped_write_workload_extension": 1,
+  "cache_contract_checks": "PASS",
+  "engines": {
+    "sqlite": {
+      "load_ms": {
+        "median": 23.9431,
+        "samples": [
+          23.9431
+        ]
+      },
+      "reused_16_key_p50_us": {
+        "median": 7.7,
+        "samples": [
+          7.7
+        ]
+      },
+      "unique_reads_ms": {
+        "median": 15.5951,
+        "samples": [
+          15.5951
+        ]
+      },
+      "one_off_scan_ms": {
+        "median": 0.471,
+        "samples": [
+          0.471
+        ]
+      },
+      "warm_hit_p50_us": {
+        "median": 8.0,
+        "samples": [
+          8.0
+        ]
+      },
+      "warm_hit_p99_us": {
+        "median": 12.1,
+        "samples": [
+          12.1
+        ]
+      },
+      "cleared_app_cache_p50_us": {
+        "median": 7.9,
+        "samples": [
+          7.9
+        ]
+      },
+      "range_p50_us": {
+        "median": 29.4,
+        "samples": [
+          29.4
+        ]
+      },
+      "post_mutation_scan_ms": {
+        "median": 0.5095,
+        "samples": [
+          0.5095
+        ]
+      },
+      "post_mutation_range_p50_us": {
+        "median": 9.1,
+        "samples": [
+          9.1
+        ]
+      },
+      "post_compaction_scan_ms": {
+        "median": 0.4704,
+        "samples": [
+          0.4704
+        ]
+      },
+      "updates_ms": {
+        "median": 43.3096,
+        "samples": [
+          43.3096
+        ]
+      },
+      "durable_mutation_p50_us": {
+        "median": 2540.4,
+        "samples": [
+          2540.4
+        ]
+      },
+      "reopen_ms": {
+        "median": 7.8175,
+        "samples": [
+          7.8175
+        ]
+      },
+      "maintenance_ms": {
+        "median": 19.9686,
+        "samples": [
+          19.9686
+        ]
+      },
+      "final_owned_file_bytes": {
+        "median": 200704,
+        "samples": [
+          200704
+        ]
+      },
+      "arena_write_calls": {
+        "median": null,
+        "samples": [],
+        "status": "not measured"
+      },
+      "arena_bytes_written": {
+        "median": null,
+        "samples": [],
+        "status": "not measured"
+      }
+    },
+    "spi": {
+      "load_ms": {
+        "median": 249.5987,
+        "samples": [
+          249.5987
+        ]
+      },
+      "reused_16_key_p50_us": {
+        "median": 38.6,
+        "samples": [
+          38.6
+        ]
+      },
+      "unique_reads_ms": {
+        "median": 87.5721,
+        "samples": [
+          87.5721
+        ]
+      },
+      "one_off_scan_ms": {
+        "median": 14.8488,
+        "samples": [
+          14.8488
+        ]
+      },
+      "warm_hit_p50_us": {
+        "median": 46.0,
+        "samples": [
+          46.0
+        ]
+      },
+      "warm_hit_p99_us": {
+        "median": 102.0,
+        "samples": [
+          102.0
+        ]
+      },
+      "cleared_app_cache_p50_us": {
+        "median": 46.6,
+        "samples": [
+          46.6
+        ]
+      },
+      "range_p50_us": {
+        "median": 745.1,
+        "samples": [
+          745.1
+        ]
+      },
+      "post_mutation_scan_ms": {
+        "median": 13.2681,
+        "samples": [
+          13.2681
+        ]
+      },
+      "post_mutation_range_p50_us": {
+        "median": 48.8,
+        "samples": [
+          48.8
+        ]
+      },
+      "post_compaction_scan_ms": {
+        "median": 12.3567,
+        "samples": [
+          12.3567
+        ]
+      },
+      "updates_ms": {
+        "median": 144.8626,
+        "samples": [
+          144.8626
+        ]
+      },
+      "durable_mutation_p50_us": {
+        "median": 9292.4,
+        "samples": [
+          9292.4
+        ]
+      },
+      "reopen_ms": {
+        "median": 4.9366,
+        "samples": [
+          4.9366
+        ]
+      },
+      "maintenance_ms": {
+        "median": 46.9527,
+        "samples": [
+          46.9527
+        ]
+      },
+      "final_owned_file_bytes": {
+        "median": 352072,
+        "samples": [
+          352072
+        ]
+      },
+      "arena_write_calls": {
+        "median": 150,
+        "samples": [
+          150
+        ]
+      },
+      "arena_bytes_written": {
+        "median": 2588672,
+        "samples": [
+          2588672
+        ]
+      },
+      "load_arena_bytes": {
+        "median": 2107360,
+        "samples": [
+          2107360
+        ]
+      },
+      "update_arena_bytes": {
+        "median": 454672,
+        "samples": [
+          454672
+        ]
+      },
+      "single_mutation_arena_bytes": {
+        "median": 26640,
+        "samples": [
+          26640
+        ]
+      },
+      "cache_bytes_after_reuse": {
+        "median": 1000,
+        "samples": [
+          1000
+        ]
+      },
+      "cache_values_after_reuse": {
+        "median": 0,
+        "samples": [
+          0
+        ]
+      },
+      "cache_values_after_unique_reads": {
+        "median": 0,
+        "samples": [
+          0
+        ]
+      },
+      "cache_values_after_scan": {
+        "median": 0,
+        "samples": [
+          0
+        ]
+      }
+    },
+    "spi-packed": {
+      "load_ms": {
+        "median": 116.4547,
+        "samples": [
+          116.4547
+        ]
+      },
+      "reused_16_key_p50_us": {
+        "median": 12.9,
+        "samples": [
+          12.9
+        ]
+      },
+      "unique_reads_ms": {
+        "median": 26.5897,
+        "samples": [
+          26.5897
+        ]
+      },
+      "one_off_scan_ms": {
+        "median": 0.5016,
+        "samples": [
+          0.5016
+        ]
+      },
+      "warm_hit_p50_us": {
+        "median": 19.7,
+        "samples": [
+          19.7
+        ]
+      },
+      "warm_hit_p99_us": {
+        "median": 30.6,
+        "samples": [
+          30.6
+        ]
+      },
+      "cleared_app_cache_p50_us": {
+        "median": 24.6,
+        "samples": [
+          24.6
+        ]
+      },
+      "range_p50_us": {
+        "median": 60.8,
+        "samples": [
+          60.8
+        ]
+      },
+      "post_mutation_scan_ms": {
+        "median": 0.7443,
+        "samples": [
+          0.7443
+        ]
+      },
+      "post_mutation_range_p50_us": {
+        "median": 46.8,
+        "samples": [
+          46.8
+        ]
+      },
+      "post_compaction_scan_ms": {
+        "median": 0.4853,
+        "samples": [
+          0.4853
+        ]
+      },
+      "updates_ms": {
+        "median": 116.9823,
+        "samples": [
+          116.9823
+        ]
+      },
+      "durable_mutation_p50_us": {
+        "median": 9227.4,
+        "samples": [
+          9227.4
+        ]
+      },
+      "reopen_ms": {
+        "median": 5.1294,
+        "samples": [
+          5.1294
+        ]
+      },
+      "maintenance_ms": {
+        "median": 18.3727,
+        "samples": [
+          18.3727
+        ]
+      },
+      "final_owned_file_bytes": {
+        "median": 193600,
+        "samples": [
+          193600
+        ]
+      },
+      "arena_write_calls": {
+        "median": 92,
+        "samples": [
+          92
+        ]
+      },
+      "arena_bytes_written": {
+        "median": 511312,
+        "samples": [
+          511312
+        ]
+      },
+      "load_arena_bytes": {
+        "median": 234288,
+        "samples": [
+          234288
+        ]
+      },
+      "update_arena_bytes": {
+        "median": 172032,
+        "samples": [
+          172032
+        ]
+      },
+      "single_mutation_arena_bytes": {
+        "median": 104992,
+        "samples": [
+          104992
+        ]
+      },
+      "cache_bytes_after_reuse": {
+        "median": 792,
+        "samples": [
+          792
+        ]
+      },
+      "cache_values_after_reuse": {
+        "median": 0,
+        "samples": [
+          0
+        ]
+      },
+      "cache_values_after_unique_reads": {
+        "median": 0,
+        "samples": [
+          0
+        ]
+      },
+      "cache_values_after_scan": {
+        "median": 0,
+        "samples": [
+          0
+        ]
+      }
+    }
+  },
+  "limits": [
+    "Local KV operation contract only, not SQL or production durability equivalence",
+    "Logical file lengths are not allocated filesystem/device/NAND bytes",
+    "Node/page cache budgets are not equal total memory or OS-cache budgets",
+    "Closed-loop samples are not service latency under offered load",
+    "Maintenance implementations and physical formats differ"
+  ]
+}

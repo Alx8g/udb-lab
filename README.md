@@ -298,8 +298,18 @@ historical controls rather than interchangeable timing baselines.
 
 This is not a zero-copy output API or automatic expert routing. Base pages still
 require checked reads and output allocation. Delta merging and transactional
-output assembly still allocate. Performance and allocation acceptance for this
-execution change are pending the paired campaign.
+output assembly still allocate. The [paired scan campaign](results/spi/packed-direct-scan-paired-v1/summary.json)
+passed 54 trials and 18 persistent-byte comparisons from identical committed source.
+With 64-byte values and normal cache, packed ranges measured 22.6 versus 41.8
+microseconds, full scans 0.398 versus 0.539 ms, and post-mutation scans 0.724
+versus 1.005 ms for direct versus materialized execution. At 1 KiB, full scans
+measured 0.432 versus 0.565 ms. Large-value scan improvements were small.
+
+Not every phase improved. The 1 KiB packed update median increased from 116.98
+to 122.56 ms and maintenance from 18.37 to 20.84 ms. Unchanged legacy and SQLite
+controls also varied. Three seeds do not establish statistical equivalence or
+an across-workload win. Direct-scan allocation validation remains pending
+separate diagnostics, and none of these timings demonstrates lower page-read bytes.
 
 ## Diagnostic attribution
 
