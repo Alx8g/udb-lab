@@ -223,8 +223,24 @@ the `spi-packed` comparison adapter. Legacy AVL remains the default/control.
 This is an integrated physical storage path, not automatic mixture-of-experts
 routing. Fixed-extent implicit mapping, fine physical reuse, expert admission
 policy and typed analytics remain open. Empty internal fence pages are retained,
-and current compaction does not merge them. Performance acceptance is pending
-normal and adverse-cache comparisons. No overall superiority is claimed.
+and current compaction does not merge them.
+
+The [normal-cache results](results/spi/packed-normal-v1/summary.json),
+[1 KiB results](results/spi/packed-small-v1/summary.json) and
+[4 KiB-value results](results/spi/packed-large-values-v1/summary.json) passed all
+33 committed-source trials. With 64-byte values and an 8 MiB cache, full scans
+fell from 15.54 ms to 1.33 ms, load from 163.12 ms to 78.06 ms, and unique reads
+from 15.97 ms to 1.77 ms versus legacy SPI. Arena writes fell from 2,585,984 to
+495,120 bytes. Final logical file lengths were 193,600 bytes versus SQLite's
+200,704 bytes. The reported 0.4-microsecond point median is below the lab's
+1-microsecond reporting threshold and does not support a precise speedup ratio.
+
+These results do not justify enabling packed storage by default. With a 1 KiB
+cache, point medians regressed from 46.6 to 86.7 microseconds and update time
+from 150.66 to 186.97 ms. With 4 KiB values, ranges regressed from 2.38 to 2.66 ms.
+SQLite remained faster on general scans, ranges, updates and durable commits.
+No across-workload, CPU or total-memory superiority is established. Diagnostic
+attribution of packed cache misses is the next gate before further optimization.
 
 ## Diagnostic attribution
 
