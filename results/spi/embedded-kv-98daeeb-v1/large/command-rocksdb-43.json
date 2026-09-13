@@ -1,0 +1,16 @@
+{
+  "command": [
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\multi-engine-release-98daeeb\\spi-compare.exe",
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\embedded-kv-98daeeb-v1\\large\\rocksdb-seed-43",
+    "rocksdb",
+    "1000",
+    "43",
+    "4096",
+    "8388608"
+  ],
+  "started_utc": "2026-09-13T00:07:05.890090+00:00",
+  "finished_utc": "2026-09-13T00:07:13.951157+00:00",
+  "exit_code": 0,
+  "stdout": "{\"engine\":\"rocksdb\",\"load_ms\":35.7852,\"result\":\"C:\\\\Users\\\\verom\\\\.treehouse\\\\dbs-5593e8\\\\4\\\\dbs\\\\.working\\\\tmp\\\\embedded-kv-98daeeb-v1\\\\large\\\\rocksdb-seed-43\\\\result.json\",\"rows\":1000,\"single_commit_p50_us\":2798.2,\"validation\":\"PASS\",\"warm_read_ms\":2.3178}\n",
+  "stderr": ""
+}

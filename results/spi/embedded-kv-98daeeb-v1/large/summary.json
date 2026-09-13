@@ -1,0 +1,1241 @@
+{
+  "trials": 21,
+  "all_full_outputs_match": true,
+  "value_cache_workload_extension": 1,
+  "grouped_write_workload_extension": 1,
+  "cache_contract_checks": "PASS",
+  "engines": {
+    "sqlite": {
+      "load_ms": {
+        "median": 74.3788,
+        "samples": [
+          79.8602,
+          74.3788,
+          73.7785
+        ]
+      },
+      "reused_16_key_p50_us": {
+        "median": 23.3,
+        "samples": [
+          23.9,
+          23.2,
+          23.3
+        ]
+      },
+      "unique_reads_ms": {
+        "median": 28.2689,
+        "samples": [
+          28.9871,
+          28.1263,
+          28.2689
+        ]
+      },
+      "one_off_scan_ms": {
+        "median": 4.2383,
+        "samples": [
+          4.1882,
+          4.2383,
+          5.3931
+        ]
+      },
+      "warm_hit_p50_us": {
+        "median": 36.5,
+        "samples": [
+          36.5,
+          35.4,
+          36.6
+        ]
+      },
+      "warm_hit_p99_us": {
+        "median": 130.7,
+        "samples": [
+          126.7,
+          140.7,
+          130.7
+        ]
+      },
+      "cleared_app_cache_p50_us": {
+        "median": 52.2,
+        "samples": [
+          51.2,
+          53.8,
+          52.2
+        ]
+      },
+      "range_p50_us": {
+        "median": 567.9,
+        "samples": [
+          550.4,
+          567.9,
+          575.2
+        ]
+      },
+      "post_mutation_scan_ms": {
+        "median": 5.4562,
+        "samples": [
+          6.6291,
+          5.2586,
+          5.4562
+        ]
+      },
+      "post_mutation_range_p50_us": {
+        "median": 46.5,
+        "samples": [
+          54.1,
+          45.2,
+          46.5
+        ]
+      },
+      "post_compaction_scan_ms": {
+        "median": 5.2231,
+        "samples": [
+          5.2231,
+          4.4636,
+          5.8781
+        ]
+      },
+      "updates_ms": {
+        "median": 50.1472,
+        "samples": [
+          49.6273,
+          50.1472,
+          52.3472
+        ]
+      },
+      "durable_mutation_p50_us": {
+        "median": 2651.4,
+        "samples": [
+          2619.8,
+          2651.4,
+          2782.7
+        ]
+      },
+      "reopen_ms": {
+        "median": 12.7402,
+        "samples": [
+          14.1187,
+          12.7402,
+          12.4012
+        ],
+        "qualification": "Close/reopen connection and reapply PRAGMAs."
+      },
+      "maintenance_ms": {
+        "median": 65.4768,
+        "samples": [
+          68.0075,
+          65.4768,
+          65.3215
+        ],
+        "qualification": "Checkpoint, VACUUM, checkpoint and integrity_check."
+      },
+      "final_owned_file_bytes": {
+        "median": 4657152,
+        "samples": [
+          4657152,
+          4657152,
+          4657152
+        ],
+        "qualification": "All owned database/WAL file lengths."
+      },
+      "arena_write_calls": {
+        "median": null,
+        "samples": [],
+        "status": "not measured"
+      },
+      "arena_bytes_written": {
+        "median": null,
+        "samples": [],
+        "status": "not measured"
+      }
+    },
+    "redb": {
+      "load_ms": {
+        "median": 45.5768,
+        "samples": [
+          45.5768,
+          49.1037,
+          42.6487
+        ]
+      },
+      "reused_16_key_p50_us": {
+        "median": 1.2,
+        "samples": [
+          1.1,
+          1.8,
+          1.2
+        ]
+      },
+      "unique_reads_ms": {
+        "median": 9.6929,
+        "samples": [
+          9.1942,
+          15.5799,
+          9.6929
+        ]
+      },
+      "one_off_scan_ms": {
+        "median": 9.8758,
+        "samples": [
+          9.4544,
+          14.0866,
+          9.8758
+        ]
+      },
+      "warm_hit_p50_us": {
+        "median": 1.8,
+        "samples": [
+          1.9,
+          1.8,
+          1.7
+        ]
+      },
+      "warm_hit_p99_us": {
+        "median": 55.9,
+        "samples": [
+          56.1,
+          55.9,
+          52.8
+        ]
+      },
+      "cleared_app_cache_p50_us": {
+        "median": 73.3,
+        "samples": [
+          73.3,
+          82.1,
+          60.5
+        ]
+      },
+      "range_p50_us": {
+        "median": 168.4,
+        "samples": [
+          168.4,
+          230.4,
+          130.5
+        ]
+      },
+      "post_mutation_scan_ms": {
+        "median": 10.7548,
+        "samples": [
+          10.0899,
+          16.3103,
+          10.7548
+        ]
+      },
+      "post_mutation_range_p50_us": {
+        "median": 4.3,
+        "samples": [
+          3.5,
+          5.0,
+          4.3
+        ]
+      },
+      "post_compaction_scan_ms": {
+        "median": 11.5421,
+        "samples": [
+          8.7219,
+          17.2282,
+          11.5421
+        ]
+      },
+      "updates_ms": {
+        "median": 66.5424,
+        "samples": [
+          66.5424,
+          101.7247,
+          64.1025
+        ]
+      },
+      "durable_mutation_p50_us": {
+        "median": 2997.4,
+        "samples": [
+          2923.0,
+          3449.7,
+          2997.4
+        ]
+      },
+      "reopen_ms": {
+        "median": 20.945,
+        "samples": [
+          20.0524,
+          24.9938,
+          20.945
+        ],
+        "qualification": "Close/reopen database."
+      },
+      "maintenance_ms": {
+        "median": 104.2824,
+        "samples": [
+          101.6619,
+          138.0806,
+          104.2824
+        ],
+        "qualification": "Native compact, then harness full-output reopen check; not the SPI verify algorithm."
+      },
+      "final_owned_file_bytes": {
+        "median": 8302592,
+        "samples": [
+          8302592,
+          8310784,
+          8302592
+        ],
+        "qualification": "Owned file lengths."
+      },
+      "arena_write_calls": {
+        "median": null,
+        "samples": [],
+        "status": "not measured"
+      },
+      "arena_bytes_written": {
+        "median": null,
+        "samples": [],
+        "status": "not measured"
+      }
+    },
+    "lmdb": {
+      "load_ms": {
+        "median": 37.608,
+        "samples": [
+          37.608,
+          35.7495,
+          42.2123
+        ]
+      },
+      "reused_16_key_p50_us": {
+        "median": 0.5,
+        "samples": [
+          0.6,
+          0.5,
+          0.5
+        ]
+      },
+      "unique_reads_ms": {
+        "median": 0.8257,
+        "samples": [
+          0.8257,
+          0.9678,
+          0.6037
+        ]
+      },
+      "one_off_scan_ms": {
+        "median": 1.5668,
+        "samples": [
+          2.1501,
+          1.4181,
+          1.5668
+        ]
+      },
+      "warm_hit_p50_us": {
+        "median": 3.0,
+        "samples": [
+          3.3,
+          3.0,
+          3.0
+        ]
+      },
+      "warm_hit_p99_us": {
+        "median": 55.8,
+        "samples": [
+          55.8,
+          75.5,
+          53.0
+        ]
+      },
+      "cleared_app_cache_p50_us": {
+        "median": null,
+        "samples": [
+          0.7,
+          0.8,
+          0.8
+        ],
+        "qualification": "not comparable: adapter has no application-cache clear, raw warm observations retained",
+        "status": "not comparable; raw observations retained"
+      },
+      "range_p50_us": {
+        "median": 58.2,
+        "samples": [
+          58.2,
+          64.5,
+          49.4
+        ]
+      },
+      "post_mutation_scan_ms": {
+        "median": 3.6908,
+        "samples": [
+          4.9922,
+          3.5409,
+          3.6908
+        ]
+      },
+      "post_mutation_range_p50_us": {
+        "median": 1.2,
+        "samples": [
+          1.9,
+          1.2,
+          1.2
+        ]
+      },
+      "post_compaction_scan_ms": {
+        "median": 3.9855,
+        "samples": [
+          4.4313,
+          3.8759,
+          3.9855
+        ]
+      },
+      "updates_ms": {
+        "median": 55.5984,
+        "samples": [
+          55.5984,
+          48.1154,
+          70.6002
+        ]
+      },
+      "durable_mutation_p50_us": {
+        "median": 2792.6,
+        "samples": [
+          2792.6,
+          2650.4,
+          2910.4
+        ]
+      },
+      "reopen_ms": {
+        "median": 10.0395,
+        "samples": [
+          10.0395,
+          10.2274,
+          9.0203
+        ],
+        "qualification": "Close/reopen environment; OS cache remains warm."
+      },
+      "maintenance_ms": {
+        "median": 2.4976,
+        "samples": [
+          2.4976,
+          2.4923,
+          2.6441
+        ],
+        "qualification": "Forced environment sync only, NOT compaction. Full output validated after reopen."
+      },
+      "final_owned_file_bytes": {
+        "median": 1073750016,
+        "samples": [
+          1073750016,
+          1073750016,
+          1073750016
+        ],
+        "qualification": "Owned file lengths, not resident mapped bytes."
+      },
+      "arena_write_calls": {
+        "median": null,
+        "samples": [],
+        "status": "not measured"
+      },
+      "arena_bytes_written": {
+        "median": null,
+        "samples": [],
+        "status": "not measured"
+      }
+    },
+    "rocksdb": {
+      "load_ms": {
+        "median": 32.5936,
+        "samples": [
+          32.5936,
+          32.1926,
+          35.7852
+        ]
+      },
+      "reused_16_key_p50_us": {
+        "median": 2.9,
+        "samples": [
+          1.3,
+          3.2,
+          2.9
+        ]
+      },
+      "unique_reads_ms": {
+        "median": 14.8142,
+        "samples": [
+          6.4625,
+          15.1684,
+          14.8142
+        ]
+      },
+      "one_off_scan_ms": {
+        "median": 7.6145,
+        "samples": [
+          5.2713,
+          7.6145,
+          8.0054
+        ]
+      },
+      "warm_hit_p50_us": {
+        "median": 1.3,
+        "samples": [
+          1.3,
+          1.5,
+          1.3
+        ]
+      },
+      "warm_hit_p99_us": {
+        "median": 52.0,
+        "samples": [
+          51.1,
+          52.5,
+          52.0
+        ]
+      },
+      "cleared_app_cache_p50_us": {
+        "median": 68.2,
+        "samples": [
+          58.0,
+          70.7,
+          68.2
+        ]
+      },
+      "range_p50_us": {
+        "median": 327.4,
+        "samples": [
+          156.5,
+          336.1,
+          327.4
+        ]
+      },
+      "post_mutation_scan_ms": {
+        "median": 10.7116,
+        "samples": [
+          6.6335,
+          10.7116,
+          11.6021
+        ]
+      },
+      "post_mutation_range_p50_us": {
+        "median": 20.5,
+        "samples": [
+          9.8,
+          20.5,
+          20.9
+        ]
+      },
+      "post_compaction_scan_ms": {
+        "median": 8.8409,
+        "samples": [
+          8.8409,
+          8.4345,
+          9.3055
+        ]
+      },
+      "updates_ms": {
+        "median": 43.1818,
+        "samples": [
+          43.1818,
+          43.6867,
+          41.3488
+        ]
+      },
+      "durable_mutation_p50_us": {
+        "median": 2798.2,
+        "samples": [
+          2714.8,
+          2892.4,
+          2798.2
+        ]
+      },
+      "reopen_ms": {
+        "median": 115.8927,
+        "samples": [
+          85.6573,
+          116.2698,
+          115.8927
+        ],
+        "qualification": "Close/reopen DB; recovery/memtable state can differ from other engines."
+      },
+      "maintenance_ms": {
+        "median": 33.9123,
+        "samples": [
+          35.3264,
+          33.9123,
+          33.3941
+        ],
+        "qualification": "Flush and compact_range; must wait for completion. Not SPI integrity verification."
+      },
+      "final_owned_file_bytes": {
+        "median": 7422530,
+        "samples": [
+          7422530,
+          7422528,
+          7422530
+        ],
+        "qualification": "Owned SST, WAL and metadata file lengths."
+      },
+      "arena_write_calls": {
+        "median": null,
+        "samples": [],
+        "status": "not measured"
+      },
+      "arena_bytes_written": {
+        "median": null,
+        "samples": [],
+        "status": "not measured"
+      }
+    },
+    "duckdb": {
+      "load_ms": {
+        "median": 2051.4481,
+        "samples": [
+          2069.8829,
+          2025.6382,
+          2051.4481
+        ]
+      },
+      "reused_16_key_p50_us": {
+        "median": 295.8,
+        "samples": [
+          304.5,
+          295.8,
+          280.3
+        ]
+      },
+      "unique_reads_ms": {
+        "median": 325.9772,
+        "samples": [
+          322.142,
+          346.8687,
+          325.9772
+        ]
+      },
+      "one_off_scan_ms": {
+        "median": 13.601,
+        "samples": [
+          14.5882,
+          13.601,
+          12.9212
+        ]
+      },
+      "warm_hit_p50_us": {
+        "median": 136.2,
+        "samples": [
+          136.2,
+          146.1,
+          136.0
+        ]
+      },
+      "warm_hit_p99_us": {
+        "median": 389.3,
+        "samples": [
+          327.2,
+          461.8,
+          389.3
+        ]
+      },
+      "cleared_app_cache_p50_us": {
+        "median": 787.8,
+        "samples": [
+          787.8,
+          765.1,
+          801.1
+        ]
+      },
+      "range_p50_us": {
+        "median": 1065.3,
+        "samples": [
+          1148.9,
+          914.4,
+          1065.3
+        ]
+      },
+      "post_mutation_scan_ms": {
+        "median": 15.3669,
+        "samples": [
+          15.3669,
+          15.854,
+          13.1593
+        ]
+      },
+      "post_mutation_range_p50_us": {
+        "median": 612.0,
+        "samples": [
+          562.8,
+          642.9,
+          612.0
+        ]
+      },
+      "post_compaction_scan_ms": {
+        "median": 12.5336,
+        "samples": [
+          12.5336,
+          11.2417,
+          13.3861
+        ]
+      },
+      "updates_ms": {
+        "median": 2170.068,
+        "samples": [
+          2170.068,
+          2266.7685,
+          2165.3118
+        ]
+      },
+      "durable_mutation_p50_us": {
+        "median": 7552.5,
+        "samples": [
+          7482.9,
+          7716.7,
+          7552.5
+        ]
+      },
+      "reopen_ms": {
+        "median": 56.1171,
+        "samples": [
+          58.4982,
+          53.9569,
+          56.1171
+        ],
+        "qualification": "Close/reopen embedded DB and reprepare statements."
+      },
+      "maintenance_ms": {
+        "median": 0.3555,
+        "samples": [
+          0.2859,
+          0.3555,
+          0.435
+        ],
+        "qualification": "CHECKPOINT only, NOT VACUUM or full integrity utility."
+      },
+      "final_owned_file_bytes": {
+        "median": 9711616,
+        "samples": [
+          9711616,
+          9711616,
+          9711616
+        ],
+        "qualification": "Owned file lengths."
+      },
+      "arena_write_calls": {
+        "median": null,
+        "samples": [],
+        "status": "not measured"
+      },
+      "arena_bytes_written": {
+        "median": null,
+        "samples": [],
+        "status": "not measured"
+      }
+    },
+    "spi": {
+      "load_ms": {
+        "median": 72.7747,
+        "samples": [
+          72.7747,
+          82.0407,
+          72.5832
+        ]
+      },
+      "reused_16_key_p50_us": {
+        "median": 6.1,
+        "samples": [
+          6.1,
+          6.6,
+          6.1
+        ]
+      },
+      "unique_reads_ms": {
+        "median": 11.0698,
+        "samples": [
+          10.7699,
+          12.9316,
+          11.0698
+        ]
+      },
+      "one_off_scan_ms": {
+        "median": 12.4805,
+        "samples": [
+          12.5601,
+          12.4805,
+          11.9803
+        ]
+      },
+      "warm_hit_p50_us": {
+        "median": 9.5,
+        "samples": [
+          9.5,
+          11.2,
+          9.4
+        ]
+      },
+      "warm_hit_p99_us": {
+        "median": 69.9,
+        "samples": [
+          69.9,
+          87.6,
+          60.1
+        ]
+      },
+      "cleared_app_cache_p50_us": {
+        "median": 46.2,
+        "samples": [
+          46.2,
+          50.9,
+          44.4
+        ]
+      },
+      "range_p50_us": {
+        "median": 785.8,
+        "samples": [
+          785.8,
+          828.4,
+          783.0
+        ]
+      },
+      "post_mutation_scan_ms": {
+        "median": 12.8563,
+        "samples": [
+          12.8563,
+          12.8148,
+          14.3705
+        ]
+      },
+      "post_mutation_range_p50_us": {
+        "median": 18.1,
+        "samples": [
+          18.0,
+          18.3,
+          18.1
+        ]
+      },
+      "post_compaction_scan_ms": {
+        "median": 12.1128,
+        "samples": [
+          12.4666,
+          12.0597,
+          12.1128
+        ]
+      },
+      "updates_ms": {
+        "median": 100.9658,
+        "samples": [
+          105.5009,
+          100.9658,
+          99.9049
+        ]
+      },
+      "durable_mutation_p50_us": {
+        "median": 9349.5,
+        "samples": [
+          9349.5,
+          9436.0,
+          9313.2
+        ]
+      },
+      "reopen_ms": {
+        "median": 7.0903,
+        "samples": [
+          7.6638,
+          6.0619,
+          7.0903
+        ],
+        "qualification": "Drop database handle and reopen committed root."
+      },
+      "maintenance_ms": {
+        "median": 56.8477,
+        "samples": [
+          56.8477,
+          52.1093,
+          59.6537
+        ],
+        "qualification": "Whole-epoch compaction, collection and explicit integrity verification."
+      },
+      "final_owned_file_bytes": {
+        "median": 4208072,
+        "samples": [
+          4208072,
+          4208072,
+          4208072
+        ],
+        "qualification": "All owned database file lengths, not allocated device bytes."
+      },
+      "arena_write_calls": {
+        "median": 300,
+        "samples": [
+          300,
+          300,
+          300
+        ]
+      },
+      "arena_bytes_written": {
+        "median": 7575440,
+        "samples": [
+          7575440,
+          7555168,
+          7577808
+        ]
+      },
+      "load_arena_bytes": {
+        "median": 5005360,
+        "samples": [
+          5005360,
+          5005360,
+          5005360
+        ]
+      },
+      "update_arena_bytes": {
+        "median": 2424320,
+        "samples": [
+          2424320,
+          2404768,
+          2427168
+        ]
+      },
+      "single_mutation_arena_bytes": {
+        "median": 145280,
+        "samples": [
+          145760,
+          145040,
+          145280
+        ]
+      },
+      "cache_bytes_after_reuse": {
+        "median": 4200,
+        "samples": [
+          4200,
+          4200,
+          4200
+        ]
+      },
+      "cache_values_after_reuse": {
+        "median": 0,
+        "samples": [
+          0,
+          0,
+          0
+        ]
+      },
+      "cache_values_after_unique_reads": {
+        "median": 0,
+        "samples": [
+          0,
+          0,
+          0
+        ]
+      },
+      "cache_values_after_scan": {
+        "median": 0,
+        "samples": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    "spi-packed": {
+      "load_ms": {
+        "median": 61.9514,
+        "samples": [
+          59.1386,
+          65.0035,
+          61.9514
+        ]
+      },
+      "reused_16_key_p50_us": {
+        "median": 6.2,
+        "samples": [
+          6.2,
+          6.4,
+          6.2
+        ]
+      },
+      "unique_reads_ms": {
+        "median": 7.4945,
+        "samples": [
+          7.4945,
+          7.5802,
+          7.2721
+        ]
+      },
+      "one_off_scan_ms": {
+        "median": 8.7804,
+        "samples": [
+          8.8789,
+          8.5189,
+          8.7804
+        ]
+      },
+      "warm_hit_p50_us": {
+        "median": 8.6,
+        "samples": [
+          8.4,
+          8.6,
+          8.7
+        ]
+      },
+      "warm_hit_p99_us": {
+        "median": 61.0,
+        "samples": [
+          60.5,
+          63.1,
+          61.0
+        ]
+      },
+      "cleared_app_cache_p50_us": {
+        "median": 31.2,
+        "samples": [
+          30.4,
+          32.0,
+          31.2
+        ]
+      },
+      "range_p50_us": {
+        "median": 689.3,
+        "samples": [
+          689.3,
+          686.6,
+          701.3
+        ]
+      },
+      "post_mutation_scan_ms": {
+        "median": 9.6927,
+        "samples": [
+          10.3949,
+          9.6927,
+          9.078
+        ]
+      },
+      "post_mutation_range_p50_us": {
+        "median": 69.2,
+        "samples": [
+          64.7,
+          77.6,
+          69.2
+        ]
+      },
+      "post_compaction_scan_ms": {
+        "median": 8.5839,
+        "samples": [
+          7.92,
+          8.5839,
+          8.9456
+        ]
+      },
+      "updates_ms": {
+        "median": 98.4552,
+        "samples": [
+          98.4552,
+          96.7941,
+          102.0181
+        ]
+      },
+      "durable_mutation_p50_us": {
+        "median": 9564.2,
+        "samples": [
+          9564.2,
+          9888.6,
+          9376.8
+        ]
+      },
+      "reopen_ms": {
+        "median": 7.2189,
+        "samples": [
+          6.4671,
+          7.2189,
+          7.5581
+        ],
+        "qualification": "Drop database handle and reopen committed root."
+      },
+      "maintenance_ms": {
+        "median": 52.2925,
+        "samples": [
+          48.5223,
+          55.3851,
+          52.2925
+        ],
+        "qualification": "Whole-epoch compaction, collection and explicit integrity verification."
+      },
+      "final_owned_file_bytes": {
+        "median": 4160320,
+        "samples": [
+          4160320,
+          4160320,
+          4160320
+        ],
+        "qualification": "All owned database file lengths, not allocated device bytes."
+      },
+      "arena_write_calls": {
+        "median": 280,
+        "samples": [
+          280,
+          276,
+          280
+        ]
+      },
+      "arena_bytes_written": {
+        "median": 6467848,
+        "samples": [
+          6467848,
+          6451480,
+          6487464
+        ]
+      },
+      "load_arena_bytes": {
+        "median": 4177288,
+        "samples": [
+          4177288,
+          4177288,
+          4177288
+        ]
+      },
+      "update_arena_bytes": {
+        "median": 2112512,
+        "samples": [
+          2112512,
+          2096064,
+          2132368
+        ]
+      },
+      "single_mutation_arena_bytes": {
+        "median": 178048,
+        "samples": [
+          178048,
+          178128,
+          177808
+        ]
+      },
+      "cache_bytes_after_reuse": {
+        "median": 19060,
+        "samples": [
+          19060,
+          19060,
+          19060
+        ]
+      },
+      "cache_values_after_reuse": {
+        "median": 0,
+        "samples": [
+          0,
+          0,
+          0
+        ]
+      },
+      "cache_values_after_unique_reads": {
+        "median": 0,
+        "samples": [
+          0,
+          0,
+          0
+        ]
+      },
+      "cache_values_after_scan": {
+        "median": 0,
+        "samples": [
+          0,
+          0,
+          0
+        ]
+      }
+    }
+  },
+  "limits": [
+    "Local KV operation contract only, not SQL or production durability equivalence",
+    "Logical file lengths are not allocated filesystem/device/NAND bytes",
+    "Node/page cache budgets are not equal total memory or OS-cache budgets",
+    "Closed-loop samples are not service latency under offered load",
+    "Maintenance implementations and physical formats differ"
+  ],
+  "engine_capabilities": {
+    "sqlite": {
+      "class": "embedded-sql",
+      "adapter_status": "verified-existing",
+      "common_kv_workload": true,
+      "durability": "WITHOUT ROWID table; WAL and synchronous=FULL.",
+      "cache_clear_supported": true,
+      "cache": "PRAGMA cache_size plus shrink_memory; OS cache uncontrolled.",
+      "maintenance": "Checkpoint, VACUUM, checkpoint and integrity_check.",
+      "reopen": "Close/reopen connection and reapply PRAGMAs.",
+      "physical_scope": "All owned database/WAL file lengths.",
+      "engine": "sqlite",
+      "canonical_engine": "sqlite"
+    },
+    "redb": {
+      "class": "embedded-kv",
+      "adapter_status": "draft-unverified",
+      "common_kv_workload": true,
+      "version": "redb 4.1.0, pinned for repository Rust 1.89 compatibility; not latest 4.2.0.",
+      "durability": "Durability::Immediate for table initialization and each write transaction.",
+      "cache_clear_supported": true,
+      "cache": "set_cache_size; close/reopen used to discard engine cache, not OS cache.",
+      "maintenance": "Native compact, then harness full-output reopen check; not the SPI verify algorithm.",
+      "reopen": "Close/reopen database.",
+      "physical_scope": "Owned file lengths.",
+      "engine": "redb",
+      "canonical_engine": "redb"
+    },
+    "lmdb": {
+      "class": "embedded-kv",
+      "adapter_status": "draft-unverified",
+      "common_kv_workload": true,
+      "version": "lmdb-rkv 0.14.0; native LMDB source pinned by Cargo.lock.",
+      "durability": "Default synchronous environment; no NOSYNC, NOMETASYNC, MAPASYNC or WRITEMAP flags.",
+      "cache_clear_supported": false,
+      "cache": "OS-managed mmap cache; map size is virtual address reservation, not a RAM limit.",
+      "maintenance": "Forced environment sync only, NOT compaction. Full output validated after reopen.",
+      "reopen": "Close/reopen environment; OS cache remains warm.",
+      "physical_scope": "Owned file lengths, not resident mapped bytes.",
+      "engine": "lmdb",
+      "canonical_engine": "lmdb"
+    },
+    "rocksdb": {
+      "class": "embedded-kv",
+      "adapter_status": "draft-unverified",
+      "common_kv_workload": true,
+      "version": "rocksdb crate 0.25.0; native 11.8.1 pinned by Cargo.lock.",
+      "durability": "Atomic WriteBatch with WAL enabled and sync=true; not a transactional conflict-checking API.",
+      "cache_clear_supported": true,
+      "cache": "Explicit block cache; additional 4 MiB write buffers and engine metadata are outside that cache budget. Close/reopen is not device-cold.",
+      "maintenance": "Flush and compact_range; must wait for completion. Not SPI integrity verification.",
+      "reopen": "Close/reopen DB; recovery/memtable state can differ from other engines.",
+      "physical_scope": "Owned SST, WAL and metadata file lengths.",
+      "engine": "rocksdb",
+      "canonical_engine": "rocksdb"
+    },
+    "duckdb": {
+      "class": "embedded-analytics-sql",
+      "adapter_status": "draft-unverified",
+      "common_kv_workload": true,
+      "version": "Official DuckDB C library 1.5.5 with explicit path and hash.",
+      "durability": "Persistent database synchronous commit defaults, recorded without claiming power-loss parity.",
+      "cache_clear_supported": true,
+      "cache": "Memory limit at least 64 MiB and one execution thread. Not equal to SPI cache. Close/reopen and reprepare for application-cache reset.",
+      "maintenance": "CHECKPOINT only, NOT VACUUM or full integrity utility.",
+      "reopen": "Close/reopen embedded DB and reprepare statements.",
+      "physical_scope": "Owned file lengths.",
+      "qualification": "Prepared BLOB primary-key operations characterize this KV stream only. This adapter is NOT a typed analytics benchmark.",
+      "engine": "duckdb",
+      "canonical_engine": "duckdb"
+    },
+    "spi": {
+      "class": "embedded-kv",
+      "adapter_status": "verified-existing",
+      "common_kv_workload": true,
+      "durability": "Data synchronization plus checksummed manifest publication barriers.",
+      "cache_clear_supported": true,
+      "cache": "Charged node/value/page budget, not RSS or OS cache.",
+      "maintenance": "Whole-epoch compaction, collection and explicit integrity verification.",
+      "reopen": "Drop database handle and reopen committed root.",
+      "physical_scope": "All owned database file lengths, not allocated device bytes.",
+      "engine": "spi",
+      "canonical_engine": "spi"
+    },
+    "spi-packed": {
+      "class": "embedded-kv",
+      "adapter_status": "verified-existing",
+      "common_kv_workload": true,
+      "durability": "Data synchronization plus checksummed manifest publication barriers.",
+      "cache_clear_supported": true,
+      "cache": "Charged node/value/page budget, not RSS or OS cache.",
+      "maintenance": "Whole-epoch compaction, collection and explicit integrity verification.",
+      "reopen": "Drop database handle and reopen committed root.",
+      "physical_scope": "All owned database file lengths, not allocated device bytes.",
+      "engine": "spi-packed",
+      "canonical_engine": "spi"
+    }
+  }
+}

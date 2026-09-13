@@ -1,0 +1,16 @@
+{
+  "command": [
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\multi-engine-release-98daeeb\\spi-compare.exe",
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\embedded-kv-98daeeb-v1\\small\\redb-seed-17",
+    "redb",
+    "2000",
+    "17",
+    "64",
+    "1024"
+  ],
+  "started_utc": "2026-09-13T00:05:15.450907+00:00",
+  "finished_utc": "2026-09-13T00:05:17.907370+00:00",
+  "exit_code": 0,
+  "stdout": "{\"engine\":\"redb\",\"load_ms\":29.067,\"result\":\"C:\\\\Users\\\\verom\\\\.treehouse\\\\dbs-5593e8\\\\4\\\\dbs\\\\.working\\\\tmp\\\\embedded-kv-98daeeb-v1\\\\small\\\\redb-seed-17\\\\result.json\",\"rows\":2000,\"single_commit_p50_us\":2818.7,\"validation\":\"PASS\",\"warm_read_ms\":17.5229}\n",
+  "stderr": ""
+}

@@ -1,0 +1,16 @@
+{
+  "command": [
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\multi-engine-release-98daeeb\\spi-compare.exe",
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\embedded-kv-98daeeb-v1\\large\\spi-packed-seed-29",
+    "spi-packed",
+    "1000",
+    "29",
+    "4096",
+    "8388608"
+  ],
+  "started_utc": "2026-09-13T00:07:04.215604+00:00",
+  "finished_utc": "2026-09-13T00:07:04.873213+00:00",
+  "exit_code": 0,
+  "stdout": "{\"engine\":\"spi-packed\",\"load_ms\":65.0035,\"result\":\"C:\\\\Users\\\\verom\\\\.treehouse\\\\dbs-5593e8\\\\4\\\\dbs\\\\.working\\\\tmp\\\\embedded-kv-98daeeb-v1\\\\large\\\\spi-packed-seed-29\\\\result.json\",\"rows\":1000,\"single_commit_p50_us\":9888.6,\"validation\":\"PASS\",\"warm_read_ms\":10.2288}\n",
+  "stderr": ""
+}

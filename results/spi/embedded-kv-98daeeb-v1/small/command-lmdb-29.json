@@ -1,0 +1,16 @@
+{
+  "command": [
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\multi-engine-release-98daeeb\\spi-compare.exe",
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\embedded-kv-98daeeb-v1\\small\\lmdb-seed-29",
+    "lmdb",
+    "2000",
+    "29",
+    "64",
+    "1024"
+  ],
+  "started_utc": "2026-09-13T00:05:39.722679+00:00",
+  "finished_utc": "2026-09-13T00:05:39.927486+00:00",
+  "exit_code": 0,
+  "stdout": "{\"engine\":\"lmdb\",\"load_ms\":26.418,\"result\":\"C:\\\\Users\\\\verom\\\\.treehouse\\\\dbs-5593e8\\\\4\\\\dbs\\\\.working\\\\tmp\\\\embedded-kv-98daeeb-v1\\\\small\\\\lmdb-seed-29\\\\result.json\",\"rows\":2000,\"single_commit_p50_us\":2881.3,\"validation\":\"PASS\",\"warm_read_ms\":0.8671}\n",
+  "stderr": ""
+}

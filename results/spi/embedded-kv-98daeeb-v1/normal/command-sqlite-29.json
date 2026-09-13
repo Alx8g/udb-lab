@@ -1,0 +1,16 @@
+{
+  "command": [
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\multi-engine-release-98daeeb\\spi-compare.exe",
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\embedded-kv-98daeeb-v1\\normal\\sqlite-seed-29",
+    "sqlite",
+    "2000",
+    "29",
+    "64",
+    "8388608"
+  ],
+  "started_utc": "2026-09-13T00:04:32.870417+00:00",
+  "finished_utc": "2026-09-13T00:04:33.130723+00:00",
+  "exit_code": 0,
+  "stdout": "{\"engine\":\"sqlite\",\"load_ms\":25.0347,\"result\":\"C:\\\\Users\\\\verom\\\\.treehouse\\\\dbs-5593e8\\\\4\\\\dbs\\\\.working\\\\tmp\\\\embedded-kv-98daeeb-v1\\\\normal\\\\sqlite-seed-29\\\\result.json\",\"rows\":2000,\"single_commit_p50_us\":2658.3,\"validation\":\"PASS\",\"warm_read_ms\":6.6511}\n",
+  "stderr": ""
+}
