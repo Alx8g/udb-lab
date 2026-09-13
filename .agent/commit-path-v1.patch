@@ -1,0 +1,211 @@
+--- a/src/spi/storage.rs
++++ b/src/spi/storage.rs
+@@ -14,6 +14,9 @@
+ const META: &[u8; 8] = b"SPIMETA1";
+ const HEADER: usize = 32;
+ const META_LEN: usize = 64;
++const MANIFEST_SLOTS: usize = 2;
++const MANIFEST_LEN: usize = META_LEN * MANIFEST_SLOTS;
++const MANIFEST_SEQ_OFFSET: usize = 48;
+ pub const MAX_KEY: usize = 4096;
+ pub const MAX_VALUE: usize = 16 * 1024 * 1024;
+ const PREFIX: &str = "arena-";
+@@ -1344,7 +1347,7 @@
+         Ok(())
+     }
+ }
+-fn publish(dir: &Path, r: Root, f: &mut Fault) -> Result<()> {
++fn encode_manifest_slot(r: Root, sequence: u64) -> [u8; META_LEN] {
+     let mut b = [0; META_LEN];
+     b[..8].copy_from_slice(META);
+     put64(&mut b, 8, r.generation);
+@@ -1352,32 +1355,13 @@
+     put64(&mut b, 24, r.root);
+     put64(&mut b, 32, r.end);
+     put64(&mut b, 40, r.count);
++    put64(&mut b, MANIFEST_SEQ_OFFSET, sequence);
+     let c = checksum(&[&b]);
+     put32(&mut b, 60, c);
+-    let tmp = dir.join("manifest.pending");
+-    let file = OpenOptions::new()
+-        .create(true)
+-        .truncate(true)
+-        .write(true)
+-        .open(&tmp)?;
+-    write_at(&file, &b, 0, f.chunk)?;
+-    f.hit("manifest_write")?;
+-    file.sync_all()?;
+-    f.hit("manifest_sync")?;
+-    drop(file);
+-    replace(&tmp, &dir.join("manifest.spi"))?;
+-    f.hit("manifest_replace")?;
+-    sync_directory(dir)?;
+-    f.hit("directory_sync")?;
+-    Ok(())
++    b
+ }
+-fn read_manifest(p: &Path) -> Result<Root> {
+-    let mut f = File::open(p)?;
+-    if f.metadata()?.len() != META_LEN as u64 {
+-        return Err(Error::Corrupt("manifest size".into()));
+-    }
+-    let mut b = [0; META_LEN];
+-    f.read_exact(&mut b)?;
++
++fn decode_manifest_slot(mut b: [u8; META_LEN]) -> Result<(Root, u64)> {
+     let c = get32(&b, 60);
+     b[60..64].fill(0);
+     if &b[..8] != META || checksum(&[&b]) != c {
+@@ -1393,26 +1377,93 @@
+     if r.end < 8 || (r.root == 0) != (r.count == 0) || r.root >= r.end {
+         return Err(Error::Corrupt("manifest root".into()));
+     }
+-    Ok(r)
++    Ok((r, get64(&b, MANIFEST_SEQ_OFFSET)))
+ }
+-#[cfg(unix)]
+-fn replace(a: &Path, b: &Path) -> io::Result<()> {
+-    fs::rename(a, b)
++
++fn read_manifest_state(file: &File) -> Result<(Root, u64, usize)> {
++    let len = file.metadata()?.len() as usize;
++    if len != META_LEN && len != MANIFEST_LEN {
++        return Err(Error::Corrupt("manifest size".into()));
++    }
++    let slots = if len == META_LEN { 1 } else { MANIFEST_SLOTS };
++    let mut best: Option<(Root, u64, usize)> = None;
++    for slot in 0..slots {
++        let mut b = [0; META_LEN];
++        read_exact_at(file, &mut b, (slot * META_LEN) as u64)?;
++        if b.iter().all(|&v| v == 0) {
++            continue;
++        }
++        let Ok((root, sequence)) = decode_manifest_slot(b) else {
++            // A torn/incomplete slot is expected after a crash. The other
++            // slot remains the authoritative fallback.
++            continue;
++        };
++        let newer = best.as_ref().is_none_or(|(current, current_sequence, _)| {
++            sequence > *current_sequence
++                || (sequence == *current_sequence
++                    && (root.generation, root.epoch) > (current.generation, current.epoch))
++        });
++        if newer {
++            best = Some((root, sequence, slot));
++        }
++    }
++    best.ok_or_else(|| Error::Corrupt("no valid manifest slot".into()))
+ }
+-#[cfg(windows)]
+-fn replace(a: &Path, b: &Path) -> io::Result<()> {
+-    use std::os::windows::ffi::OsStrExt;
+-    #[link(name = "kernel32")]
+-    unsafe extern "system" {
+-        fn MoveFileExW(a: *const u16, b: *const u16, flags: u32) -> i32;
+-    }
+-    let a: Vec<u16> = a.as_os_str().encode_wide().chain(Some(0)).collect();
+-    let b: Vec<u16> = b.as_os_str().encode_wide().chain(Some(0)).collect();
+-    if unsafe { MoveFileExW(a.as_ptr(), b.as_ptr(), 1 | 8) } == 0 {
+-        Err(io::Error::last_os_error())
+-    } else {
+-        Ok(())
++
++fn publish(dir: &Path, r: Root, f: &mut Fault) -> Result<()> {
++    let path = dir.join("manifest.spi");
++    if !path.exists() {
++        let file = OpenOptions::new()
++            .create_new(true)
++            .read(true)
++            .write(true)
++            .open(&path)?;
++        file.set_len(MANIFEST_LEN as u64)?;
++        f.hit("manifest_write")?;
++        let b = encode_manifest_slot(r, 1);
++        write_at(&file, &b, 0, f.chunk)?;
++        f.hit("manifest_written")?;
++        file.sync_all()?;
++        f.hit("manifest_sync")?;
++        // Only manifest creation changes the directory namespace. Ordinary
++        // commits update the inactive slot in-place and avoid rename+dir fsync.
++        sync_directory(dir)?;
++        f.hit("manifest_replace")?;
++        f.hit("directory_sync")?;
++        return Ok(());
+     }
++
++    let file = OpenOptions::new().read(true).write(true).open(&path)?;
++    let (_, sequence, active_slot) = read_manifest_state(&file)?;
++    let sequence = sequence
++        .checked_add(1)
++        .ok_or_else(|| Error::Budget("manifest sequence overflow".into()))?;
++    if file.metadata()?.len() == META_LEN as u64 {
++        // One-time migration from the original single-slot experimental
++        // format. The old 64-byte slot remains valid until this file sync.
++        file.set_len(MANIFEST_LEN as u64)?;
++    }
++    let target_slot = if active_slot == 0 { 1 } else { 0 };
++    let b = encode_manifest_slot(r, sequence);
++    // Preserve the old process-crash checkpoint semantics: an injected exit
++    // at manifest_write happens before the new slot is touched.
++    f.hit("manifest_write")?;
++    write_at(&file, &b, (target_slot * META_LEN) as u64, f.chunk)?;
++    // A process exit here may expose old or new through the OS page cache; a
++    // real power-loss guarantee is intentionally not claimed.
++    f.hit("manifest_written")?;
++    file.sync_all()?;
++    f.hit("manifest_sync")?;
++    // Legacy checkpoint names remain as no-op fault boundaries so old test
++    // tooling can still cut after the durable publication point.
++    f.hit("manifest_replace")?;
++    f.hit("directory_sync")?;
++    Ok(())
++}
++
++fn read_manifest(p: &Path) -> Result<Root> {
++    let file = File::open(p)?;
++    read_manifest_state(&file).map(|(root, _, _)| root)
+ }
+ #[cfg(unix)]
+ fn sync_directory(p: &Path) -> io::Result<()> {
+--- a/tests/spi-process.rs
++++ b/tests/spi-process.rs
+@@ -40,6 +40,7 @@
+         "append_flush",
+         "data_sync",
+         "manifest_write",
++        "manifest_written",
+         "manifest_sync",
+         "manifest_replace",
+         "directory_sync",
+@@ -56,8 +57,10 @@
+         assert_eq!(output.status.code(), Some(86), "{stage}: {:?}", output);
+         let db = Database::open(&p, Options::default()).unwrap();
+         let a = db.get(b"a").unwrap().unwrap();
+-        if matches!(stage, "manifest_replace" | "directory_sync") {
++        if matches!(stage, "manifest_sync" | "manifest_replace" | "directory_sync") {
+             assert_eq!(a, b"new");
++        } else if stage == "manifest_written" {
++            assert!(a == b"old" || a == b"new");
+         } else {
+             assert_eq!(a, b"old");
+         }
+@@ -77,6 +80,7 @@
+         "append_flush",
+         "compact_data_sync",
+         "manifest_write",
++        "manifest_written",
+         "manifest_sync",
+         "manifest_replace",
+         "directory_sync",
+--- a/tests/spi-storage.rs
++++ b/tests/spi-storage.rs
+@@ -309,6 +309,9 @@
+     drop(db);
+     let mut m = fs::read(p.join("manifest.spi")).unwrap();
+     m[55] ^= 1;
++    if m.len() >= 128 {
++        m[64 + 55] ^= 1;
++    }
+     fs::write(p.join("manifest.spi"), m).unwrap();
+     assert!(matches!(
+         Database::open(&p, Options::default()),
