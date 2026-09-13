@@ -1,0 +1,36 @@
+name: SPI agent benchmark artifact
+
+on:
+  push:
+    branches: [spi/commit-path-v1]
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Run release correctness suite
+        run: cargo test --locked --release --all-targets --features rusqlite -- --test-threads=1
+      - name: Build Linux release binaries
+        run: cargo build --locked --release --features rusqlite --bins
+      - name: Package exact source and binaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifact/source artifact/bin
+          git archive HEAD | tar -x -C artifact/source
+          cp target/release/spi artifact/bin/
+          cp target/release/spi-compare artifact/bin/
+          printf '%s\n' "$(git rev-parse HEAD)" > artifact/COMMIT_SHA
+          sha256sum artifact/bin/* > artifact/BINARIES.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: spi-agent-linux-${{ github.sha }}
+          path: artifact
+          if-no-files-found: error
+          retention-days: 7
