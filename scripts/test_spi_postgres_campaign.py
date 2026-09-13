@@ -4,10 +4,13 @@ import json
 import os
 from pathlib import Path
 import tempfile
+import socket
+import sys
+import time
 import unittest
 from unittest.mock import patch
 
-from run_spi_postgres_campaign import config_string, free_loopback_port, validate_server_version
+from run_spi_postgres_campaign import config_string, free_loopback_port, validate_server_version, run_owned_command
 from validate_engine_result import external_inputs
 
 
@@ -58,6 +61,59 @@ class PostgresBoundaryTests(unittest.TestCase):
             (root / 'benchmark-postgresql.conf').write_bytes(b'changed')
             with self.assertRaisesRegex(ValueError, 'configuration changed'):
                 external_inputs(['postgres'])
+
+    def run_command(self, root, code, timeout=5):
+        return run_owned_command([sys.executable, '-c', code], root=root, output=root,
+                                 number=1, env=os.environ.copy(),
+                                 password='synthetic-test-secret-not-a-credential', timeout=timeout)
+
+    def test_file_capture_returns_while_descendant_holds_output_handles(self):
+        root, _, _, _ = self.fixture()
+        with socket.socket() as listener:
+            listener.bind(('127.0.0.1', 0))
+            listener.listen(1)
+            listener.settimeout(15)
+            child = ('import socket; s=socket.socket(); s.settimeout(10); '
+                     f's.connect({listener.getsockname()!r}); s.recv(1); s.close()')
+            parent = ('import subprocess,sys; '
+                      f'subprocess.Popen([sys.executable,"-c",{child!r}], '
+                      'stdout=sys.stdout,stderr=sys.stderr,close_fds=False); '
+                      'print("parent exited",flush=True)')
+            started = time.monotonic()
+            try:
+                output = self.run_command(root, parent)
+                self.assertEqual(output, 'parent exited')
+                self.assertLess(time.monotonic() - started, 5)
+            finally:
+                connection, _ = listener.accept()
+                with connection:
+                    connection.settimeout(5)
+                    connection.sendall(b'x')
+                    self.assertEqual(connection.recv(1), b'')
+        self.assertFalse(json.loads((root / 'command-01.json').read_bytes())['timed_out'])
+
+    def test_timeout_records_failure_and_redacts_private_output(self):
+        root, _, _, _ = self.fixture()
+        code = ('import socket; print("synthetic-test-secret-not-a-credential",flush=True); '
+                's=socket.socket(); s.bind(("127.0.0.1",0)); s.listen(); s.accept()')
+        with self.assertRaisesRegex(RuntimeError, 'timed out'):
+            self.run_command(root, code, timeout=0.5)
+        record = json.loads((root / 'command-01.json').read_bytes())
+        self.assertTrue(record['timed_out'])
+        self.assertIsNone(record['exit_code'])
+        self.assertNotIn('synthetic-test-secret-not-a-credential', json.dumps(record))
+        self.assertIn('[REDACTED]', record['stdout'])
+        self.assertTrue((root / 'private-command-01.stdout').exists())
+
+    def test_nonzero_exit_is_recorded_and_existing_capture_is_preserved(self):
+        root, _, _, _ = self.fixture()
+        with self.assertRaisesRegex(RuntimeError, 'failed'):
+            self.run_command(root, 'raise SystemExit(7)')
+        record = json.loads((root / 'command-01.json').read_bytes())
+        self.assertEqual(record['exit_code'], 7)
+        with self.assertRaises(FileExistsError):
+            self.run_command(root, 'print("must not run")')
+        self.assertEqual(record, json.loads((root / 'command-01.json').read_bytes()))
 
     def test_wrong_port_host_and_data_directory_rejected(self):
         root, path, marker, env = self.fixture()

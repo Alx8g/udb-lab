@@ -46,6 +46,38 @@ def validate_server_version(version: str) -> None:
         raise ValueError('PostgreSQL 18.4 official runtime required')
 
 
+def run_owned_command(argv, *, root, output, number, env, password, timeout):
+    """Wait for the command, never for EOF on daemon-inherited output pipes.
+
+    Raw file captures remain private in scratch, outside retention's JSON
+    allowlist. Timeout evidence is sanitized before raising to cluster cleanup.
+    """
+    stdout_path = output / f'private-command-{number:02d}.stdout'
+    stderr_path = output / f'private-command-{number:02d}.stderr'
+    timed_out = False
+    exit_code = None
+    with stdout_path.open('xb') as stdout, stderr_path.open('xb') as stderr:
+        try:
+            result = subprocess.run(argv, cwd=root, env=env, stdin=subprocess.DEVNULL,
+                                    stdout=stdout, stderr=stderr, timeout=timeout, close_fds=True)
+            exit_code = result.returncode
+        except subprocess.TimeoutExpired:
+            timed_out = True
+    stdout_text = stdout_path.read_text(encoding='utf-8', errors='replace')
+    stderr_text = stderr_path.read_text(encoding='utf-8', errors='replace')
+    path = output / f'command-{number:02d}.json'
+    evidence = {'command': [str(arg).replace(password, '[REDACTED]') for arg in argv],
+                'exit_code': exit_code, 'timed_out': timed_out, 'timeout_seconds': timeout,
+                'stdout': stdout_text.replace(password, '[REDACTED]'),
+                'stderr': stderr_text.replace(password, '[REDACTED]')}
+    write_json(path, evidence)
+    if timed_out:
+        raise RuntimeError(f'{Path(argv[0]).name} timed out; see {path}')
+    if exit_code:
+        raise RuntimeError(f'{Path(argv[0]).name} failed; see {path}')
+    return stdout_text.strip()
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--binary', type=Path, required=True)
@@ -96,20 +128,14 @@ def main() -> None:
         if name.startswith('PG') or name.startswith('SPI_PG_'):
             del server_env[name]
     server_env['PATH'] = str(pg_bin) + os.pathsep + server_env.get('PATH', '')
-    commands = []
+    command_number = 0
 
     def command(argv: list[str], *, env=None, timeout=120):
-        result = subprocess.run(argv, cwd=root, env=env or server_env, capture_output=True,
-                                text=True, encoding='utf-8', errors='replace', timeout=timeout)
-        # Generated credentials are never persisted into command evidence.
-        evidence = {'command': argv, 'exit_code': result.returncode,
-                    'stdout': result.stdout.replace(password, '[REDACTED]'),
-                    'stderr': result.stderr.replace(password, '[REDACTED]')}
-        commands.append(evidence)
-        write_json(output / f'command-{len(commands):02d}.json', evidence)
-        if result.returncode:
-            raise RuntimeError(f'{Path(argv[0]).name} failed; see {output}/command-{len(commands):02d}.json')
-        return result.stdout.strip()
+        nonlocal command_number
+        command_number += 1
+        return run_owned_command(argv, root=root, output=output, number=command_number,
+                                 env=env if env is not None else server_env,
+                                 password=password, timeout=timeout)
 
     postgres_version = command([str(postgres), '--version'])
     server_files = {p.name: sha256(p) for p in pg_bin.iterdir()
@@ -189,7 +215,7 @@ def main() -> None:
                 'startup_succeeded': started, 'elapsed_ns_including_startup_shutdown': time.perf_counter_ns() - run_started,
                 'server_stopped': not (data / 'postmaster.pid').exists(),
                 'retained_cluster_logical_bytes': directory_bytes(data),
-                'private_files': ['private-password.txt'],
+                'private_files': ['private-password.txt', 'private-command-*.stdout', 'private-command-*.stderr'],
                 'retention_rule': 'Do not publish credentials, cluster data, raw server logs, or raw config. Retain sanitized command evidence and trial JSON only.',
             })
     if sha256(executable) != executable_hash or any(sha256(root / n) != h for n, h in source_hashes.items()):
