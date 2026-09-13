@@ -309,6 +309,9 @@ fn corruption_is_detected_on_raw_bytes_not_reconstructed_fields() {
     drop(db);
     let mut m = fs::read(p.join("manifest.spi")).unwrap();
     m[55] ^= 1;
+    if m.len() >= 128 {
+        m[64 + 55] ^= 1;
+    }
     fs::write(p.join("manifest.spi"), m).unwrap();
     assert!(matches!(
         Database::open(&p, Options::default()),
