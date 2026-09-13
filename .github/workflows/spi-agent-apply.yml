@@ -23,6 +23,8 @@ jobs:
           set -euo pipefail
           git apply --check .agent/commit-path-v1.patch
           git apply .agent/commit-path-v1.patch
+          git apply --check .agent/commit-path-oracle.patch
+          git apply .agent/commit-path-oracle.patch
           cargo fmt --all
       - name: Validate correctness
         run: cargo test --locked --release --all-targets --features rusqlite -- --test-threads=1
@@ -32,10 +34,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          rm .agent/commit-path-v1.patch
+          rm .agent/commit-path-v1.patch .agent/commit-path-oracle.patch
           git config user.name "SPI benchmark agent"
           git config user.email "spi-agent@users.noreply.github.com"
-          git add src/spi/storage.rs tests/spi-process.rs tests/spi-storage.rs .agent/commit-path-v1.patch
+          git add src/spi/storage.rs tests/spi-process.rs tests/spi-storage.rs tests/spi-grouped.rs .agent/commit-path-v1.patch .agent/commit-path-oracle.patch
           git commit -m "perf: publish roots through dual manifest slots [agent-applied]"
           git push origin HEAD:spi/commit-path-v1
       - name: Package exact committed source and binaries
