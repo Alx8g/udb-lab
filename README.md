@@ -392,6 +392,31 @@ compaction. Diagnostic Rust allocation counts exclude native library allocations
 and server memory. Keep SPI's implementation frozen during comparisons. Report
 losses and unavailable capabilities, not a combined universal-winner score.
 
+The committed [gap matrix](results/spi/multi-engine-gap-matrix-007c1f6-v1/gap-matrix.json)
+contains 84 embedded trials and 9 PostgreSQL trials. In the normal 2,000-row case,
+packed SPI measured 0.421 ms full scans and 1.09 ms unique reads versus 0.568 ms
+and 6.35 ms for SQLite. SQLite measured 25.6 ms load, 39.6 ms updates and 2.63 ms
+single-row commits, versus 134 ms, 89.3 ms and 9.76 ms for legacy SPI. RocksDB
+measured 22.6 ms updates. At 20,000 rows, packed SPI measured a 4.83 ms full scan
+versus 5.62 ms for SQLite, while SQLite measured 273 ms load versus 799 ms for
+packed SPI. These are three-seed medians from one sequential Windows host, not
+statistical dominance or service-tail results. The matrix retains all samples,
+regressions and metric qualifications.
+
+The [resource summary](results/spi/multi-engine-resource-summary-896920b-v1/resources.json)
+is diagnostic-only. Summed measured-phase CPU was 140.6 ms for packed SPI versus
+328.1 ms for legacy SPI in the normal case, and 562.5 versus 2,812.5 ms at
+20,000 rows. CPU includes harness work and has coarse OS resolution. Rust
+allocation counters omit native-library allocations. Process memory samples
+omit PostgreSQL server resources and system-wide cache. Legacy SPI's entire
+30-commit normal diagnostic phase attributed 74 ms to data synchronization and
+150 ms to manifest synchronization, not those amounts per commit. Nested timers
+overlap. These are bottleneck observations, not accepted performance timings.
+
+The [comparison findings](results/spi/multi-engine-findings-896920b-v1.json) identify
+publication cost, cache-miss read amplification and large-value scan locality as
+the next optimization targets. No storage defaults or durability barriers changed.
+
 ## Diagnostic attribution
 
 The optional `spi-profile` build records phase-level storage work, nested wall

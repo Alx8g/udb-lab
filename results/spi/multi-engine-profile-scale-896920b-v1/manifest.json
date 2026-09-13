@@ -1,0 +1,32 @@
+{
+  "diagnostic_only": true,
+  "source_commit": "896920bc857bc0bef789052e995241f5eb02bae3",
+  "sha256": {
+    "environment.json": "c033fa5b79321f3eb1ddf4bee4f40a2423aa710907e39e66a093901e67c33511",
+    "summary.json": "e529bfb58672848a7c7f28f08f3e07fb4b4884bd76c5d2af262b44d979abe87b",
+    "command-duckdb-17.json": "26874f224893974f1617b6b2d038d83f647ab5d18f0ba9fc3c99304f6a41fb0c",
+    "duckdb-seed-17/result.json": "4d068f8d7f46170ce3109eb46aaac8eb0272821370902cdc7c45a674f58b2079",
+    "command-lmdb-17.json": "ecdc7ee5a103d47b91daa148906e6fab619c18ff229a3c584e8b601dde0c4b52",
+    "lmdb-seed-17/result.json": "1c839b192343b138bbe7723987867fa86146e647bb868cd6f24128075d86a476",
+    "command-redb-17.json": "2862739bb783a1e0a22e7ab9c71a7dbd13f64be0e52957b1e9e522be66cbb35b",
+    "redb-seed-17/result.json": "2f732e70041bc2df86e0e95d56cf9d40ce882ea84fb2daea02b7bda38e221084",
+    "command-rocksdb-17.json": "83020c65cf79391e7be7567934348f96a4f7eac366fa00b8962d60800374615d",
+    "rocksdb-seed-17/result.json": "6a0fa9e1a868e9b73040406ad17e629ebb0fa89df245ca6f3fed5a7056d35fbd",
+    "command-spi-17.json": "a809ea5eeabeeb4f46d669b39d47a1b6a05389bc94661cc058c6dec66ad4d76c",
+    "spi-seed-17/result.json": "d20bcc3d791890719df299c9b0bb39c747e6e3c679b394502e3dd03223be11ef",
+    "command-spi-packed-17.json": "1c73289265d5a4a87543201d535d63223af65be89260c8c249f7027ea9b88ba4",
+    "spi-packed-seed-17/result.json": "38b9731c33ff1bbb8f2a2c073cc1b236f3567f535b1d367f5e328d77d56ae9ed",
+    "command-sqlite-17.json": "3c9cafcd792aa9bdad086f75c5abcd4efa9547b1da873dd00b209d2b4ed4c17c",
+    "sqlite-seed-17/result.json": "91f86b417cb1745302bcadbdeafeb42197a55ca67beec84b83f610b949ff3fc4"
+  },
+  "limits": [
+    "Instrumented wall timings are not accepted performance results",
+    "Process CPU includes harness/oracle work, not CPU per engine operation",
+    "Rust allocator counts omit native engine allocations, allocator metadata and OS cache",
+    "Server CPU and memory are not captured by client-process profiling",
+    "Process memory samples include benchmark inputs and output buffers",
+    "Storage counters persist across reopen/maintenance and include verify",
+    "Storage timers overlap when nested. Do not add all categories.",
+    "Process CPU has OS-specific resolution and may report zero in short phases"
+  ]
+}

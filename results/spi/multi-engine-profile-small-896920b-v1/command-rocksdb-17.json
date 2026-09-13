@@ -1,0 +1,14 @@
+{
+  "command": [
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\multi-engine-profile-binary-896920b\\spi-compare.exe",
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\multi-engine-profile-small-896920b-v1\\rocksdb-seed-17",
+    "rocksdb",
+    "2000",
+    "17",
+    "64",
+    "1024"
+  ],
+  "exit_code": 0,
+  "stdout": "{\"engine\":\"rocksdb\",\"load_ms\":23.699,\"result\":\"C:\\\\Users\\\\verom\\\\.treehouse\\\\dbs-5593e8\\\\4\\\\dbs\\\\.working\\\\tmp\\\\multi-engine-profile-small-896920b-v1\\\\rocksdb-seed-17\\\\result.json\",\"rows\":2000,\"single_commit_p50_us\":2519.3,\"validation\":\"PASS\",\"warm_read_ms\":1.6003}\n",
+  "stderr": ""
+}

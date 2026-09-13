@@ -30,7 +30,7 @@
       "physical_scope": "All owned database/WAL file lengths."
     },
     "redb": {
-      "class": "embedded-kv", "adapter_status": "draft-unverified", "common_kv_workload": true,
+      "class": "embedded-kv", "adapter_status": "verified-campaign", "common_kv_workload": true,
       "version": "redb 4.1.0, pinned for repository Rust 1.89 compatibility; not latest 4.2.0.",
       "durability": "Durability::Immediate for table initialization and each write transaction.",
       "cache_clear_supported": true, "cache": "set_cache_size; close/reopen used to discard engine cache, not OS cache.",
@@ -39,7 +39,7 @@
       "physical_scope": "Owned file lengths."
     },
     "lmdb": {
-      "class": "embedded-kv", "adapter_status": "draft-unverified", "common_kv_workload": true,
+      "class": "embedded-kv", "adapter_status": "verified-campaign", "common_kv_workload": true,
       "version": "lmdb-rkv 0.14.0; native LMDB source pinned by Cargo.lock.",
       "durability": "Default synchronous environment; no NOSYNC, NOMETASYNC, MAPASYNC or WRITEMAP flags.",
       "cache_clear_supported": false, "cache": "OS-managed mmap cache; map size is virtual address reservation, not a RAM limit.",
@@ -48,7 +48,7 @@
       "physical_scope": "Owned file lengths, not resident mapped bytes."
     },
     "rocksdb": {
-      "class": "embedded-kv", "adapter_status": "draft-unverified", "common_kv_workload": true,
+      "class": "embedded-kv", "adapter_status": "verified-campaign", "common_kv_workload": true,
       "version": "rocksdb crate 0.25.0; native 11.8.1 pinned by Cargo.lock.",
       "durability": "Atomic WriteBatch with WAL enabled and sync=true; not a transactional conflict-checking API.",
       "cache_clear_supported": true, "cache": "Explicit block cache; additional 4 MiB write buffers and engine metadata are outside that cache budget. Close/reopen is not device-cold.",
@@ -57,7 +57,7 @@
       "physical_scope": "Owned SST, WAL and metadata file lengths."
     },
     "duckdb": {
-      "class": "embedded-analytics-sql", "adapter_status": "draft-unverified", "common_kv_workload": true,
+      "class": "embedded-analytics-sql", "adapter_status": "verified-campaign", "common_kv_workload": true,
       "version": "Official DuckDB C library 1.5.5 with explicit path and hash.",
       "durability": "Persistent database synchronous commit defaults, recorded without claiming power-loss parity.",
       "cache_clear_supported": true, "cache": "Memory limit at least 64 MiB and one execution thread. Not equal to SPI cache. Close/reopen and reprepare for application-cache reset.",
@@ -67,7 +67,7 @@
       "qualification": "Prepared BLOB primary-key operations characterize this KV stream only. This adapter is NOT a typed analytics benchmark."
     },
     "postgres": {
-      "class": "server-sql", "adapter_status": "draft-unverified", "common_kv_workload": true,
+      "class": "server-sql", "adapter_status": "verified-campaign", "common_kv_workload": true,
       "version": "Official portable PostgreSQL 18.4 binaries with recorded hashes.",
       "durability": "fsync=on, full_page_writes=on, synchronous_commit=on; serializable session transactions.",
       "cache_clear_supported": false, "cache": "64 MiB shared_buffers plus work_mem and OS cache. Not an equal-memory embedded comparison.",
