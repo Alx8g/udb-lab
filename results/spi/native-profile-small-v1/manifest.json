@@ -1,0 +1,26 @@
+{
+  "diagnostic_only": true,
+  "source_commit": "a1ca40395d67ae0f9bcdf0833b4b57a41b19505a",
+  "sha256": {
+    "command-spi-17.json": "998707846fd39588ae8151a5819e601dc1d3f5391c76a125a6603891db3bc365",
+    "command-spi-29.json": "be393b6da22f035d835d62b336b32611130bfde64d22607e99edcf5ff9e6c92e",
+    "command-spi-43.json": "40d623be8a38b81938b3c6b8c07169d2fe139fba2d3a4873494a5a084c963801",
+    "command-spi-grouped-17.json": "ee058b4593a07a3a044807ceeb3de773561c70cbcedc4546bb72a4ae8e4b779d",
+    "command-spi-grouped-29.json": "295abbbaa15dd2cae956b050b559875b3327095874fadfe2397cdc6fe260c21b",
+    "command-spi-grouped-43.json": "a01fc9914cded4e02e0be1f00da21dbc5fb6a1229eddc06303f0701f25918380",
+    "command-sqlite-17.json": "d8f9102af0c9ea4393124f32a7bce747b4082d53d7c41dd6abcbd029a09610cb",
+    "command-sqlite-29.json": "37384edfb53fd0d72ab59f6e320ca46827de3dd1d0abd35b7e8adb72f0b4ab27",
+    "command-sqlite-43.json": "619cec8515f977a2ffd43ce85e47215b93b54750faec5bdc9ecd371593cbbc69",
+    "environment.json": "bc88560772c346e777c1806b8a2d21ed08ca3a5a34a14bbc290b8ae9d8ea8a61",
+    "summary.json": "8da4d27ac1abc266fd05c31216837341286a8ea6ca14bc9801433497e5578c1a",
+    "spi-grouped-seed-17/result.json": "e5dbd0118e48a71bc4615336e0ea8e038db53f6b11289a4c2cb8c5a791e422aa",
+    "spi-grouped-seed-29/result.json": "af98b67f1d602fd548c17934a95be0a08a487f170bb412a851c7912b77ccb127",
+    "spi-grouped-seed-43/result.json": "0567ab58bb2eb8f9054f25246e641545e1e0afd6bc0c1ee835b4458bbd21a932",
+    "spi-seed-17/result.json": "7ae6cd85addd4c0e49d21f20555a150575a9a45209ab071b665d27c99839518d",
+    "spi-seed-29/result.json": "8e25f84958feb68b417d218c6d7131a04a8bca317e2c6dd823c2be1336019186",
+    "spi-seed-43/result.json": "73d077d3affe3557ced71b8fb979e792752db5528d26c7763367464adbb07990",
+    "sqlite-seed-17/result.json": "15444828d4fa7699047555e4e1a209a82820b5a3baee7b92a112e556d478b6ca",
+    "sqlite-seed-29/result.json": "d6c480dc428fd8d0a070b88a3bc36a97bc54886e5faf68aabdedd1ba4415d975",
+    "sqlite-seed-43/result.json": "0304099fe05906e1c078793c5e16df434f394c2b57267cabf57844c2c6a51eb7"
+  }
+}

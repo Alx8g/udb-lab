@@ -1,0 +1,19 @@
+{
+  "duckdb": {
+    "version": "v1.5.5",
+    "official_url": "https://github.com/duckdb/duckdb/releases/download/v1.5.5/libduckdb-windows-amd64.zip",
+    "archive_sha256": "8375eb1fcf2212e8a0817950354815d4dde9dd383c2d9fa7b8975b71e278c1bd",
+    "bytes": 13412060,
+    "dll_sha256": "2b7468a4ad844429e6af2fde0b5f91893e8130a5686a88f11442ab547c7ede46",
+    "dll_matches_official_archive": true
+  },
+  "postgres": {
+    "url": "https://get.enterprisedb.com/postgresql/postgresql-18.4-1-windows-x64-binaries.zip",
+    "sha256": "7effe34c0bf89027b3f171447d351cbc460f4566c8d0f643daec67f140787858",
+    "bytes": 337444127,
+    "version": "18.4",
+    "note": "Server EXE/DLL identities retained per campaign environment.",
+    "server_bin_matches_official_archive": true,
+    "verified_server_bin_files": 68
+  }
+}

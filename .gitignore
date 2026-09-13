@@ -2,6 +2,7 @@
 /.working
 /.venv
 /__pycache__
+**/__pycache__/
 *.pdb
 *.exe
 .DS_Store

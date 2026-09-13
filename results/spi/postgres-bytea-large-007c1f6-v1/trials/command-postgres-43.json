@@ -1,0 +1,16 @@
+{
+  "command": [
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\multi-engine-release-98daeeb\\spi-compare.exe",
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\postgres-bytea-large-007c1f6-v1\\trials\\postgres-seed-43",
+    "postgres",
+    "1000",
+    "43",
+    "4096",
+    "8388608"
+  ],
+  "started_utc": "2026-09-13T00:38:29.897401+00:00",
+  "finished_utc": "2026-09-13T00:38:34.024516+00:00",
+  "exit_code": 0,
+  "stdout": "{\"engine\":\"postgres\",\"load_ms\":170.8463,\"result\":\"C:\\\\Users\\\\verom\\\\.treehouse\\\\dbs-5593e8\\\\4\\\\dbs\\\\.working\\\\tmp\\\\postgres-bytea-large-007c1f6-v1\\\\trials\\\\postgres-seed-43\\\\result.json\",\"rows\":1000,\"single_commit_p50_us\":393.4,\"validation\":\"PASS\",\"warm_read_ms\":88.1829}\n",
+  "stderr": ""
+}

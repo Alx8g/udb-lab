@@ -1,0 +1,62 @@
+{
+  "diagnostic_only": true,
+  "binary_identity": {
+    "identity_schema": 1,
+    "benchmark_schema": 2,
+    "debug_assertions": false,
+    "profile_enabled": true,
+    "compiled_engines": [
+      "spi",
+      "spi-value-cache",
+      "spi-unbuffered",
+      "spi-grouped",
+      "sqlite"
+    ],
+    "source_sha256": {
+      "Cargo.lock": "ef34c9bcf85b089be5d206da18e1844752301ccbecf39f51389b8a3c27ce18ae",
+      "Cargo.toml": "472b2fd91e2949b5589abcc101301bef8546aaeafe76c0e43531facc9b92eb2e",
+      "src/bin/spi-compare.rs": "759c9bb434e4834875285f9df7a7c404bd8db2dc8b66c26ba930052f6c38a010",
+      "src/lib.rs": "1f2fd1f3ef60ec9ba5381059ed54d9068991b57543903090c3bf3c663c2f5f02",
+      "src/spi/append_buffer.rs": "e7861eebad447ca3ff5ecdbb882d6e19e891548c42ee82f4f3623bd8c4d17721",
+      "src/spi/mod.rs": "70cb78964e38b0c07763f5aab89c48c9b8c70499889b97ba8abb4afec271cdf8",
+      "src/spi/profile.rs": "4ea1f516231abe2b179d32a50bfffe47d6f03496880260eac123a101cd7f2fe6",
+      "src/spi/storage.rs": "a9d3568d75b5b39aeec7d3a3081de04c2d0f2f49419167105e86e9beed7d0140",
+      "src/spi/transaction.rs": "3dad44332cafee50ae7e77cd30c4fc28dff945eaaaaed138382b8f7227e6f860"
+    },
+    "limitations": "Source-byte identity is checked. Build flags beyond debug assertions and external dependencies are recorded separately, not attested by this protocol."
+  },
+  "binary_sha256": "c17786f020fde160a0b9290ed9adf9b505c3cd0c7c4c2bbde15fe0d2633b7cef",
+  "git_head": "a1ca40395d67ae0f9bcdf0833b4b57a41b19505a",
+  "source_sha256": {
+    "Cargo.lock": "ef34c9bcf85b089be5d206da18e1844752301ccbecf39f51389b8a3c27ce18ae",
+    "Cargo.toml": "472b2fd91e2949b5589abcc101301bef8546aaeafe76c0e43531facc9b92eb2e",
+    "src/bin/spi-compare.rs": "759c9bb434e4834875285f9df7a7c404bd8db2dc8b66c26ba930052f6c38a010",
+    "src/lib.rs": "1f2fd1f3ef60ec9ba5381059ed54d9068991b57543903090c3bf3c663c2f5f02",
+    "src/spi/append_buffer.rs": "e7861eebad447ca3ff5ecdbb882d6e19e891548c42ee82f4f3623bd8c4d17721",
+    "src/spi/mod.rs": "70cb78964e38b0c07763f5aab89c48c9b8c70499889b97ba8abb4afec271cdf8",
+    "src/spi/profile.rs": "4ea1f516231abe2b179d32a50bfffe47d6f03496880260eac123a101cd7f2fe6",
+    "src/spi/storage.rs": "a9d3568d75b5b39aeec7d3a3081de04c2d0f2f49419167105e86e9beed7d0140",
+    "src/spi/transaction.rs": "3dad44332cafee50ae7e77cd30c4fc28dff945eaaaaed138382b8f7227e6f860",
+    "scripts/run_spi_profile.py": "7c25c95faa4736d7914cec94b75f829c6dc81fcc7efc8e78a5924fcf2c8e66a5",
+    "scripts/run_spi_campaign.py": "24dc8a2c9575878e38ee9c7c75c9b013786602924e541975cbf98e883b4d29ea",
+    "scripts/spi_benchmark_identity.py": "3f7c4527432db45baf353218971c8d63446d924fdfd6192879f2c7f40b2cff7f"
+  },
+  "rows": 2000,
+  "seeds": [
+    17,
+    29,
+    43
+  ],
+  "cache_bytes": 1024,
+  "value_bytes": 64,
+  "rustc": "rustc 1.96.0 (ac68faa20 2026-05-25)\nbinary: rustc\ncommit-hash: ac68faa20c58cbccd01ee7208bf3b6e93a7d7f96\ncommit-date: 2026-05-25\nhost: x86_64-pc-windows-msvc\nrelease: 1.96.0\nLLVM version: 22.1.2",
+  "limits": [
+    "Instrumented wall timings are not accepted performance results",
+    "Process CPU includes harness/oracle work, not CPU per engine operation",
+    "Rust allocator counts omit native SQLite allocations, allocator metadata and OS cache",
+    "Process memory samples include benchmark inputs and output buffers",
+    "Storage counters persist across reopen/maintenance and include verify",
+    "Storage timers overlap when nested. Do not add all categories.",
+    "Process CPU has OS-specific resolution and may report zero in short phases"
+  ]
+}

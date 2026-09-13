@@ -1,0 +1,27 @@
+{
+  "source_commit": "156ab63fc77ebca9b89a98e02bab6eade6f3dd65",
+  "diagnostic_only": true,
+  "sha256": {
+    "command-spi-17.json": "59074e4283dd8f35cbb2ccc586835d0f1da2d6c1b4732315521821b015330962",
+    "command-spi-29.json": "f247bf01905773e577bb18d94119b04ec48db334714dca75869bfbf77e8cac6f",
+    "command-spi-43.json": "2543c43c16f7eb01e08ff2020cee055a5d235f408971146a09859ea1bee57220",
+    "command-spi-packed-17.json": "02bb6b14150fee9f4b85868aa396a84f516e0e266fcd39746d2a60b71612d367",
+    "command-spi-packed-29.json": "7d6f39143ec57ac78164e1a436bd66df4ad0122997436a42e57bee1b26748408",
+    "command-spi-packed-43.json": "b641d910ab790eeaeac475e0fcfbb21ffc7555255c80ed48eaa28150b6489b3a",
+    "command-sqlite-17.json": "711f03528841040265d3556d41f6d09e9970038bf825036166ac1fa66730675a",
+    "command-sqlite-29.json": "6c7ffa67a9a0d3c604d3bb04e9c38ed1d49f1e57f66545ef5401ed7ee3100f48",
+    "command-sqlite-43.json": "e62f3cd206871749d0eb70519e5d0cfff8699484444be303f7d1aedbe98d10e2",
+    "environment.json": "7a2cf0c1837f405450d9c8dc2beccd22163dceec08cc71fa0a4f82f14bf1f4a8",
+    "spi-packed-seed-17/result.json": "092859791318f570bbb1d83f25d6a0984c55c5718628dd5fdeae9391a3fc618c",
+    "spi-packed-seed-29/result.json": "ebbd967dcaade6afe6ff930befd8d992530286fd1cfee57ee17ee1d35ceb97eb",
+    "spi-packed-seed-43/result.json": "09192bc266c4e1569817469b8c1bbb379264558eee1dd4f376d59b38a7bdf5ef",
+    "spi-seed-17/result.json": "2d8775dea46fed110ef21a07943afc64092b46283938649f5efaabd8ce3247a3",
+    "spi-seed-29/result.json": "cec280acc2c2bdaff9332b9787804de733bae59e64cda4473128f13b4dfca911",
+    "spi-seed-43/result.json": "fdd7cb60e3af4e193466396d2ae5e6a29eabf9b8ffae4b82e5323387267138eb",
+    "sqlite-seed-17/result.json": "c98ef705d6c812488cab58c1dea3895955bb908b697381397e4e148cf4e4d7c0",
+    "sqlite-seed-29/result.json": "50d2b1da1da90837f3f97b4bdbad076c96a6b8f21f39be45a6f009145eda631f",
+    "sqlite-seed-43/result.json": "5de91609ed5673450c1ed36e43f406e12b30857df45bdc29221efd4fc3287968",
+    "summary.json": "4c183eb549702e0d6fc1512d6683201849705539e8b69a203ea2a10e96fac66d"
+  },
+  "limits": "Exact logical outputs validated. Layouts differ. Diagnostic timings are not performance claims. File lengths are not allocated-device bytes. OS cache uncontrolled."
+}

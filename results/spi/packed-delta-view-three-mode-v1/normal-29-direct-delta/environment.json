@@ -1,0 +1,61 @@
+{
+  "created_utc": "2026-09-12T12:43:29.593760+00:00",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "machine": "AMD64",
+  "processor": "Intel64 Family 6 Model 154 Stepping 3, GenuineIntel",
+  "logical_cpus": 20,
+  "rustc": "rustc 1.96.0 (ac68faa20 2026-05-25)\nbinary: rustc\ncommit-hash: ac68faa20c58cbccd01ee7208bf3b6e93a7d7f96\ncommit-date: 2026-05-25\nhost: x86_64-pc-windows-msvc\nrelease: 1.96.0\nLLVM version: 22.1.2",
+  "git_head": "4f39349a31db5ce25b0feefea756e8c994550080",
+  "git_status": "",
+  "binary_sha256": "cdd05adc425a0e4075a0bf3e4a81f80c1963138fd3b136a252d27328cf9b0e42",
+  "binary_identity": {
+    "identity_schema": 1,
+    "benchmark_schema": 2,
+    "debug_assertions": false,
+    "profile_enabled": false,
+    "crc32_implementation": "ieee-slicing8",
+    "packed_scan_implementation": "direct-delta",
+    "compiled_engines": [
+      "spi",
+      "spi-value-cache",
+      "spi-unbuffered",
+      "spi-grouped",
+      "spi-packed",
+      "sqlite"
+    ],
+    "source_sha256": {
+      "Cargo.lock": "ef34c9bcf85b089be5d206da18e1844752301ccbecf39f51389b8a3c27ce18ae",
+      "Cargo.toml": "99888ebc4dbbd11cb5a2bfc63dce477ad0629390b47fac02c70a9c2ec6da8c0d",
+      "src/bin/spi-compare.rs": "5e294dd77b905bc9b5507fe480c45cf101d7977b1d58f13cd6cbbf48db1063f2",
+      "src/lib.rs": "1f2fd1f3ef60ec9ba5381059ed54d9068991b57543903090c3bf3c663c2f5f02",
+      "src/spi/append_buffer.rs": "e7861eebad447ca3ff5ecdbb882d6e19e891548c42ee82f4f3623bd8c4d17721",
+      "src/spi/mod.rs": "70cb78964e38b0c07763f5aab89c48c9b8c70499889b97ba8abb4afec271cdf8",
+      "src/spi/packed.rs": "57467c3212626e92078411558a2c79b44a92c29a8b37faab57d386f06d770db2",
+      "src/spi/profile.rs": "4ea1f516231abe2b179d32a50bfffe47d6f03496880260eac123a101cd7f2fe6",
+      "src/spi/storage.rs": "4ac6f7c711d953dc129e28abad6b5fb3a5932740002eb2c52986bc9978518ea1",
+      "src/spi/transaction.rs": "5c116bda409684a001ac234691b59da6e2099f4d04beb0d1ed311cc662f67ff0"
+    },
+    "limitations": "Source-byte identity is checked. Build flags beyond debug assertions and external dependencies are recorded separately, not attested by this protocol."
+  },
+  "source_sha256": {
+    "Cargo.toml": "99888ebc4dbbd11cb5a2bfc63dce477ad0629390b47fac02c70a9c2ec6da8c0d",
+    "Cargo.lock": "ef34c9bcf85b089be5d206da18e1844752301ccbecf39f51389b8a3c27ce18ae",
+    "src/spi/append_buffer.rs": "e7861eebad447ca3ff5ecdbb882d6e19e891548c42ee82f4f3623bd8c4d17721",
+    "src/spi/mod.rs": "70cb78964e38b0c07763f5aab89c48c9b8c70499889b97ba8abb4afec271cdf8",
+    "src/spi/packed.rs": "57467c3212626e92078411558a2c79b44a92c29a8b37faab57d386f06d770db2",
+    "src/spi/profile.rs": "4ea1f516231abe2b179d32a50bfffe47d6f03496880260eac123a101cd7f2fe6",
+    "src/spi/storage.rs": "4ac6f7c711d953dc129e28abad6b5fb3a5932740002eb2c52986bc9978518ea1",
+    "src/spi/transaction.rs": "5c116bda409684a001ac234691b59da6e2099f4d04beb0d1ed311cc662f67ff0",
+    "src/lib.rs": "1f2fd1f3ef60ec9ba5381059ed54d9068991b57543903090c3bf3c663c2f5f02",
+    "src/bin/spi-compare.rs": "5e294dd77b905bc9b5507fe480c45cf101d7977b1d58f13cd6cbbf48db1063f2",
+    "scripts/spi_benchmark_identity.py": "15d9d74319b425491113595c1877b7c8de72cbdce972d956c6ebef8d49fdec0b",
+    "scripts/run_spi_campaign.py": "6f6258fb5510e6898eff5b5d23b87db3e3dc84c2d05533a5c76146da44755b27"
+  },
+  "rows": 2000,
+  "value_bytes": 64,
+  "cache_bytes": 8388608,
+  "seeds": [
+    29
+  ],
+  "method": "Sequential engines with rotating order by seed. Complete output checks inside native adapter. No OS-cache purge or CPU affinity setting."
+}

@@ -1,0 +1,27 @@
+{
+  "hash_algorithm": "sha256",
+  "files": {
+    "command-spi-17.json": "4382d57e340f356c2820e8859130aad4ce595750f31a5f0e625762b0d6729e04",
+    "command-spi-29.json": "bc1c6c3870161bed4f3ffc44a99ce1209e9e0c1c9f2f330e0c81b965c44f2fc5",
+    "command-spi-43.json": "bc665cdf57cdaff2b13387062814ccf5bb5eb9b1c032c7bac3c9e984853390f3",
+    "command-spi-unbuffered-17.json": "6ff96ceff751c3b870f86cb28bede9128d69a0d5c4cceef73ea68def222a9833",
+    "command-spi-unbuffered-29.json": "62344f5fa64bbb18d43cb93193711c85e78fa74ad89d82bd1aa0bd818af5dc1b",
+    "command-spi-unbuffered-43.json": "663aa2ca41ec3c72a48c3b8ae2e5fecd0d6123c1e145ffc03144df3bbe3743b1",
+    "command-sqlite-17.json": "9de3f590e96d347a9470d67a5e6d557525d08eb3d2681db41548ea8eeb3f99ab",
+    "command-sqlite-29.json": "aaf208e84f16d72ae3d5e2426e6f827338bae749d45a29c3ebeb5ea0fff38a4d",
+    "command-sqlite-43.json": "b680e544d21c79e56d6827a66127831a59c987e84bb83cadf74378ccd2fd5ca3",
+    "environment.json": "230d55cd587edb48a586fc6c6e32a914156cc4f20dfea6141e4bf91a0860b48d",
+    "README.json": "936fbebe4b167bcb3b54f8891859ec39256c5c06128af6a87893b10eef51613c",
+    "summary.json": "848199d48a62473d04f9b1a55ae4b7875e64bd002b5adeb500821ca3860c8f97",
+    "spi-seed-17/result.json": "62740201b877d6613f5a06a9064bed85abbee01e0dc1798028a616aeb3b540cb",
+    "spi-seed-29/result.json": "0fc45bf0c5491edec98776cad97fbcddddda147d94d26ae2912a3c43f23e6a95",
+    "spi-seed-43/result.json": "37d25a662f898aafe281da1bad3cf47146c4cd81a85cd6e79fdf166d858adebc",
+    "spi-unbuffered-seed-17/result.json": "7a60c79ef0a2484594c0cde3ec491184296c99c98e4f363fed479d3505dfc070",
+    "spi-unbuffered-seed-29/result.json": "c3695485aabcdcf0d59456e2da2d43b614daa2ac5fdf4b4ca12f9847e125328a",
+    "spi-unbuffered-seed-43/result.json": "9674836d2fe7de791941d7bc746153ff559dec9fc44665dd978df5ab4aadd163",
+    "sqlite-seed-17/result.json": "ef50e5aeca58558ab1c69ff3238781d8ce29a643e29ac4d49b9b19cfe9a1b741",
+    "sqlite-seed-29/result.json": "676ac1bfa5c01ac9cce0a91b5c4b54a238055bb1aa51725d6f0e0de1ade47e4d",
+    "sqlite-seed-43/result.json": "43c0697c358510afcf26c8b9a37c10671c092b26bd8c5a52297d01bc1687cd65"
+  },
+  "comparison": "Buffered/direct SPI bytes and outputs are identical. SQLite write counters are not measured."
+}

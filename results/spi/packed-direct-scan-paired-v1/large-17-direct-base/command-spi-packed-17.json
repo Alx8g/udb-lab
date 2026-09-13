@@ -1,0 +1,16 @@
+{
+  "command": [
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\direct-scan-binaries-v1\\direct-base.exe",
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\direct-scan-paired-v1\\large-17-direct-base\\spi-packed-seed-17",
+    "spi-packed",
+    "1000",
+    "17",
+    "4096",
+    "8388608"
+  ],
+  "started_utc": "2026-09-12T12:12:36.054921+00:00",
+  "finished_utc": "2026-09-12T12:12:36.655087+00:00",
+  "exit_code": 0,
+  "stdout": "{\"engine\":\"spi-packed\",\"load_ms\":57.2494,\"result\":\"C:\\\\Users\\\\verom\\\\.treehouse\\\\dbs-5593e8\\\\4\\\\dbs\\\\.working\\\\tmp\\\\direct-scan-paired-v1\\\\large-17-direct-base\\\\spi-packed-seed-17\\\\result.json\",\"rows\":1000,\"single_commit_p50_us\":9107.2,\"validation\":\"PASS\",\"warm_read_ms\":8.5522}\n",
+  "stderr": ""
+}

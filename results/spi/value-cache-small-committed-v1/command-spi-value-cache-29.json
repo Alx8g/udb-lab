@@ -1,0 +1,16 @@
+{
+  "command": [
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\target\\release\\spi-compare.exe",
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\value-cache-small-committed-v1\\spi-value-cache-seed-29",
+    "spi-value-cache",
+    "2000",
+    "29",
+    "64",
+    "1024"
+  ],
+  "started_utc": "2026-09-12T08:53:57.485112+00:00",
+  "finished_utc": "2026-09-12T08:53:58.771140+00:00",
+  "exit_code": 0,
+  "stdout": "{\"engine\":\"spi-value-cache\",\"load_ms\":333.9674,\"result\":\"C:\\\\Users\\\\verom\\\\.treehouse\\\\dbs-5593e8\\\\4\\\\dbs\\\\.working\\\\tmp\\\\value-cache-small-committed-v1\\\\spi-value-cache-seed-29\\\\result.json\",\"rows\":2000,\"single_commit_p50_us\":10010.7,\"validation\":\"PASS\",\"warm_read_ms\":109.1232}\n",
+  "stderr": ""
+}

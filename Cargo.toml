@@ -2,6 +2,8 @@
 name = "udb-lab"
 version = "0.1.0"
 edition = "2021"
+rust-version = "1.89"
+default-run = "udb-lab"
 description = "Kernel laboratory for universal database architecture research"
 license = "MIT"
 publish = false
@@ -13,6 +15,28 @@ codegen-units = 1
 panic = "abort"
 
 [dependencies]
+libloading = { version = "0.8", optional = true }
+lmdb = { version = "=0.14.0", package = "lmdb-rkv", optional = true }
+postgres = { version = "0.19", optional = true }
 rand = { version = "0.8", features = ["small_rng"] }
+redb = { version = "=4.1.0", optional = true }
+rocksdb = { version = "=0.25.0", default-features = false, features = ["bindgen-runtime"], optional = true }
+rusqlite = { version = "0.40", features = ["bundled"], optional = true }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+
+[features]
+rusqlite = ["dep:rusqlite"]
+# Diagnostic work attribution. Normal benchmark runner rejects these builds.
+spi-profile = []
+# Byte-identical legacy checksum control for matched implementation campaigns.
+spi-crc-bitwise = []
+# Direct packed-page scan control. Default uses direct base-record iteration.
+spi-scan-materialized = []
+# Prior direct-base execution with materialized delta chains; same file format.
+spi-delta-materialized = []
+redb = ["dep:redb"]
+lmdb = ["dep:lmdb"]
+rocksdb = ["dep:rocksdb"]
+libloading = ["dep:libloading"]
+postgres = ["dep:postgres"]

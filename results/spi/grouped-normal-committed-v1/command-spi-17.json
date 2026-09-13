@@ -1,0 +1,16 @@
+{
+  "command": [
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\target\\release\\spi-compare.exe",
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\grouped-normal-committed-v1\\spi-seed-17",
+    "spi",
+    "2000",
+    "17",
+    "64",
+    "8388608"
+  ],
+  "started_utc": "2026-09-12T09:34:11.366976+00:00",
+  "finished_utc": "2026-09-12T09:34:12.164681+00:00",
+  "exit_code": 0,
+  "stdout": "{\"engine\":\"spi\",\"load_ms\":186.7926,\"result\":\"C:\\\\Users\\\\verom\\\\.treehouse\\\\dbs-5593e8\\\\4\\\\dbs\\\\.working\\\\tmp\\\\grouped-normal-committed-v1\\\\spi-seed-17\\\\result.json\",\"rows\":2000,\"single_commit_p50_us\":9452.4,\"validation\":\"PASS\",\"warm_read_ms\":13.5533}\n",
+  "stderr": ""
+}

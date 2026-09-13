@@ -1,0 +1,14 @@
+{
+  "command": [
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\target\\release\\spi-compare.exe",
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\packed-crc-profile-bitwise-normal-v1\\spi-seed-17",
+    "spi",
+    "2000",
+    "17",
+    "64",
+    "8388608"
+  ],
+  "exit_code": 0,
+  "stdout": "{\"engine\":\"spi\",\"load_ms\":180.6864,\"result\":\"C:\\\\Users\\\\verom\\\\.treehouse\\\\dbs-5593e8\\\\4\\\\dbs\\\\.working\\\\tmp\\\\packed-crc-profile-bitwise-normal-v1\\\\spi-seed-17\\\\result.json\",\"rows\":2000,\"single_commit_p50_us\":8960.6,\"validation\":\"PASS\",\"warm_read_ms\":10.1271}\n",
+  "stderr": ""
+}

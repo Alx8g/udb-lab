@@ -1,0 +1,26 @@
+{
+  "hash_algorithm": "sha256",
+  "files": {
+    "command-spi-17.json": "ac469810475ea422c0cacafa44c64866f916b0b2e9cef6c60dc9760d58aacd49",
+    "command-spi-29.json": "3c467248068114d16c0994d3e033dcb343426a3f04f93b4b90b632194fa8fbb1",
+    "command-spi-43.json": "5599409cd8c401d4919748094454f1e42777dd6039caef225e1a14f51f3d0aab",
+    "command-spi-unbuffered-17.json": "4a22df9382ad4e50494dd0fef36c380f0247302338f4576fae02f3249cf04132",
+    "command-spi-unbuffered-29.json": "51ad83a5a6053ec25aa326de672e598d8e1a53fadedf180e332dd0ee915d5e15",
+    "command-spi-unbuffered-43.json": "a6e53bf6c7918d848a7824054250453d451af84ad5912f1c65f5fe897467312d",
+    "command-sqlite-17.json": "8ce6b264a5f287ef64daeccbcb9a9722c631b89a778d1dcf3f4f76750f334569",
+    "command-sqlite-29.json": "4964b5e73b1ae3787214cc64992d7c3cb7ed28cfee2f72c80a77f92836cdb03c",
+    "command-sqlite-43.json": "0e1aead8cb4cde5cfa07b45cf0a414c391eaf227e88e85bd7aad7b731b8ca83a",
+    "environment.json": "df3e885578816da1d36da503c2e75ad340b2350ae5cd26f2ad0cb72616bf221a",
+    "summary.json": "c972d163df13b44f55c4f404641885627071e79db3f9dd43eaea565b7eec3fb4",
+    "spi-seed-17/result.json": "8674b119391fded6cfe3cf0e8493c7ad694679f5c1dba290ac687c28a1921650",
+    "spi-seed-29/result.json": "32c53accfa40d55375168de6baba939d93171734d0ff6bebb6e76b843a440142",
+    "spi-seed-43/result.json": "b9cca01122413229bdea820398f1c27d71438238c8a60b9c2cd248fb2e71dc76",
+    "spi-unbuffered-seed-17/result.json": "720d4c3e9b3812ff97dba72829b399aa3ba3df9e241f8aad9b6f5749057678c3",
+    "spi-unbuffered-seed-29/result.json": "eb781952788d8a24ea1f3375bec0080ce3cf8e68f6f0c457831ce87b0c7dcdeb",
+    "spi-unbuffered-seed-43/result.json": "ab387f7afebb82c405c4f5924f216d97c076c07d1741295146fa7da6aee72e86",
+    "sqlite-seed-17/result.json": "e2e48a6a8ddb1c078a8fffe461a12e3ef57b784188fa95a861ab3283a9674b4b",
+    "sqlite-seed-29/result.json": "2b5125650f89780a93b3eb2c517dd6faa65a9abbee6ffcaf965e9174bd9d67eb",
+    "sqlite-seed-43/result.json": "2b04e1f48510f42f6454427f06bdf8cb44e141a8cf191812c5279a6568a22506"
+  },
+  "comparison": "Buffered/direct SPI bytes and outputs are identical. SQLite write counters are not measured."
+}

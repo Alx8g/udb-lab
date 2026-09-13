@@ -1,0 +1,51 @@
+{
+  "sha256": {
+    "command-spi-17.json": "6f3bc014362fceebfa122ba5f45d575b7e6932457aaa36a7312646898d46ff68",
+    "command-spi-29.json": "be319f3b52150dd0d25de370d6b2ab0cd00da0020546169b8e7d30792fe6a805",
+    "command-spi-43.json": "47e11401170d18f00463af4539964531a702414939800bae47bbb1b9009a8723",
+    "command-spi-unbuffered-17.json": "291120dd1d607e7fcd5b7e45e40b70915d83c27cfb53587e24d1944f375c991c",
+    "command-spi-unbuffered-29.json": "e723e18c41153f288ff7abe335028e654bbc0cd87f512e7334552f6cac76d035",
+    "command-spi-unbuffered-43.json": "4ac8e0f93cd120688ece5ca9318b8c042e85e97a35159afc7cc2dc8526943f3d",
+    "command-spi-value-cache-17.json": "159d1a012cadcae132baceb3e6e944014afdb4317154236989ef0ba73fd0549a",
+    "command-spi-value-cache-29.json": "3189dd38aa4c9d3cebe0d6324f32344fb8b9bd42802888ba1fbea852cd99e6df",
+    "command-spi-value-cache-43.json": "82f334c5c8d1cbfd82acc9e2bf9706b3e1d596037e6564d667941b8266df9ccb",
+    "command-sqlite-17.json": "e2a14f9a119f7961b7a76e420ace938fd7e27ceb4faca23b285183570b7b443c",
+    "command-sqlite-29.json": "c15989db4145c051a0de1bfc13d0135824d1cdcdd595784af9130b9616854200",
+    "command-sqlite-43.json": "49f76badbb2ccbe8b6ba8edb51e8fb755a72e6d656167efdf0d1c13b894ec63d",
+    "environment.json": "e0b898f1279f672cc5338b7b7f3efda0f1cab3d745acb38ded28fb7783d68806",
+    "spi-seed-17/result.json": "f1a17f7c60f1472d9c0dd6a8114f265022f73bf6cbfad6c3ac404e7af192ddae",
+    "spi-seed-29/result.json": "c778d5cbb5ccee9c73c9b93ad9835fb4839d17ec1f74a540ee29afe01a013af3",
+    "spi-seed-43/result.json": "b0b7e9f5020f041b287a845316c5a0415527012c25ab99fcda6502de974e6034",
+    "spi-unbuffered-seed-17/result.json": "5ba0b577bbb8aaf92f44733dee6f2304534da0b2b2cd8414fce65ce92e85ec46",
+    "spi-unbuffered-seed-29/result.json": "3037cdaa4a9d33437aaca57bf5f407736426bce7e6c3e9be576f20fe86c55b06",
+    "spi-unbuffered-seed-43/result.json": "7a363c9a2227df7c05955f28df8b41f04725f1f6821edeb58c73abea493d41ae",
+    "spi-value-cache-seed-17/result.json": "fdf819c5af2b73893278e775378ec7696a928d2ec219c3daa3545c8e63905434",
+    "spi-value-cache-seed-29/result.json": "ac922a96ab2e5a8869963aa50e6827c0502183a2392933053b7f298d62ed83c8",
+    "spi-value-cache-seed-43/result.json": "8f82e9af3567dfe9ff3f547f6abe050f91ba2767848283adfe96bcc09bb315c3",
+    "sqlite-seed-17/result.json": "ce0c03df1a4c690aef08791c6ac27b453826cd4b488c3ccf1c5f68880e5baf46",
+    "sqlite-seed-29/result.json": "8b6e7247db59e1a40da1beb9a647720410d98a31109c292d0a7d1d50ac90ddc6",
+    "sqlite-seed-43/result.json": "cdb553692d89cd7e64d913f1b5fe38d353256f3b7efc2affc8a6022ae2bc4f1f",
+    "summary.json": "163c6d73576548a891c089c6f3bb27b3a6b917cfc5e9fcb273f10986b04c9646"
+  },
+  "physical_equivalence_checks": [
+    {
+      "seed": 17,
+      "spi_control_and_value_cache_bytes_identical": true,
+      "manifest_sha256": "2769b370d97a7bfbd7f6a8a2e056cee05ac0c2ae15adebc0c72b416b6f022668",
+      "arena_sha256": "d6d4f54dc2f02b584f73fff66ade162c2c04fb7ddf7f12d801f393cf300271a5"
+    },
+    {
+      "seed": 29,
+      "spi_control_and_value_cache_bytes_identical": true,
+      "manifest_sha256": "2769b370d97a7bfbd7f6a8a2e056cee05ac0c2ae15adebc0c72b416b6f022668",
+      "arena_sha256": "f6c8d89f478d55f38feff16541137ae04dc8ae0cb970389f4b2947f6345cac0d"
+    },
+    {
+      "seed": 43,
+      "spi_control_and_value_cache_bytes_identical": true,
+      "manifest_sha256": "2769b370d97a7bfbd7f6a8a2e056cee05ac0c2ae15adebc0c72b416b6f022668",
+      "arena_sha256": "7d8a58b21d76aad6bbf6f067f47e920abbe417ea6334fd5a528f483b73688cb1"
+    }
+  ],
+  "scope": "Immutable data images are compared after compaction. Source-pinned local benchmark, not power-loss or service-latency proof."
+}

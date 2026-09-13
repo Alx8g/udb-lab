@@ -1,0 +1,16 @@
+{
+  "command": [
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\spi-compare-bitwise.exe",
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\crc-paired-v1\\small-43-ieee-bitwise\\sqlite-seed-43",
+    "sqlite",
+    "2000",
+    "43",
+    "64",
+    "1024"
+  ],
+  "started_utc": "2026-09-12T11:31:18.912321+00:00",
+  "finished_utc": "2026-09-12T11:31:19.190157+00:00",
+  "exit_code": 0,
+  "stdout": "{\"engine\":\"sqlite\",\"load_ms\":24.5734,\"result\":\"C:\\\\Users\\\\verom\\\\.treehouse\\\\dbs-5593e8\\\\4\\\\dbs\\\\.working\\\\tmp\\\\crc-paired-v1\\\\small-43-ieee-bitwise\\\\sqlite-seed-43\\\\result.json\",\"rows\":2000,\"single_commit_p50_us\":2656.5,\"validation\":\"PASS\",\"warm_read_ms\":18.104}\n",
+  "stderr": ""
+}

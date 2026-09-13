@@ -1,0 +1,89 @@
+{
+  "schema": 2,
+  "scope": "Current SPI binary-key/value operation comparison. No SQL, search, vector, distributed or analytical feature equivalence is implied.",
+  "shared_kv_contract": {
+    "operations": ["load_batch", "point_get", "missing_get", "ordered_range", "hot_point_get", "unique_point_get", "full_scan", "batch_update", "durable_single_commit", "reopen", "maintenance"],
+    "keys": "Eight-byte big-endian integer keys in the timed workload. Common adapter boundary tests use nonempty binary keys up to 511 bytes. This is narrower than SPI's supported key contract.",
+    "values": "Exact binary values, with every result copied into an owned buffer and completely validated against an independent ordered map.",
+    "isolation": "Sequential single-client operation stream. Engine isolation settings are recorded, not proven equivalent by this campaign.",
+    "durability": "Persistent engines request their synchronous commit mode. Crash/power-loss parity across engines is not established by these timings.",
+    "cache": "Requested cache size is a tuning input, not an equal total-memory budget. No OS cache purge. Engines without an application-cache control are excluded from the cache-cleared comparison.",
+    "maintenance": "Native maintenance actions are measured and labeled individually, not ranked as equivalent compaction or integrity operations.",
+    "resource_vector": ["per-phase latency samples", "process CPU when measured", "allocation requests when measured", "process memory when measured", "logical file or relation bytes with scope", "read/write counters where implemented"]
+  },
+  "spi_aliases": ["spi", "spi-packed", "spi-grouped", "spi-value-cache", "spi-unbuffered"],
+  "engines": {
+    "spi": {
+      "class": "embedded-kv", "adapter_status": "verified-existing", "common_kv_workload": true,
+      "durability": "Data synchronization plus checksummed manifest publication barriers.",
+      "cache_clear_supported": true, "cache": "Charged node/value/page budget, not RSS or OS cache.",
+      "maintenance": "Whole-epoch compaction, collection and explicit integrity verification.",
+      "reopen": "Drop database handle and reopen committed root.",
+      "physical_scope": "All owned database file lengths, not allocated device bytes."
+    },
+    "sqlite": {
+      "class": "embedded-sql", "adapter_status": "verified-existing", "common_kv_workload": true,
+      "durability": "WITHOUT ROWID table; WAL and synchronous=FULL.",
+      "cache_clear_supported": true, "cache": "PRAGMA cache_size plus shrink_memory; OS cache uncontrolled.",
+      "maintenance": "Checkpoint, VACUUM, checkpoint and integrity_check.",
+      "reopen": "Close/reopen connection and reapply PRAGMAs.",
+      "physical_scope": "All owned database/WAL file lengths."
+    },
+    "redb": {
+      "class": "embedded-kv", "adapter_status": "verified-campaign", "common_kv_workload": true,
+      "version": "redb 4.1.0, pinned for repository Rust 1.89 compatibility; not latest 4.2.0.",
+      "durability": "Durability::Immediate for table initialization and each write transaction.",
+      "cache_clear_supported": true, "cache": "set_cache_size; close/reopen used to discard engine cache, not OS cache.",
+      "maintenance": "Native compact, then harness full-output reopen check; not the SPI verify algorithm.",
+      "reopen": "Close/reopen database.",
+      "physical_scope": "Owned file lengths."
+    },
+    "lmdb": {
+      "class": "embedded-kv", "adapter_status": "verified-campaign", "common_kv_workload": true,
+      "version": "lmdb-rkv 0.14.0; native LMDB source pinned by Cargo.lock.",
+      "durability": "Default synchronous environment; no NOSYNC, NOMETASYNC, MAPASYNC or WRITEMAP flags.",
+      "cache_clear_supported": false, "cache": "OS-managed mmap cache; map size is virtual address reservation, not a RAM limit.",
+      "maintenance": "Forced environment sync only, NOT compaction. Full output validated after reopen.",
+      "reopen": "Close/reopen environment; OS cache remains warm.",
+      "physical_scope": "Owned file lengths, not resident mapped bytes."
+    },
+    "rocksdb": {
+      "class": "embedded-kv", "adapter_status": "verified-campaign", "common_kv_workload": true,
+      "version": "rocksdb crate 0.25.0; native 11.8.1 pinned by Cargo.lock.",
+      "durability": "Atomic WriteBatch with WAL enabled and sync=true; not a transactional conflict-checking API.",
+      "cache_clear_supported": true, "cache": "Explicit block cache; additional 4 MiB write buffers and engine metadata are outside that cache budget. Close/reopen is not device-cold.",
+      "maintenance": "Flush and compact_range; must wait for completion. Not SPI integrity verification.",
+      "reopen": "Close/reopen DB; recovery/memtable state can differ from other engines.",
+      "physical_scope": "Owned SST, WAL and metadata file lengths."
+    },
+    "duckdb": {
+      "class": "embedded-analytics-sql", "adapter_status": "verified-campaign", "common_kv_workload": true,
+      "version": "Official DuckDB C library 1.5.5 with explicit path and hash.",
+      "durability": "Persistent database synchronous commit defaults, recorded without claiming power-loss parity.",
+      "cache_clear_supported": true, "cache": "Memory limit at least 64 MiB and one execution thread. Not equal to SPI cache. Close/reopen and reprepare for application-cache reset.",
+      "maintenance": "CHECKPOINT only, NOT VACUUM or full integrity utility.",
+      "reopen": "Close/reopen embedded DB and reprepare statements.",
+      "physical_scope": "Owned file lengths.",
+      "qualification": "Prepared BLOB primary-key operations characterize this KV stream only. This adapter is NOT a typed analytics benchmark."
+    },
+    "postgres": {
+      "class": "server-sql", "adapter_status": "verified-campaign", "common_kv_workload": true,
+      "version": "Official portable PostgreSQL 18.4 binaries with recorded hashes.",
+      "durability": "fsync=on, full_page_writes=on, synchronous_commit=on; serializable session transactions.",
+      "cache_clear_supported": false, "cache": "64 MiB shared_buffers plus work_mem and OS cache. Not an equal-memory embedded comparison.",
+      "maintenance": "VACUUM ANALYZE and CHECKPOINT as separate messages; not full compaction.",
+      "reopen": "Client reconnect, NOT server restart or crash recovery.",
+      "physical_scope": "Table+index+TOAST relation lengths only; cluster/WAL totals reported separately.",
+      "qualification": "Prepared BYTEA operations over authenticated loopback TCP on a new owned cluster. Transport is included; report separately from embedded calls."
+    }
+  },
+  "coverage_gaps": [
+    {"engines": ["PostgreSQL", "MySQL/MariaDB", "CockroachDB", "TiDB", "SingleStore"], "domain": "general SQL/OLTP", "reason": "SPI has no SQL planner, typed relational schema, joins or SQL transactional workload API. A BYTEA KV comparison does not validate this domain."},
+    {"engines": ["DuckDB", "ClickHouse"], "domain": "analytical SQL", "reason": "SPI has no integrated typed columnar aggregation/join executor. Historical kernels are not the durable DB interface."},
+    {"engines": ["Elasticsearch", "OpenSearch"], "domain": "full-text search", "reason": "No SPI text-index/query/ranking API yet. Cannot fabricate feature-equivalent output."},
+    {"engines": ["Qdrant", "Milvus", "pgvector"], "domain": "vector search", "reason": "No SPI vector query/index API yet. Exact and approximate contracts would need separate benchmarks."},
+    {"engines": ["FoundationDB", "CockroachDB", "TiDB"], "domain": "distributed transactions", "reason": "SPI is currently single-node. Distributed failure, replication and network costs are not implemented."},
+    {"engines": ["Redis", "Valkey", "WiredTiger", "LevelDB"], "domain": "additional key/value baselines", "reason": "No validated adapter in this first campaign. This roster is representative, not every available database."}
+  ],
+  "acceptance": "Report measured operation rows by engine class, preserve regressions and unmatched settings, and give specific optimization priorities. Never label unmeasured or unsupported capabilities as wins, zeros, or completed benchmarks."
+}

@@ -1,0 +1,16 @@
+{
+  "command": [
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\multi-engine-release-98daeeb\\spi-compare.exe",
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\embedded-kv-98daeeb-v1\\scale\\duckdb-seed-17",
+    "duckdb",
+    "20000",
+    "17",
+    "64",
+    "8388608"
+  ],
+  "started_utc": "2026-09-13T00:07:37.184042+00:00",
+  "finished_utc": "2026-09-13T00:08:37.028631+00:00",
+  "exit_code": 0,
+  "stdout": "{\"engine\":\"duckdb\",\"load_ms\":43361.7598,\"result\":\"C:\\\\Users\\\\verom\\\\.treehouse\\\\dbs-5593e8\\\\4\\\\dbs\\\\.working\\\\tmp\\\\embedded-kv-98daeeb-v1\\\\scale\\\\duckdb-seed-17\\\\result.json\",\"rows\":20000,\"single_commit_p50_us\":5518.8,\"validation\":\"PASS\",\"warm_read_ms\":5837.8666}\n",
+  "stderr": ""
+}

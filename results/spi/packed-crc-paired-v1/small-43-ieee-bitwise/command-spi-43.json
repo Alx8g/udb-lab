@@ -1,0 +1,16 @@
+{
+  "command": [
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\spi-compare-bitwise.exe",
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\crc-paired-v1\\small-43-ieee-bitwise\\spi-seed-43",
+    "spi",
+    "2000",
+    "43",
+    "64",
+    "1024"
+  ],
+  "started_utc": "2026-09-12T11:31:19.211493+00:00",
+  "finished_utc": "2026-09-12T11:31:20.381756+00:00",
+  "exit_code": 0,
+  "stdout": "{\"engine\":\"spi\",\"load_ms\":312.959,\"result\":\"C:\\\\Users\\\\verom\\\\.treehouse\\\\dbs-5593e8\\\\4\\\\dbs\\\\.working\\\\tmp\\\\crc-paired-v1\\\\small-43-ieee-bitwise\\\\spi-seed-43\\\\result.json\",\"rows\":2000,\"single_commit_p50_us\":9417.6,\"validation\":\"PASS\",\"warm_read_ms\":103.8672}\n",
+  "stderr": ""
+}

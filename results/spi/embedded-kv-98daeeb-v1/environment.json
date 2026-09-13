@@ -1,0 +1,169 @@
+{
+  "created_utc": "2026-09-13T00:04:10.277979+00:00",
+  "git_head": "98daeeb45317098a0a4d9c23b3d396f8c17cbe31",
+  "git_status": "",
+  "source_sha256": {
+    "Cargo.lock": "2499271ee80ffee0575f290b0e1b04f3b1a55cd6a18afe1cad931b22157738f1",
+    "Cargo.toml": "4c8c7eb40e0974c2ad9374b508c89185da625b22110d80d18c6e50894acf711e",
+    "src/bin/spi-compare.rs": "877515802ed5044a4ebe20a6cb402753244a0b330ac5ba447106e19cad159874",
+    "src/bin/spi-compare/duck.rs": "ba89f95b54983ecd7b39cc0bca5b20cd0cfcadaece2e4d62b24a0c0da0148a15",
+    "src/bin/spi-compare/engines.rs": "9dac389910e29eab8872c3e4133ac335c12859f14a3de45decadba5e26aea093",
+    "src/bin/spi-compare/pg.rs": "1d869d8f3ae4760491cc668151ee09270f5134dbadc92e6713bb3264bc630576",
+    "src/lib.rs": "1f2fd1f3ef60ec9ba5381059ed54d9068991b57543903090c3bf3c663c2f5f02",
+    "src/spi/append_buffer.rs": "e7861eebad447ca3ff5ecdbb882d6e19e891548c42ee82f4f3623bd8c4d17721",
+    "src/spi/mod.rs": "70cb78964e38b0c07763f5aab89c48c9b8c70499889b97ba8abb4afec271cdf8",
+    "src/spi/packed.rs": "57467c3212626e92078411558a2c79b44a92c29a8b37faab57d386f06d770db2",
+    "src/spi/profile.rs": "4ea1f516231abe2b179d32a50bfffe47d6f03496880260eac123a101cd7f2fe6",
+    "src/spi/storage.rs": "4ac6f7c711d953dc129e28abad6b5fb3a5932740002eb2c52986bc9978518ea1",
+    "src/spi/transaction.rs": "5c116bda409684a001ac234691b59da6e2099f4d04beb0d1ed311cc662f67ff0",
+    "scripts/run_embedded_kv_campaign.py": "d9c00da18c855b04eaf688043cc7b47b846d63d2c4cfba65a0c203d0cadce955",
+    "scripts/run_spi_campaign.py": "6660c05eb7cffab79d65306bf203007d713bc3f9df0880745e8a0ad53f04a1f5",
+    "scripts/spi_benchmark_identity.py": "1e1efc24c6a073370eaca2da3c5bf3757c7dbdd36c80e02c160b672478a950bd",
+    "scripts/validate_engine_result.py": "50422264f92874323913a0a769cfa5cade8c2496e282bce715d2326acf2db2a5",
+    "scripts/engine_capabilities.json": "a13e751c386edc0a8469a46e470515aebb2e8efc2121d7bf7ecbcd52755ae758"
+  },
+  "binary_sha256": "6637d0f26450ae8e37b65e64b468796a20bcb65c456983c44ead15a0dbcee9a3",
+  "binary_identity": {
+    "identity_schema": 1,
+    "benchmark_schema": 2,
+    "debug_assertions": false,
+    "profile_enabled": false,
+    "crc32_implementation": "ieee-slicing8",
+    "packed_scan_implementation": "direct-delta",
+    "compiled_engines": [
+      "spi",
+      "spi-value-cache",
+      "spi-unbuffered",
+      "spi-grouped",
+      "spi-packed",
+      "sqlite",
+      "redb",
+      "lmdb",
+      "rocksdb",
+      "duckdb",
+      "postgres"
+    ],
+    "source_sha256": {
+      "Cargo.lock": "2499271ee80ffee0575f290b0e1b04f3b1a55cd6a18afe1cad931b22157738f1",
+      "Cargo.toml": "4c8c7eb40e0974c2ad9374b508c89185da625b22110d80d18c6e50894acf711e",
+      "src/bin/spi-compare.rs": "877515802ed5044a4ebe20a6cb402753244a0b330ac5ba447106e19cad159874",
+      "src/bin/spi-compare/duck.rs": "ba89f95b54983ecd7b39cc0bca5b20cd0cfcadaece2e4d62b24a0c0da0148a15",
+      "src/bin/spi-compare/engines.rs": "9dac389910e29eab8872c3e4133ac335c12859f14a3de45decadba5e26aea093",
+      "src/bin/spi-compare/pg.rs": "1d869d8f3ae4760491cc668151ee09270f5134dbadc92e6713bb3264bc630576",
+      "src/lib.rs": "1f2fd1f3ef60ec9ba5381059ed54d9068991b57543903090c3bf3c663c2f5f02",
+      "src/spi/append_buffer.rs": "e7861eebad447ca3ff5ecdbb882d6e19e891548c42ee82f4f3623bd8c4d17721",
+      "src/spi/mod.rs": "70cb78964e38b0c07763f5aab89c48c9b8c70499889b97ba8abb4afec271cdf8",
+      "src/spi/packed.rs": "57467c3212626e92078411558a2c79b44a92c29a8b37faab57d386f06d770db2",
+      "src/spi/profile.rs": "4ea1f516231abe2b179d32a50bfffe47d6f03496880260eac123a101cd7f2fe6",
+      "src/spi/storage.rs": "4ac6f7c711d953dc129e28abad6b5fb3a5932740002eb2c52986bc9978518ea1",
+      "src/spi/transaction.rs": "5c116bda409684a001ac234691b59da6e2099f4d04beb0d1ed311cc662f67ff0"
+    },
+    "limitations": "Source-byte identity is checked. Build flags beyond debug assertions and external dependencies are recorded separately, not attested by this protocol."
+  },
+  "external_dependencies": {
+    "duckdb": {
+      "library_path": "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\multi-engine-deps-v1\\duckdb\\duckdb.dll",
+      "sha256": "2b7468a4ad844429e6af2fde0b5f91893e8130a5686a88f11442ab547c7ede46",
+      "expected_version": "v1.5.5"
+    }
+  },
+  "engines": [
+    "spi",
+    "spi-packed",
+    "sqlite",
+    "redb",
+    "lmdb",
+    "rocksdb",
+    "duckdb"
+  ],
+  "cases": {
+    "normal": [
+      2000,
+      64,
+      8388608
+    ],
+    "small": [
+      2000,
+      64,
+      1024
+    ],
+    "large": [
+      1000,
+      4096,
+      8388608
+    ],
+    "scale": [
+      20000,
+      64,
+      8388608
+    ]
+  },
+  "seeds": [
+    17,
+    29,
+    43
+  ],
+  "coverage_gaps": [
+    {
+      "engines": [
+        "PostgreSQL",
+        "MySQL/MariaDB",
+        "CockroachDB",
+        "TiDB",
+        "SingleStore"
+      ],
+      "domain": "general SQL/OLTP",
+      "reason": "SPI has no SQL planner, typed relational schema, joins or SQL transactional workload API. A BYTEA KV comparison does not validate this domain."
+    },
+    {
+      "engines": [
+        "DuckDB",
+        "ClickHouse"
+      ],
+      "domain": "analytical SQL",
+      "reason": "SPI has no integrated typed columnar aggregation/join executor. Historical kernels are not the durable DB interface."
+    },
+    {
+      "engines": [
+        "Elasticsearch",
+        "OpenSearch"
+      ],
+      "domain": "full-text search",
+      "reason": "No SPI text-index/query/ranking API yet. Cannot fabricate feature-equivalent output."
+    },
+    {
+      "engines": [
+        "Qdrant",
+        "Milvus",
+        "pgvector"
+      ],
+      "domain": "vector search",
+      "reason": "No SPI vector query/index API yet. Exact and approximate contracts would need separate benchmarks."
+    },
+    {
+      "engines": [
+        "FoundationDB",
+        "CockroachDB",
+        "TiDB"
+      ],
+      "domain": "distributed transactions",
+      "reason": "SPI is currently single-node. Distributed failure, replication and network costs are not implemented."
+    },
+    {
+      "engines": [
+        "Redis",
+        "Valkey",
+        "WiredTiger",
+        "LevelDB"
+      ],
+      "domain": "additional key/value baselines",
+      "reason": "No validated adapter in this first campaign. This roster is representative, not every available database."
+    }
+  ],
+  "limits": [
+    "Common ordered binary-KV operation stream, not universal database capability",
+    "Requested cache budgets are not equal total memory. LMDB cache is OS-managed.",
+    "DuckDB uses prepared BLOB operations and a declared memory floor, not columnar analytics.",
+    "No concurrency/offered-load, power-loss or larger-than-RAM result is implied."
+  ]
+}

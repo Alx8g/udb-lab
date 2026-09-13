@@ -1,0 +1,55 @@
+{
+  "created_utc": "2026-09-12T09:34:17.538041+00:00",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "machine": "AMD64",
+  "processor": "Intel64 Family 6 Model 154 Stepping 3, GenuineIntel",
+  "logical_cpus": 20,
+  "rustc": "rustc 1.96.0 (ac68faa20 2026-05-25)\nbinary: rustc\ncommit-hash: ac68faa20c58cbccd01ee7208bf3b6e93a7d7f96\ncommit-date: 2026-05-25\nhost: x86_64-pc-windows-msvc\nrelease: 1.96.0\nLLVM version: 22.1.2",
+  "git_head": "5e6de9d13171edbd75a9bfcf4e793261bdc5ead4",
+  "git_status": "",
+  "binary_sha256": "c6b2f00ec6d48dec17e76cb2104a7b14b706587c4d2fa37dddf3842ad426f7bf",
+  "binary_identity": {
+    "identity_schema": 1,
+    "benchmark_schema": 2,
+    "debug_assertions": false,
+    "compiled_engines": [
+      "spi",
+      "spi-value-cache",
+      "spi-unbuffered",
+      "spi-grouped",
+      "sqlite"
+    ],
+    "source_sha256": {
+      "Cargo.lock": "ef34c9bcf85b089be5d206da18e1844752301ccbecf39f51389b8a3c27ce18ae",
+      "Cargo.toml": "d7cbde8c48a91abaf4173c148cb4781aba35f662f6cd8324350e226f6a114dbe",
+      "src/bin/spi-compare.rs": "81ac686e62c43cc356f63483ec4c544231e9350324e215bcefe2c4c982a73e70",
+      "src/lib.rs": "1f2fd1f3ef60ec9ba5381059ed54d9068991b57543903090c3bf3c663c2f5f02",
+      "src/spi/append_buffer.rs": "e7861eebad447ca3ff5ecdbb882d6e19e891548c42ee82f4f3623bd8c4d17721",
+      "src/spi/mod.rs": "e326fa65a6f054839260d15355c1f7ad0f0bf8c398eb7da37e625e122c04d8af",
+      "src/spi/storage.rs": "9bf32b09057432ce0b79ff9096051981507d0fb90235582a1c3407d99948dba8",
+      "src/spi/transaction.rs": "3dad44332cafee50ae7e77cd30c4fc28dff945eaaaaed138382b8f7227e6f860"
+    },
+    "limitations": "Source-byte identity is checked. Build flags beyond debug assertions and external dependencies are recorded separately, not attested by this protocol."
+  },
+  "source_sha256": {
+    "Cargo.toml": "d7cbde8c48a91abaf4173c148cb4781aba35f662f6cd8324350e226f6a114dbe",
+    "Cargo.lock": "ef34c9bcf85b089be5d206da18e1844752301ccbecf39f51389b8a3c27ce18ae",
+    "src/spi/append_buffer.rs": "e7861eebad447ca3ff5ecdbb882d6e19e891548c42ee82f4f3623bd8c4d17721",
+    "src/spi/mod.rs": "e326fa65a6f054839260d15355c1f7ad0f0bf8c398eb7da37e625e122c04d8af",
+    "src/spi/storage.rs": "9bf32b09057432ce0b79ff9096051981507d0fb90235582a1c3407d99948dba8",
+    "src/spi/transaction.rs": "3dad44332cafee50ae7e77cd30c4fc28dff945eaaaaed138382b8f7227e6f860",
+    "src/lib.rs": "1f2fd1f3ef60ec9ba5381059ed54d9068991b57543903090c3bf3c663c2f5f02",
+    "src/bin/spi-compare.rs": "81ac686e62c43cc356f63483ec4c544231e9350324e215bcefe2c4c982a73e70",
+    "scripts/spi_benchmark_identity.py": "0209982afaebc467c56bfcf8f45283e4b243d3047da81d1ef1c395f556ac7987",
+    "scripts/run_spi_campaign.py": "0a82ab42a3a89212be51e30d270725e2893112fba4853f9d91cff113d4312fe1"
+  },
+  "rows": 2000,
+  "value_bytes": 64,
+  "cache_bytes": 1024,
+  "seeds": [
+    17,
+    29,
+    43
+  ],
+  "method": "Sequential engines with rotating order by seed. Complete output checks inside native adapter. No OS-cache purge or CPU affinity setting."
+}

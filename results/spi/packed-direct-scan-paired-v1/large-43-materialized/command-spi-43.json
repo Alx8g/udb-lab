@@ -1,0 +1,16 @@
+{
+  "command": [
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\direct-scan-binaries-v1\\materialized.exe",
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\direct-scan-paired-v1\\large-43-materialized\\spi-seed-43",
+    "spi",
+    "1000",
+    "43",
+    "4096",
+    "8388608"
+  ],
+  "started_utc": "2026-09-12T12:12:42.248337+00:00",
+  "finished_utc": "2026-09-12T12:12:42.873018+00:00",
+  "exit_code": 0,
+  "stdout": "{\"engine\":\"spi\",\"load_ms\":68.6297,\"result\":\"C:\\\\Users\\\\verom\\\\.treehouse\\\\dbs-5593e8\\\\4\\\\dbs\\\\.working\\\\tmp\\\\direct-scan-paired-v1\\\\large-43-materialized\\\\spi-seed-43\\\\result.json\",\"rows\":1000,\"single_commit_p50_us\":8733.0,\"validation\":\"PASS\",\"warm_read_ms\":9.6218}\n",
+  "stderr": ""
+}

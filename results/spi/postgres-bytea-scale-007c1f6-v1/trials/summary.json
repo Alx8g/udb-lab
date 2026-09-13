@@ -1,0 +1,178 @@
+{
+  "trials": 3,
+  "all_full_outputs_match": true,
+  "value_cache_workload_extension": 1,
+  "grouped_write_workload_extension": 1,
+  "cache_contract_checks": "PASS",
+  "engines": {
+    "postgres": {
+      "load_ms": {
+        "median": 2050.6367,
+        "samples": [
+          2050.6367,
+          1478.7181,
+          2142.4639
+        ]
+      },
+      "reused_16_key_p50_us": {
+        "median": 92.1,
+        "samples": [
+          92.1,
+          58.8,
+          96.0
+        ]
+      },
+      "unique_reads_ms": {
+        "median": 2012.6085,
+        "samples": [
+          2061.7417,
+          1787.6986,
+          2012.6085
+        ]
+      },
+      "one_off_scan_ms": {
+        "median": 15.3903,
+        "samples": [
+          24.9866,
+          15.2589,
+          15.3903
+        ]
+      },
+      "warm_hit_p50_us": {
+        "median": 103.5,
+        "samples": [
+          104.1,
+          71.3,
+          103.5
+        ]
+      },
+      "warm_hit_p99_us": {
+        "median": 232.0,
+        "samples": [
+          255.1,
+          211.1,
+          232.0
+        ]
+      },
+      "cleared_app_cache_p50_us": {
+        "median": null,
+        "samples": [
+          77.0,
+          69.6,
+          93.8
+        ],
+        "qualification": "not comparable: adapter has no application-cache clear, raw warm observations retained",
+        "status": "not comparable; raw observations retained"
+      },
+      "range_p50_us": {
+        "median": 232.2,
+        "samples": [
+          232.2,
+          205.2,
+          264.1
+        ]
+      },
+      "post_mutation_scan_ms": {
+        "median": 17.1028,
+        "samples": [
+          31.0736,
+          15.1542,
+          17.1028
+        ]
+      },
+      "post_mutation_range_p50_us": {
+        "median": 103.0,
+        "samples": [
+          158.6,
+          103.0,
+          80.0
+        ]
+      },
+      "post_compaction_scan_ms": {
+        "median": 20.258,
+        "samples": [
+          15.6889,
+          20.258,
+          21.6162
+        ]
+      },
+      "updates_ms": {
+        "median": 61.0425,
+        "samples": [
+          61.0425,
+          59.3129,
+          74.1473
+        ]
+      },
+      "durable_mutation_p50_us": {
+        "median": 473.1,
+        "samples": [
+          473.1,
+          335.0,
+          490.5
+        ]
+      },
+      "reopen_ms": {
+        "median": 34.1765,
+        "samples": [
+          35.5124,
+          29.1176,
+          34.1765
+        ],
+        "qualification": "Client reconnect, NOT server restart or crash recovery."
+      },
+      "maintenance_ms": {
+        "median": 990.9304,
+        "samples": [
+          990.9304,
+          925.2433,
+          1090.5962
+        ],
+        "qualification": "VACUUM ANALYZE and CHECKPOINT as separate messages; not full compaction."
+      },
+      "final_owned_file_bytes": {
+        "median": 2908160,
+        "samples": [
+          2908160,
+          2908160,
+          2908160
+        ],
+        "qualification": "Table+index+TOAST relation lengths only; cluster/WAL totals reported separately."
+      },
+      "arena_write_calls": {
+        "median": null,
+        "samples": [],
+        "status": "not measured"
+      },
+      "arena_bytes_written": {
+        "median": null,
+        "samples": [],
+        "status": "not measured"
+      }
+    }
+  },
+  "limits": [
+    "Local KV operation contract only, not SQL or production durability equivalence",
+    "Logical file lengths are not allocated filesystem/device/NAND bytes",
+    "Node/page cache budgets are not equal total memory or OS-cache budgets",
+    "Closed-loop samples are not service latency under offered load",
+    "Maintenance implementations and physical formats differ"
+  ],
+  "engine_capabilities": {
+    "postgres": {
+      "class": "server-sql",
+      "adapter_status": "draft-unverified",
+      "common_kv_workload": true,
+      "version": "Official portable PostgreSQL 18.4 binaries with recorded hashes.",
+      "durability": "fsync=on, full_page_writes=on, synchronous_commit=on; serializable session transactions.",
+      "cache_clear_supported": false,
+      "cache": "64 MiB shared_buffers plus work_mem and OS cache. Not an equal-memory embedded comparison.",
+      "maintenance": "VACUUM ANALYZE and CHECKPOINT as separate messages; not full compaction.",
+      "reopen": "Client reconnect, NOT server restart or crash recovery.",
+      "physical_scope": "Table+index+TOAST relation lengths only; cluster/WAL totals reported separately.",
+      "qualification": "Prepared BYTEA operations over authenticated loopback TCP on a new owned cluster. Transport is included; report separately from embedded calls.",
+      "engine": "postgres",
+      "canonical_engine": "postgres"
+    }
+  }
+}

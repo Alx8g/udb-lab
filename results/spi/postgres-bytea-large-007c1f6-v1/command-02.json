@@ -1,0 +1,19 @@
+{
+  "command": [
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\multi-engine-deps-v1\\postgres\\pgsql\\bin\\initdb.exe",
+    "-D",
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\postgres-bytea-large-007c1f6-v1\\cluster",
+    "-U",
+    "spi_bench",
+    "--encoding=UTF8",
+    "--locale=C",
+    "--auth-local=scram-sha-256",
+    "--auth-host=scram-sha-256",
+    "--pwfile=C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\postgres-bytea-large-007c1f6-v1\\private-password.txt"
+  ],
+  "exit_code": 0,
+  "timed_out": false,
+  "timeout_seconds": 120,
+  "stdout": "The files belonging to this database system will be owned by user \"verom\".\nThis user must also own the server process.\n\nThe database cluster will be initialized with locale \"C\".\nThe default text search configuration will be set to \"english\".\n\nData page checksums are enabled.\n\ncreating directory C:/Users/verom/.treehouse/dbs-5593e8/4/dbs/.working/tmp/postgres-bytea-large-007c1f6-v1/cluster ... ok\ncreating subdirectories ... ok\nselecting dynamic shared memory implementation ... windows\nselecting default \"max_connections\" ... 100\nselecting default \"shared_buffers\" ... 128MB\nselecting default time zone ... Pacific/Auckland\ncreating configuration files ... ok\nrunning bootstrap script ... ok\nperforming post-bootstrap initialization ... ok\nsyncing data to disk ... ok\n\nSuccess. You can now start the database server using:\n\n    ^\"C^:^\\Users^\\verom^\\^.treehouse^\\dbs^-5593e8^\\4^\\dbs^\\^.working^\\tmp^\\multi^-engine^-deps^-v1^\\postgres^\\pgsql^\\bin^\\pg^_ctl^\" -D ^\"C^:^\\Users^\\verom^\\^.treehouse^\\dbs^-5593e8^\\4^\\dbs^\\^.working^\\tmp^\\postgres^-bytea^-large^-007c1f6^-v1^\\cluster^\" -l logfile start\n\n",
+  "stderr": ""
+}

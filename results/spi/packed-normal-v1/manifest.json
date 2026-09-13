@@ -1,0 +1,33 @@
+{
+  "source_commit": "7d16a589c85da923d18c5ea34344c079f2e20b11",
+  "diagnostic_only": false,
+  "sha256": {
+    "command-spi-17.json": "70e82665995a41516111d12602409ee43ca284551e54d038e4be3706c5c83332",
+    "command-spi-29.json": "22c717bece41a0367c7c40f48b1ab5cf7f7006cf2d615ab42352d1db1a33a1a1",
+    "command-spi-43.json": "190a99d57def4656e4b46532935967cbf821974e148a747f6d3626ad5964694e",
+    "command-spi-grouped-17.json": "34f10f253774867139c8eac049fa72e8b85758e37591b40eb8d989a8865bc2c0",
+    "command-spi-grouped-29.json": "298695196012c7449f9554623b134f3f92cc639580f69ca92ec8cac8b7d33a4e",
+    "command-spi-grouped-43.json": "3e6133463681ab764ee5acf8880a62acd7ab4a68e481e9244dfebfd280cc393f",
+    "command-spi-packed-17.json": "ab480ad2bc7f6ac96e2ed6733049cdf5967331587ecdf7176b2f43afc467f729",
+    "command-spi-packed-29.json": "097925d3c9466c54ec4c44ffa25a560227bafa851890e7926e312ac6e2399fcd",
+    "command-spi-packed-43.json": "9c53e11eec40f5245290d5e19fc12902157d5edf2889681d6a3d06a24bdddb14",
+    "command-sqlite-17.json": "066ed261fba5b1fef99abb8cb82407b0f93aae15f3f1ee9e8723fa63f8c11f01",
+    "command-sqlite-29.json": "103d5563f0c44e7f24daa0ba48b5cf42e641223a691857b851b1ceba5c06d34c",
+    "command-sqlite-43.json": "776d8ecbb6a4c6cfcdf1b6108ee40e157eab09efc846e5fb705f12f09c34d648",
+    "environment.json": "8640820510676c8b9bfae0436ac06542db24701aea2dcd1c2d9bb2dc8ec9d929",
+    "spi-grouped-seed-17/result.json": "ccb1087a12cb1470f34e9dd9c19ec4a823d9373ce916be9899e29246f5dc1f92",
+    "spi-grouped-seed-29/result.json": "354d33669bb5f1527d87a105eaa0bc9a2d4d5e066a78fd32bc6c1cefbfabca36",
+    "spi-grouped-seed-43/result.json": "6847ff7f26fd6619ae62284705edc24201fc52c984119881351a4b40ad6d4f1b",
+    "spi-packed-seed-17/result.json": "4e5d47d109833b60ae2249ce6eaad6d42eae2cffb0b8915e0d1da73a999a9490",
+    "spi-packed-seed-29/result.json": "632702a774fdf81fdd0439abd833bae7ab799ee1a357eba67c751349d5f265ae",
+    "spi-packed-seed-43/result.json": "f1c53c08b20e053571ddb93b14e14beaf1ed653e1bee3cd8c07951a9229a7b28",
+    "spi-seed-17/result.json": "5bfa9e2963f2244fb60434bbe6037205d7deb5f88307801641e371ea818b9249",
+    "spi-seed-29/result.json": "d386805b0dfcc375f2dc4eecca7c22f0346efbc2e9238667604c06344e68a018",
+    "spi-seed-43/result.json": "f103c5997a84acc9b078bf360c4df74c8492f7050f41f654ea50a394a1e2b0c6",
+    "sqlite-seed-17/result.json": "1cf77e504f315dc4ac4bd6f41580390e4429e672a83b054270e68e918975df89",
+    "sqlite-seed-29/result.json": "a983be252972658dc0747a095aacb7c933bb9d3a794d3f9d703b6b4618928aff",
+    "sqlite-seed-43/result.json": "320e7e7fb016c84ea6df918e64e8cea3c743f17f1e94bebd5b95a4703312c60c",
+    "summary.json": "9b26f89381b9af9ffae5da3f9a9d4845c0c1fa8b96e37ad7c634f2af058b5df2"
+  },
+  "limits": "Exact logical outputs validated. Layouts differ. Diagnostic timings are not performance claims. File lengths are not allocated-device bytes. OS cache uncontrolled."
+}

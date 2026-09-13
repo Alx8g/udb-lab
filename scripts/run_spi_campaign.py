@@ -1,0 +1,249 @@
+"""Run sequential, reproducible native SPI/SQLite trials into a new directory.
+
+No compilation, package installation, cache dropping, or directory deletion.
+Use uv run --no-project scripts/run_spi_campaign.py --help.
+"""
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import os
+import platform
+import statistics
+import subprocess
+from datetime import datetime, timezone
+from pathlib import Path
+
+from spi_benchmark_identity import IdentityError, inspect_binary
+from validate_engine_result import validate_engine_name, metric_qualification, validate_external_stats, external_inputs
+
+
+def sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for block in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def command_output(command: list[str], cwd: Path) -> str:
+    result = subprocess.run(command, cwd=cwd, capture_output=True, text=True, encoding="utf-8")
+    if result.returncode:
+        raise RuntimeError(f"{command[0]} failed: {result.stderr}")
+    return result.stdout.strip()
+
+
+def write_json(path: Path, content: object) -> None:
+    with path.open("x", encoding="utf-8") as stream:
+        json.dump(content, stream, indent=2)
+        stream.write("\n")
+
+
+def validate_record(record: dict, engine: str, rows: int, seed: int, value_bytes: int, cache_bytes: int, *, diagnostic: bool = False) -> None:
+    """Check the native result's operation and resource contract before acceptance."""
+    if record.get("diagnostic_only") is not diagnostic:
+        raise RuntimeError("diagnostic/performance result mismatch")
+    expected = {"benchmark_schema": 2, "value_cache_workload_extension": 1,
+                "grouped_write_workload_extension": 1, "scan_workload_extension": 1,
+                "engine": engine, "rows": rows, "seed": seed,
+                "value_bytes": value_bytes, "cache_bytes": cache_bytes,
+                "full_output_validation": "PASS"}
+    for field, value in expected.items():
+        if record.get(field) != value:
+            raise RuntimeError(f"native result contract mismatch: {field}")
+    for field in ("load_batches_256", "updates_batches_64", "single_row_commits",
+                  "warm_hits", "reused_16_key_hits", "unique_value_reads", "one_off_scan",
+                  "post_mutation_scan", "post_mutation_ranges", "post_compaction_scan"):
+        metric = record.get(field, {})
+        samples = metric.get("samples_ns")
+        if not isinstance(samples, list) or not samples or any(type(n) is not int or n < 0 for n in samples):
+            raise RuntimeError(f"invalid timing samples: {field}")
+        if metric.get("total_ns") != sum(samples) or metric.get("sample_count") != len(samples):
+            raise RuntimeError(f"inconsistent timing summary: {field}")
+    if not engine.startswith("spi"):
+        validate_external_stats(record, engine)
+        return
+    snapshots = ("cache_after_reused_hits", "cache_after_unique_reads", "cache_after_one_off_scan",
+                 "after_load", "after_updates", "before_maintenance", "after_maintenance")
+    for field in snapshots:
+        stats = record[field]
+        if not 0 <= stats["cache_bytes"] <= cache_bytes:
+            raise RuntimeError(f"shared cache exceeds budget: {field}")
+        if stats["value_cache_enabled"] != (engine == "spi-value-cache"):
+            raise RuntimeError(f"incorrect cache control: {field}")
+        if stats["grouped_updates_enabled"] != (engine == "spi-grouped"):
+            raise RuntimeError(f"incorrect grouped-update control: {field}")
+        if stats["append_buffer_enabled"] != (engine != "spi-unbuffered"):
+            raise RuntimeError(f"incorrect append-buffer control: {field}")
+        if stats["packed_format"] != (engine == "spi-packed"):
+            raise RuntimeError(f"incorrect packed-format control: {field}")
+        if stats["retired_cache_page_capacity"] != 0:
+            raise RuntimeError(f"retired packed cache retained capacity: {field}")
+        if engine != "spi-packed" and stats["cache_page_entries"] != 0:
+            raise RuntimeError(f"legacy control admitted packed pages: {field}")
+        if stats["retired_cache_value_capacity"] != 0:
+            raise RuntimeError(f"retired value cache retained capacity: {field}")
+        if engine != "spi-value-cache" and stats["cache_value_entries"] != 0:
+            raise RuntimeError(f"node-only control admitted values: {field}")
+        if value_bytes + 192 > cache_bytes // 8 and stats["cache_value_entries"] != 0:
+            raise RuntimeError(f"undersized cache admitted values: {field}")
+    if record["cache_after_one_off_scan"]["cache_page_entries"] != 0:
+        raise RuntimeError("one-off scan populated the packed page cache")
+    if record["cache_after_one_off_scan"]["cache_value_entries"] != 0:
+        raise RuntimeError("one-off scan populated the value cache")
+    for counter in ("bytes_written", "arena_write_calls"):
+        previous = 0
+        for field in ("after_load", "after_updates", "before_maintenance"):
+            value = record[field].get(counter)
+            if type(value) is not int or value < previous:
+                raise RuntimeError(f"invalid cumulative arena counter: {counter} {field}")
+            previous = value
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--binary", type=Path, required=True)
+    parser.add_argument("--expected-crc", choices=["ieee-bitwise", "ieee-slicing8"])
+    parser.add_argument("--expected-scan", choices=["direct-base", "direct-delta", "materialized"])
+    parser.add_argument("--out", type=Path, required=True)
+    parser.add_argument("--rows", type=int, default=5000)
+    parser.add_argument("--value-bytes", type=int, default=64)
+    parser.add_argument("--cache-bytes", type=int, default=8 * 1024 * 1024)
+    parser.add_argument("--seeds", type=int, nargs="+", default=[17, 29, 43])
+    parser.add_argument("--engines", nargs="+", choices=["spi", "spi-value-cache", "spi-unbuffered", "spi-grouped", "spi-packed", "sqlite", "lmdb", "redb", "rocksdb", "duckdb", "postgres"], default=["spi", "sqlite"])
+    args = parser.parse_args()
+    binary = args.binary.resolve(strict=True)
+    root = Path(__file__).resolve().parents[1]
+    try:
+        identity = inspect_binary(binary, root, args.engines)
+    except IdentityError as exc:
+        parser.error(str(exc))
+    if args.expected_crc and identity["crc32_implementation"] != args.expected_crc:
+        parser.error("binary CRC implementation does not match requested control")
+    if args.expected_scan and identity["packed_scan_implementation"] != args.expected_scan:
+        parser.error("binary scan implementation does not match requested control")
+    out = args.out.resolve()
+    if args.rows < 100 or not 1 <= args.value_bytes <= 4096 or args.cache_bytes < 1024:
+        parser.error("rows >= 100, 1 <= value-bytes <= 4096, cache-bytes >= 1024 required")
+    if len(set(args.seeds)) != len(args.seeds) or len(set(args.engines)) != len(args.engines):
+        parser.error("duplicate seeds or engines")
+    capabilities = {e: validate_engine_name(e, shared_kv=True) for e in args.engines}
+    dependencies = external_inputs(args.engines)
+    out.mkdir(exist_ok=False)
+    source_files = [root / "Cargo.toml", root / "Cargo.lock"]
+    source_files += sorted((root / "src/spi").glob("*.rs"))
+    source_files += [root / "src/lib.rs", root / "src/bin/spi-compare.rs", root / "scripts/spi_benchmark_identity.py", Path(__file__).resolve()]
+    source_files += sorted((root / "src/bin/spi-compare").rglob("*.rs"))
+    source_files += [root / "scripts/engine_capabilities.json", root / "scripts/validate_engine_result.py"]
+    binary_hash = sha256(binary)
+    source_hashes = {p.relative_to(root).as_posix(): sha256(p) for p in source_files}
+    environment = {
+        "created_utc": datetime.now(timezone.utc).isoformat(),
+        "platform": platform.platform(),
+        "machine": platform.machine(),
+        "processor": platform.processor(),
+        "logical_cpus": os.cpu_count(),
+        "rustc": command_output(["rustc", "-Vv"], root),
+        "git_head": command_output(["git", "rev-parse", "HEAD"], root),
+        "git_status": command_output(["git", "status", "--short"], root),
+        "binary_sha256": binary_hash,
+        "binary_identity": identity,
+        "engine_capabilities": capabilities,
+        "external_dependencies": dependencies,
+        "source_sha256": source_hashes,
+        "rows": args.rows,
+        "value_bytes": args.value_bytes,
+        "cache_bytes": args.cache_bytes,
+        "seeds": args.seeds,
+        "method": "Sequential engines with rotating order by seed. Complete output checks inside native adapter. No OS-cache purge or CPU affinity setting.",
+    }
+    write_json(out / "environment.json", environment)
+    records = []
+
+    def check_unchanged_inputs() -> None:
+        if external_inputs(args.engines) != dependencies:
+            raise RuntimeError("external engine dependency changed during campaign")
+        if sha256(binary) != binary_hash:
+            raise RuntimeError("benchmark binary changed during campaign")
+        for p in source_files:
+            if sha256(p) != source_hashes[p.relative_to(root).as_posix()]:
+                raise RuntimeError(f"source changed during campaign: {p.name}")
+
+    for ordinal, seed in enumerate(args.seeds):
+        shift = ordinal % len(args.engines)
+        engines = args.engines[shift:] + args.engines[:shift]
+        for engine in engines:
+            check_unchanged_inputs()
+            destination = out / f"{engine}-seed-{seed}"
+            command = [str(binary), str(destination), engine, str(args.rows), str(seed), str(args.value_bytes), str(args.cache_bytes)]
+            start = datetime.now(timezone.utc).isoformat()
+            result = subprocess.run(command, cwd=root, capture_output=True, text=True, encoding="utf-8", timeout=600)
+            evidence = {"command": command, "started_utc": start, "finished_utc": datetime.now(timezone.utc).isoformat(), "exit_code": result.returncode, "stdout": result.stdout, "stderr": result.stderr}
+            write_json(out / f"command-{engine}-{seed}.json", evidence)
+            print(result.stdout, end="", flush=True)
+            if result.returncode:
+                raise RuntimeError(f"{engine} seed {seed} failed: {result.stderr}")
+            record = json.loads((destination / "result.json").read_text(encoding="utf-8"))
+            validate_record(record, engine, args.rows, seed, args.value_bytes, args.cache_bytes)
+            if record.get("crc32_implementation") != identity["crc32_implementation"]:
+                raise RuntimeError("result CRC identity differs from binary")
+            if record.get("packed_scan_implementation") != identity["packed_scan_implementation"]:
+                raise RuntimeError("result scan identity differs from binary")
+            records.append(record)
+    check_unchanged_inputs()
+    summary = {"trials": len(records), "all_full_outputs_match": True,
+               "value_cache_workload_extension": 1, "grouped_write_workload_extension": 1,
+               "cache_contract_checks": "PASS", "engines": {}}
+    for engine in args.engines:
+        trials = [r for r in records if r["engine"] == engine]
+        metrics = {
+            "load_ms": [r["load_batches_256"]["total_ns"] / 1e6 for r in trials],
+            "reused_16_key_p50_us": [r["reused_16_key_hits"]["p50_ns"] / 1e3 for r in trials],
+            "unique_reads_ms": [r["unique_value_reads"]["total_ns"] / 1e6 for r in trials],
+            "one_off_scan_ms": [r["one_off_scan"]["total_ns"] / 1e6 for r in trials],
+            "warm_hit_p50_us": [r["warm_hits"]["p50_ns"] / 1e3 for r in trials],
+            "warm_hit_p99_us": [r["warm_hits"]["p99_ns"] / 1e3 for r in trials],
+            "cleared_app_cache_p50_us": [r["application_cache_cleared_hits_not_storage_cold"]["p50_ns"] / 1e3 for r in trials],
+            "range_p50_us": [r["ranges_up_to_100_keys"]["p50_ns"] / 1e3 for r in trials],
+            "post_mutation_scan_ms": [r["post_mutation_scan"]["total_ns"] / 1e6 for r in trials],
+            "post_mutation_range_p50_us": [r["post_mutation_ranges"]["p50_ns"] / 1e3 for r in trials],
+            "post_compaction_scan_ms": [r["post_compaction_scan"]["total_ns"] / 1e6 for r in trials],
+            "updates_ms": [r["updates_batches_64"]["total_ns"] / 1e6 for r in trials],
+            "durable_mutation_p50_us": [r["single_row_commits"]["p50_ns"] / 1e3 for r in trials],
+            "reopen_ms": [r["reopen_ns"] / 1e6 for r in trials],
+            "maintenance_ms": [r["maintenance_with_integrity_check_ns"] / 1e6 for r in trials],
+            "final_owned_file_bytes": [r["after_maintenance"]["physical_bytes"] for r in trials],
+        }
+        if all("arena_write_calls" in r["before_maintenance"] for r in trials):
+            metrics["arena_write_calls"] = [r["before_maintenance"]["arena_write_calls"] for r in trials]
+            metrics["arena_bytes_written"] = [r["before_maintenance"]["bytes_written"] for r in trials]
+        if engine.startswith("spi"):
+            metrics["load_arena_bytes"] = [r["after_load"]["bytes_written"] for r in trials]
+            metrics["update_arena_bytes"] = [r["after_updates"]["bytes_written"] - r["after_load"]["bytes_written"] for r in trials]
+            metrics["single_mutation_arena_bytes"] = [r["before_maintenance"]["bytes_written"] - r["after_updates"]["bytes_written"] for r in trials]
+            metrics["cache_bytes_after_reuse"] = [r["cache_after_reused_hits"]["cache_bytes"] for r in trials]
+            metrics["cache_values_after_reuse"] = [r["cache_after_reused_hits"]["cache_value_entries"] for r in trials]
+            metrics["cache_values_after_unique_reads"] = [r["cache_after_unique_reads"]["cache_value_entries"] for r in trials]
+            metrics["cache_values_after_scan"] = [r["cache_after_one_off_scan"]["cache_value_entries"] for r in trials]
+        summary["engines"][engine] = {k: {"median": statistics.median(v), "samples": v} for k, v in metrics.items()}
+        if "arena_write_calls" not in metrics:
+            summary["engines"][engine]["arena_write_calls"] = {"median": None, "samples": [], "status": "not measured"}
+            summary["engines"][engine]["arena_bytes_written"] = {"median": None, "samples": [], "status": "not measured"}
+    summary["limits"] = ["Local KV operation contract only, not SQL or production durability equivalence", "Logical file lengths are not allocated filesystem/device/NAND bytes", "Node/page cache budgets are not equal total memory or OS-cache budgets", "Closed-loop samples are not service latency under offered load", "Maintenance implementations and physical formats differ"]
+    summary["engine_capabilities"] = capabilities
+    for engine in args.engines:
+        metrics = summary["engines"][engine]
+        for metric in ["cleared_app_cache_p50_us", "maintenance_ms", "reopen_ms", "final_owned_file_bytes"]:
+            note = metric_qualification(engine, metric)
+            if note:
+                metrics[metric]["qualification"] = note
+                if note.startswith("not comparable:"):
+                    metrics[metric]["median"] = None
+                    metrics[metric]["status"] = "not comparable; raw observations retained"
+    write_json(out / "summary.json", summary)
+    print(json.dumps(summary, indent=2))
+
+
+if __name__ == "__main__":
+    main()

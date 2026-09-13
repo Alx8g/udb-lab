@@ -1,0 +1,14 @@
+{
+  "command": [
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\multi-engine-profile-binary-896920b\\spi-compare.exe",
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\multi-engine-profile-normal-896920b-v1\\redb-seed-17",
+    "redb",
+    "2000",
+    "17",
+    "64",
+    "8388608"
+  ],
+  "exit_code": 0,
+  "stdout": "{\"engine\":\"redb\",\"load_ms\":25.8013,\"result\":\"C:\\\\Users\\\\verom\\\\.treehouse\\\\dbs-5593e8\\\\4\\\\dbs\\\\.working\\\\tmp\\\\multi-engine-profile-normal-896920b-v1\\\\redb-seed-17\\\\result.json\",\"rows\":2000,\"single_commit_p50_us\":2857.5,\"validation\":\"PASS\",\"warm_read_ms\":2.4414}\n",
+  "stderr": ""
+}
