@@ -50,6 +50,8 @@ jobs:
           python scripts/test_external_engine_results.py
           python scripts/test_spi_postgres_campaign.py
           python scripts/test_retain_engine_campaign.py
+          python scripts/test_summarize_multi_engine.py
+          python scripts/test_summarize_engine_profiles.py
       - name: Test lightweight optional engine adapters
         run: cargo test --locked --bin spi-compare --features "rusqlite redb lmdb libloading postgres" -- --test-threads=1
       - name: Test diagnostic-profile contract validation

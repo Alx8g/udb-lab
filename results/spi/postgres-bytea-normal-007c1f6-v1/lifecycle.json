@@ -1,0 +1,12 @@
+{
+  "startup_succeeded": true,
+  "elapsed_ns_including_startup_shutdown": 10651397300,
+  "server_stopped": true,
+  "retained_cluster_logical_bytes": 92677493,
+  "private_files": [
+    "private-password.txt",
+    "private-command-*.stdout",
+    "private-command-*.stderr"
+  ],
+  "retention_rule": "Do not publish credentials, cluster data, raw server logs, or raw config. Retain sanitized command evidence and trial JSON only."
+}

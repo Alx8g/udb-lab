@@ -1,0 +1,11 @@
+{
+  "command": [
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\multi-engine-deps-v1\\postgres\\pgsql\\bin\\postgres.exe",
+    "--version"
+  ],
+  "exit_code": 0,
+  "timed_out": false,
+  "timeout_seconds": 120,
+  "stdout": "postgres (PostgreSQL) 18.4\n",
+  "stderr": ""
+}

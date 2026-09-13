@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "source_commit": "007c1f6e296ca5a26f66fe8cabdc8fd64d5584c0",
+  "diagnostic_only": false,
+  "postgres_loopback": true,
+  "sha256": {
+    "environment.json": "55402f632a4b0519bc3c45ea19987b3c9f06c625cb7d4eab1274d450c761e9b2",
+    "lifecycle.json": "bc6d6a0392d0f5995e4a5bee18a623a9621e8f2c8df050d112651cf2d0b3b3ef",
+    "trials/environment.json": "d73d48e3a6401f30a48f4ff529b1765eb7232be4c160a88e05690773bba8f697",
+    "trials/summary.json": "e2c523b84035f852f07e0dfe53cac8d268ec7ac02d764e08daea066f073c525f",
+    "trials/command-postgres-17.json": "aa8d713d2a3308a4bf5c33d0a3e549cc5df33517d0c5a55ce432a42004fced7a",
+    "trials/postgres-seed-17/result.json": "0c7de1177f6c2ae3246ab0ffc87ff741e3b623a250897b143810d60e760640a4",
+    "trials/command-postgres-29.json": "e00c3aeb788344cdd24c7f26bac900b089d68a587c73215ceab78a5b3ce980b8",
+    "trials/postgres-seed-29/result.json": "e1ee9a6336939dfbbbd42609950c69435db6557863263730d97adaca8c424a3b",
+    "trials/command-postgres-43.json": "ebdc3df2090ec45d4ae9391ea398e65d2c3bf2f86ecd744e46a86cb6c927a07c",
+    "trials/postgres-seed-43/result.json": "a42ec6581e34e9a107cc0f1a4bf85e83837afdfd7a541004d27114ee0dc92fe7",
+    "command-01.json": "11b05264b077f87d9d20c746e7e6cb00b7d17dc628d0cb4b249f9a32491e67d5",
+    "command-02.json": "b70b29476ca747583571bb3d7cceca73f11f9f33b3b8ac09de7723175aa2b5c6",
+    "command-03.json": "dd55523a48c90bb21f4b623da601045ba0d8ab615f9a92378daada9a66f4b294",
+    "command-04.json": "61f7b4aea1ca026b09b5961b8c32ae4f603e90658bc770a15cf5740503754202",
+    "command-05.json": "76abac7a7685310ef56001cae01196f598a1d17f54dfac46201bc3d4996841c3",
+    "command-06.json": "313cca7f068a76e6fdae6e7cdfc9200cc7b6768d400d785785dcdcc3b71053c6",
+    "command-07.json": "3ea5044ce4b25159e8997f1dce516bbb1bc99e27e58ba6ec901338595546066e"
+  },
+  "scope": "Complete output-checked KV evidence, raw bytes preserved. PostgreSQL cluster/credentials/config/logs excluded. Lifecycle/memory contracts differ."
+}

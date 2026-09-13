@@ -1,0 +1,20 @@
+{
+  "command": [
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\multi-engine-deps-v1\\postgres\\pgsql\\bin\\pg_ctl.exe",
+    "-D",
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\postgres-bytea-normal-007c1f6-v1\\cluster",
+    "-l",
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\postgres-bytea-normal-007c1f6-v1\\postgres-server.log",
+    "-w",
+    "-t",
+    "60",
+    "-o",
+    "-c config_file=\"C:/Users/verom/.treehouse/dbs-5593e8/4/dbs/.working/tmp/postgres-bytea-normal-007c1f6-v1/benchmark-postgresql.conf\"",
+    "start"
+  ],
+  "exit_code": 0,
+  "timed_out": false,
+  "timeout_seconds": 90,
+  "stdout": "waiting for server to start.... done\nserver started\n",
+  "stderr": ""
+}

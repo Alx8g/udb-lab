@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "source_commit": "007c1f6e296ca5a26f66fe8cabdc8fd64d5584c0",
+  "diagnostic_only": false,
+  "postgres_loopback": true,
+  "sha256": {
+    "environment.json": "2cba62fa7000f159cb0055ca6ac3fb1f282b104cf84c2cd1e211b5d094c5dafd",
+    "lifecycle.json": "5e1c0b6e69456ec11265a141b3c9496c6f1e0ad37fa97b1e01bb739cbfbf12f2",
+    "trials/environment.json": "7342462ad765c73fe9a4bbc9fd7b65204e0579cd886fa0612bf89f89b1176cc3",
+    "trials/summary.json": "8e1f70ca01f23dd247d89f7e6082a371caf4e80dcf5f0702004b703f56d75f51",
+    "trials/command-postgres-17.json": "6000b93a73ced2dca8f2d4683fdf4c5817ee187d6886abe07e3b155755dffc55",
+    "trials/postgres-seed-17/result.json": "7d987b2c8d8c57cf60826b10a5c2d2709ea5184641f0f310674a44ef9b85753c",
+    "trials/command-postgres-29.json": "99df0c41b8338a92320a87aa917c5017294ab73e8b0548dd0c39e38ee02658d6",
+    "trials/postgres-seed-29/result.json": "5a65ca756eb9050e9865db88aad584280aa2974094beb67c4e893ae6b7e78842",
+    "trials/command-postgres-43.json": "5689e382a91bd85adbffc4c296e89ce6f49a6d053fc186ff57fc23d00856a20e",
+    "trials/postgres-seed-43/result.json": "0bdadf90939323508c17dd153bbf181d009987889bedbfc3925e1ad8df3dda4c",
+    "command-01.json": "11b05264b077f87d9d20c746e7e6cb00b7d17dc628d0cb4b249f9a32491e67d5",
+    "command-02.json": "ebf39abbc37129ea0043aeba59ce646774ea36cd8b52eff8da5339c2222317e5",
+    "command-03.json": "39cbccd7f8236652519e419b32c4ca274e7d077c51fa27c0fb45f7954edc93be",
+    "command-04.json": "00deb8ca40a1db367c4d60cb267fbe648f715329237b4824eff9fafcdec53228",
+    "command-05.json": "d9144d1886cd10a88a730e41a69052c8890f601c47bf47abb51ca5b338df7523",
+    "command-06.json": "80bc271b04d615646b39d04f8ffd5dd06dba60e1c8f5a6ab557c65f2cdcd5630",
+    "command-07.json": "64a5df36f4c447e9c18d53d8aaa9279369cb0b78f187b3d43a393b193d988078"
+  },
+  "scope": "Complete output-checked KV evidence, raw bytes preserved. PostgreSQL cluster/credentials/config/logs excluded. Lifecycle/memory contracts differ."
+}

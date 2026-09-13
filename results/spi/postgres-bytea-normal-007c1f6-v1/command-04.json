@@ -1,0 +1,25 @@
+{
+  "command": [
+    "C:\\Users\\verom\\.treehouse\\dbs-5593e8\\4\\dbs\\.working\\tmp\\multi-engine-deps-v1\\postgres\\pgsql\\bin\\psql.exe",
+    "-h",
+    "127.0.0.1",
+    "-p",
+    "54046",
+    "-U",
+    "spi_bench",
+    "-d",
+    "postgres",
+    "-X",
+    "-A",
+    "-t",
+    "-v",
+    "ON_ERROR_STOP=1",
+    "-c",
+    "SELECT current_setting('cluster_name'), current_setting('data_directory'), current_setting('fsync'), current_setting('full_page_writes')"
+  ],
+  "exit_code": 0,
+  "timed_out": false,
+  "timeout_seconds": 120,
+  "stdout": "spi_benchmark_07bc0661e6cbceb94b783b9ecd441832|C:/Users/verom/.treehouse/dbs-5593e8/4/dbs/.working/tmp/postgres-bytea-normal-007c1f6-v1/cluster|on|on\n",
+  "stderr": ""
+}
