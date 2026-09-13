@@ -1,0 +1,56 @@
+name: SPI agent apply experiment
+
+on:
+  push:
+    branches: [spi/commit-path-v1]
+
+permissions:
+  contents: write
+
+jobs:
+  apply-test-package:
+    if: ${{ !contains(github.event.head_commit.message, '[agent-applied]') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Apply experiment
+        shell: bash
+        run: |
+          set -euo pipefail
+          git apply --check .agent/commit-path-v1.patch
+          git apply .agent/commit-path-v1.patch
+          cargo fmt --all
+      - name: Validate correctness
+        run: cargo test --locked --release --all-targets --features rusqlite -- --test-threads=1
+      - name: Build release binaries
+        run: cargo build --locked --release --features rusqlite --bins
+      - name: Commit validated implementation
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm .agent/commit-path-v1.patch
+          git config user.name "SPI benchmark agent"
+          git config user.email "spi-agent@users.noreply.github.com"
+          git add src/spi/storage.rs tests/spi-process.rs tests/spi-storage.rs .agent/commit-path-v1.patch
+          git commit -m "perf: publish roots through dual manifest slots [agent-applied]"
+          git push origin HEAD:spi/commit-path-v1
+      - name: Package exact committed source and binaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifact/source artifact/bin
+          git archive HEAD | tar -x -C artifact/source
+          cp target/release/spi artifact/bin/
+          cp target/release/spi-compare artifact/bin/
+          git rev-parse HEAD > artifact/COMMIT_SHA
+          sha256sum artifact/bin/* > artifact/BINARIES.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: spi-agent-dual-manifest-${{ github.run_id }}
+          path: artifact
+          if-no-files-found: error
+          retention-days: 7
