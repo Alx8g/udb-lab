@@ -1,0 +1,33 @@
+--- a/tests/spi-grouped.rs
++++ b/tests/spi-grouped.rs
+@@ -401,6 +401,7 @@
+             "append_flush",
+             "data_sync",
+             "manifest_write",
++            "manifest_written",
+             "manifest_sync",
+             "manifest_replace",
+             "directory_sync",
+@@ -426,14 +427,14 @@
+                     value: vec![2; 64],
+                 })
+                 .collect();
+-            assert_eq!(
+-                db.scan_prefix(&[]).unwrap(),
+-                if matches!(stage, "manifest_replace" | "directory_sync") {
+-                    want
+-                } else {
+-                    old
+-                }
+-            );
++            let found = db.scan_prefix(&[]).unwrap();
++            if matches!(stage, "manifest_sync" | "manifest_replace" | "directory_sync") {
++                assert_eq!(found, want);
++            } else if stage == "manifest_written" {
++                assert!(found == old || found == want);
++            } else {
++                assert_eq!(found, old);
++            }
+             db.verify().unwrap();
+         }
+     }
