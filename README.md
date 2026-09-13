@@ -361,6 +361,37 @@ post-compaction scans increased from 6.39 to 7.02 ms. Unchanged engine controls
 also varied. These small trials support a targeted post-mutation scan improvement,
 not an across-workload win, automatic expert routing or production readiness.
 
+## Representative engine comparisons
+
+The comparison executable has optional adapters for redb, LMDB, RocksDB,
+DuckDB and PostgreSQL alongside SQLite. These run the current ordered binary-KV
+operation stream, not feature-equivalent SQL, analytical, search, vector or
+distributed workloads. The [capability ledger](scripts/engine_capabilities.json)
+records each adapter's durability settings, cache limitations, lifecycle actions
+and uncovered domains. No external comparison is accepted until its source-identified
+release campaign completes with full output checks.
+
+`run_embedded_kv_campaign.py` runs normal, small-cache, large-value and 20,000-row
+cases sequentially. Configure `SPI_DUCKDB_LIBRARY` to an official version-1.5.5
+shared library when selecting DuckDB. Its path and hash are recorded. DuckDB's
+prepared BLOB workload is not a test of analytical strength, and its 64 MiB memory
+floor is not equivalent to SPI's cache budget. LMDB has OS-managed mapped caching,
+so its cache-cleared metric is explicitly not comparable. redb is pinned to 4.1.0
+for the repository's Rust 1.89 support. RocksDB uses synchronous WAL and uncompressed
+storage with block cache and write buffers reported separately.
+
+`run_spi_postgres_campaign.py` starts a new authenticated loopback-only PostgreSQL
+cluster under ignored project scratch. The adapter verifies its marker and data
+directory before writes. The runner stops only that owned server and preserves
+trial databases locally. Timings include prepared SQL and TCP. Reconnect is not
+server restart, and relation size excludes cluster/WAL overhead. Never publish
+the private password, raw cluster data, configuration or server logs.
+
+Maintenance metrics are qualified by native operation, not ranked as equivalent
+compaction. Diagnostic Rust allocation counts exclude native library allocations
+and server memory. Keep SPI's implementation frozen during comparisons. Report
+losses and unavailable capabilities, not a combined universal-winner score.
+
 ## Diagnostic attribution
 
 The optional `spi-profile` build records phase-level storage work, nested wall

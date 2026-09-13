@@ -14,6 +14,8 @@ def result(engine="spi-value-cache", cache_bytes=8192):
              "bytes_written": 1000, "arena_write_calls": 10,
              "packed_format": engine == "spi-packed", "retired_cache_page_capacity": 0,
              "cache_page_entries": 0}
+    if engine == "sqlite":
+        stats.update({"physical_bytes": 1000, "journal_mode": "WAL", "synchronous": "FULL", "sqlite_version": "fixture"})
     metric = {"samples_ns": [10, 20], "sample_count": 2, "total_ns": 30}
     return {"benchmark_schema": 2, "value_cache_workload_extension": 1, "diagnostic_only": False,
             "grouped_write_workload_extension": 1, "scan_workload_extension": 1,

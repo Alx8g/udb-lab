@@ -134,6 +134,19 @@ class BenchmarkIdentityTests(unittest.TestCase):
         with self.assertRaisesRegex(IdentityError, "inventory"):
             validate_build_info(info, self.root, ["spi"])
 
+    def test_nested_adapter_source_cannot_escape_inventory(self):
+        from unittest.mock import patch
+        extra = self.root / 'src/bin/spi-compare/nested/omitted.rs'
+        original = Path.rglob
+        def discovered(path, pattern):
+            actual = list(original(path, pattern))
+            if path == self.root / 'src/bin/spi-compare':
+                actual.append(extra)
+            return iter(actual)
+        with patch.object(Path, 'rglob', discovered):
+            with self.assertRaisesRegex(IdentityError, 'adapter module inventory'):
+                validate_build_info(self.info(), self.root, ['spi'])
+
     def test_malformed_response_is_rejected(self) -> None:
         for value in (None, [], "text"):
             with self.assertRaises(IdentityError):

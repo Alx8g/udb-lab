@@ -16,6 +16,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from spi_benchmark_identity import IdentityError, inspect_binary
+from validate_engine_result import validate_engine_name, metric_qualification, validate_external_stats, external_inputs
 
 
 def sha256(path: Path) -> str:
@@ -61,6 +62,7 @@ def validate_record(record: dict, engine: str, rows: int, seed: int, value_bytes
         if metric.get("total_ns") != sum(samples) or metric.get("sample_count") != len(samples):
             raise RuntimeError(f"inconsistent timing summary: {field}")
     if not engine.startswith("spi"):
+        validate_external_stats(record, engine)
         return
     snapshots = ("cache_after_reused_hits", "cache_after_unique_reads", "cache_after_one_off_scan",
                  "after_load", "after_updates", "before_maintenance", "after_maintenance")
@@ -109,7 +111,7 @@ def main() -> None:
     parser.add_argument("--value-bytes", type=int, default=64)
     parser.add_argument("--cache-bytes", type=int, default=8 * 1024 * 1024)
     parser.add_argument("--seeds", type=int, nargs="+", default=[17, 29, 43])
-    parser.add_argument("--engines", nargs="+", choices=["spi", "spi-value-cache", "spi-unbuffered", "spi-grouped", "spi-packed", "sqlite"], default=["spi", "sqlite"])
+    parser.add_argument("--engines", nargs="+", choices=["spi", "spi-value-cache", "spi-unbuffered", "spi-grouped", "spi-packed", "sqlite", "lmdb", "redb", "rocksdb", "duckdb", "postgres"], default=["spi", "sqlite"])
     args = parser.parse_args()
     binary = args.binary.resolve(strict=True)
     root = Path(__file__).resolve().parents[1]
@@ -126,10 +128,14 @@ def main() -> None:
         parser.error("rows >= 100, 1 <= value-bytes <= 4096, cache-bytes >= 1024 required")
     if len(set(args.seeds)) != len(args.seeds) or len(set(args.engines)) != len(args.engines):
         parser.error("duplicate seeds or engines")
+    capabilities = {e: validate_engine_name(e, shared_kv=True) for e in args.engines}
+    dependencies = external_inputs(args.engines)
     out.mkdir(exist_ok=False)
     source_files = [root / "Cargo.toml", root / "Cargo.lock"]
     source_files += sorted((root / "src/spi").glob("*.rs"))
     source_files += [root / "src/lib.rs", root / "src/bin/spi-compare.rs", root / "scripts/spi_benchmark_identity.py", Path(__file__).resolve()]
+    source_files += sorted((root / "src/bin/spi-compare").rglob("*.rs"))
+    source_files += [root / "scripts/engine_capabilities.json", root / "scripts/validate_engine_result.py"]
     binary_hash = sha256(binary)
     source_hashes = {p.relative_to(root).as_posix(): sha256(p) for p in source_files}
     environment = {
@@ -143,6 +149,8 @@ def main() -> None:
         "git_status": command_output(["git", "status", "--short"], root),
         "binary_sha256": binary_hash,
         "binary_identity": identity,
+        "engine_capabilities": capabilities,
+        "external_dependencies": dependencies,
         "source_sha256": source_hashes,
         "rows": args.rows,
         "value_bytes": args.value_bytes,
@@ -154,6 +162,8 @@ def main() -> None:
     records = []
 
     def check_unchanged_inputs() -> None:
+        if external_inputs(args.engines) != dependencies:
+            raise RuntimeError("external engine dependency changed during campaign")
         if sha256(binary) != binary_hash:
             raise RuntimeError("benchmark binary changed during campaign")
         for p in source_files:
@@ -168,7 +178,7 @@ def main() -> None:
             destination = out / f"{engine}-seed-{seed}"
             command = [str(binary), str(destination), engine, str(args.rows), str(seed), str(args.value_bytes), str(args.cache_bytes)]
             start = datetime.now(timezone.utc).isoformat()
-            result = subprocess.run(command, cwd=root, capture_output=True, text=True, encoding="utf-8")
+            result = subprocess.run(command, cwd=root, capture_output=True, text=True, encoding="utf-8", timeout=600)
             evidence = {"command": command, "started_utc": start, "finished_utc": datetime.now(timezone.utc).isoformat(), "exit_code": result.returncode, "stdout": result.stdout, "stderr": result.stderr}
             write_json(out / f"command-{engine}-{seed}.json", evidence)
             print(result.stdout, end="", flush=True)
@@ -221,6 +231,16 @@ def main() -> None:
             summary["engines"][engine]["arena_write_calls"] = {"median": None, "samples": [], "status": "not measured"}
             summary["engines"][engine]["arena_bytes_written"] = {"median": None, "samples": [], "status": "not measured"}
     summary["limits"] = ["Local KV operation contract only, not SQL or production durability equivalence", "Logical file lengths are not allocated filesystem/device/NAND bytes", "Node/page cache budgets are not equal total memory or OS-cache budgets", "Closed-loop samples are not service latency under offered load", "Maintenance implementations and physical formats differ"]
+    summary["engine_capabilities"] = capabilities
+    for engine in args.engines:
+        metrics = summary["engines"][engine]
+        for metric in ["cleared_app_cache_p50_us", "maintenance_ms", "reopen_ms", "final_owned_file_bytes"]:
+            note = metric_qualification(engine, metric)
+            if note:
+                metrics[metric]["qualification"] = note
+                if note.startswith("not comparable:"):
+                    metrics[metric]["median"] = None
+                    metrics[metric]["status"] = "not comparable; raw observations retained"
     write_json(out / "summary.json", summary)
     print(json.dumps(summary, indent=2))
 

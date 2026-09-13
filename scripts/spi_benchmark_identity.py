@@ -26,6 +26,9 @@ REQUIRED_SOURCES = frozenset({
     "src/spi/storage.rs",
     "src/spi/transaction.rs",
     "src/bin/spi-compare.rs",
+    "src/bin/spi-compare/engines.rs",
+    "src/bin/spi-compare/duck.rs",
+    "src/bin/spi-compare/pg.rs",
 })
 
 
@@ -73,6 +76,10 @@ def validate_build_info(
     expected_modules = {p for p in REQUIRED_SOURCES if p.startswith("src/spi/")}
     if discovered != expected_modules:
         raise IdentityError("storage module inventory changed; update and rebuild binary identity")
+    discovered_adapters = {p.relative_to(root).as_posix() for p in (root / "src/bin/spi-compare").rglob("*.rs")}
+    expected_adapters = {p for p in REQUIRED_SOURCES if p.startswith("src/bin/spi-compare/")}
+    if discovered_adapters != expected_adapters:
+        raise IdentityError("adapter module inventory changed; update and rebuild binary identity")
     hashes = {}
     mismatches = []
     for relative in sorted(REQUIRED_SOURCES):

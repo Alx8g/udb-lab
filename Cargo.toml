@@ -15,7 +15,12 @@ codegen-units = 1
 panic = "abort"
 
 [dependencies]
+libloading = { version = "0.8", optional = true }
+lmdb = { version = "=0.14.0", package = "lmdb-rkv", optional = true }
+postgres = { version = "0.19", optional = true }
 rand = { version = "0.8", features = ["small_rng"] }
+redb = { version = "=4.1.0", optional = true }
+rocksdb = { version = "=0.25.0", default-features = false, features = ["bindgen-runtime"], optional = true }
 rusqlite = { version = "0.40", features = ["bundled"], optional = true }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
@@ -30,3 +35,8 @@ spi-crc-bitwise = []
 spi-scan-materialized = []
 # Prior direct-base execution with materialized delta chains; same file format.
 spi-delta-materialized = []
+redb = ["dep:redb"]
+lmdb = ["dep:lmdb"]
+rocksdb = ["dep:rocksdb"]
+libloading = ["dep:libloading"]
+postgres = ["dep:postgres"]

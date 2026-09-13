@@ -12,6 +12,7 @@ from pathlib import Path
 
 from run_spi_campaign import command_output, sha256, validate_record, write_json
 from spi_benchmark_identity import IdentityError, inspect_binary
+from validate_engine_result import external_inputs, validate_engine_name
 
 PHASES = ('load', 'warm_hits', 'misses', 'cleared_hits', 'ranges', 'reuse',
           'unique', 'scan', 'updates', 'single_commits', 'reopen', 'maintenance',
@@ -44,8 +45,8 @@ def validate_profile(record: dict, engine: str, rows: int, seed: int, size: int,
             raise RuntimeError(f'invalid storage profile: {phase}')
         if metrics['rust_live_requested_bytes'] > metrics['process_peak_rust_requested_bytes']:
             raise RuntimeError('live allocation exceeds lifetime peak')
-    if engine == 'sqlite' and any(n for p in phases.values() for n in p['storage'].values()):
-        raise RuntimeError('SQLite profile unexpectedly contains SPI counters')
+    if not engine.startswith('spi') and any(n for p in phases.values() for n in p['storage'].values()):
+        raise RuntimeError('external engine profile unexpectedly contains SPI counters')
 
 
 def main() -> None:
@@ -56,7 +57,7 @@ def main() -> None:
     parser.add_argument('--value-bytes', type=int, default=64)
     parser.add_argument('--cache-bytes', type=int, default=8388608)
     parser.add_argument('--seeds', nargs='+', type=int, default=[17, 29, 43])
-    parser.add_argument('--engines', nargs='+', choices=['spi', 'spi-grouped', 'spi-packed', 'sqlite'], default=['spi', 'spi-grouped', 'sqlite'])
+    parser.add_argument('--engines', nargs='+', choices=['spi', 'spi-grouped', 'spi-packed', 'sqlite', 'lmdb', 'redb', 'rocksdb', 'duckdb', 'postgres'], default=['spi', 'spi-grouped', 'sqlite'])
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[1]
     binary = args.binary.resolve(strict=True)
@@ -72,14 +73,18 @@ def main() -> None:
         parser.error('duplicate seeds/engines')
     if command_output(['git', 'status', '--porcelain'], root):
         parser.error('commit source first, diagnostics require a clean source identity')
+    capabilities = {e: validate_engine_name(e, shared_kv=True) for e in args.engines}
+    dependencies = external_inputs(args.engines)
     output = args.out.resolve()
     output.mkdir(parents=True, exist_ok=False)
     binary_hash = sha256(binary)
     inputs = dict(identity['source_sha256'])
-    for name in ['scripts/run_spi_profile.py', 'scripts/run_spi_campaign.py', 'scripts/spi_benchmark_identity.py']:
+    for name in ['scripts/run_spi_profile.py', 'scripts/run_spi_campaign.py', 'scripts/spi_benchmark_identity.py',
+                 'scripts/validate_engine_result.py', 'scripts/engine_capabilities.json']:
         inputs[name] = sha256(root / name)
     write_json(output / 'environment.json', {
         'diagnostic_only': True, 'binary_identity': identity, 'binary_sha256': binary_hash,
+        'engine_capabilities': capabilities, 'external_dependencies': dependencies,
         'git_head': command_output(['git', 'rev-parse', 'HEAD'], root),
         'source_sha256': inputs, 'rows': args.rows, 'seeds': args.seeds,
         'cache_bytes': args.cache_bytes, 'value_bytes': args.value_bytes,
@@ -87,7 +92,8 @@ def main() -> None:
         'limits': [
             'Instrumented wall timings are not accepted performance results',
             'Process CPU includes harness/oracle work, not CPU per engine operation',
-            'Rust allocator counts omit native SQLite allocations, allocator metadata and OS cache',
+            'Rust allocator counts omit native engine allocations, allocator metadata and OS cache',
+            'Server CPU and memory are not captured by client-process profiling',
             'Process memory samples include benchmark inputs and output buffers',
             'Storage counters persist across reopen/maintenance and include verify',
             'Storage timers overlap when nested. Do not add all categories.',
@@ -96,6 +102,8 @@ def main() -> None:
     })
     results = []
     def check_inputs():
+        if external_inputs(args.engines) != dependencies:
+            raise RuntimeError('external engine dependency changed during diagnostic run')
         if sha256(binary) != binary_hash or any(sha256(root / n) != h for n, h in inputs.items()):
             raise RuntimeError('diagnostic inputs changed during run')
     for i, seed in enumerate(args.seeds):
@@ -105,7 +113,7 @@ def main() -> None:
             destination = output / f'{engine}-seed-{seed}'
             cmd = [str(binary), str(destination), engine, str(args.rows), str(seed),
                    str(args.value_bytes), str(args.cache_bytes)]
-            result = subprocess.run(cmd, cwd=root, capture_output=True, text=True, encoding='utf-8')
+            result = subprocess.run(cmd, cwd=root, capture_output=True, text=True, encoding='utf-8', timeout=600)
             write_json(output / f'command-{engine}-{seed}.json', {'command': cmd, 'exit_code': result.returncode,
                        'stdout': result.stdout, 'stderr': result.stderr})
             if result.returncode:

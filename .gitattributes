@@ -1,3 +1,5 @@
 # Preserve source-identified raw evidence byte-for-byte on every platform.
 results/spi/native-profile-*/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 results/spi/packed-*/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+results/spi/embedded-kv-*/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+results/spi/postgres-bytea-*/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol

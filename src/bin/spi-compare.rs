@@ -3,8 +3,15 @@
 #[cfg(feature = "rusqlite")]
 use rusqlite::{params, Connection, OptionalExtension};
 use serde_json::{json, Value};
-#[cfg(feature = "rusqlite")]
 use std::path::Path;
+#[cfg(feature = "libloading")]
+#[path = "spi-compare/duck.rs"]
+mod duck;
+#[path = "spi-compare/engines.rs"]
+mod engines;
+#[cfg(feature = "postgres")]
+#[path = "spi-compare/pg.rs"]
+mod pg;
 use std::{collections::BTreeMap, error::Error, fs, path::PathBuf, time::Instant};
 use udb_lab::spi::{Database, Entry, Options};
 
@@ -21,6 +28,34 @@ fn packed_scan_implementation() -> &'static str {
     }
 }
 
+fn compiled_engines() -> Vec<&'static str> {
+    let mut engines = vec![
+        "spi",
+        "spi-value-cache",
+        "spi-unbuffered",
+        "spi-grouped",
+        "spi-packed",
+    ];
+    if cfg!(feature = "rusqlite") {
+        engines.push("sqlite");
+    }
+    if cfg!(feature = "redb") {
+        engines.push("redb");
+    }
+    if cfg!(feature = "lmdb") {
+        engines.push("lmdb");
+    }
+    if cfg!(feature = "rocksdb") {
+        engines.push("rocksdb");
+    }
+    if cfg!(feature = "libloading") {
+        engines.push("duckdb");
+    }
+    if cfg!(feature = "postgres") {
+        engines.push("postgres");
+    }
+    engines
+}
 fn build_info() -> Value {
     json!({
         "identity_schema": IDENTITY_SCHEMA,
@@ -29,11 +64,7 @@ fn build_info() -> Value {
         "profile_enabled": cfg!(feature = "spi-profile"),
         "crc32_implementation": if cfg!(feature = "spi-crc-bitwise") { "ieee-bitwise" } else { "ieee-slicing8" },
         "packed_scan_implementation": packed_scan_implementation(),
-        "engines": if cfg!(feature = "rusqlite") {
-            vec!["spi", "spi-value-cache", "spi-unbuffered", "spi-grouped", "spi-packed", "sqlite"]
-        } else {
-            vec!["spi", "spi-value-cache", "spi-unbuffered", "spi-grouped", "spi-packed"]
-        },
+        "engines": compiled_engines(),
         "sources": {
             "Cargo.toml": include_str!("../../Cargo.toml"),
             "Cargo.lock": include_str!("../../Cargo.lock"),
@@ -45,6 +76,9 @@ fn build_info() -> Value {
             "src/spi/storage.rs": include_str!("../spi/storage.rs"),
             "src/spi/transaction.rs": include_str!("../spi/transaction.rs"),
             "src/bin/spi-compare.rs": include_str!("spi-compare.rs"),
+            "src/bin/spi-compare/engines.rs": include_str!("spi-compare/engines.rs"),
+            "src/bin/spi-compare/duck.rs": include_str!("spi-compare/duck.rs"),
+            "src/bin/spi-compare/pg.rs": include_str!("spi-compare/pg.rs"),
         }
     })
 }
@@ -794,7 +828,7 @@ fn main() -> Result<()> {
         return Ok(());
     }
     if args.len() < 3 {
-        return Err("usage: spi-compare NEW_OUTPUT_DIR spi|spi-value-cache|spi-unbuffered|spi-grouped|spi-packed|sqlite [rows=5000] [seed=1] [value_bytes=64] [cache_bytes=8388608]".into());
+        return Err("usage: spi-compare NEW_OUTPUT_DIR ENGINE [rows=5000] [seed=1] [value_bytes=64] [cache_bytes=8388608]".into());
     }
     let dir = PathBuf::from(&args[1]);
     let kind = &args[2];
@@ -809,14 +843,8 @@ fn main() -> Result<()> {
     if rows < 100 || size == 0 || size > 4096 {
         return Err("rows>=100 and value_bytes in 1..4096 required".into());
     }
-    if kind != "spi"
-        && kind != "spi-value-cache"
-        && kind != "spi-unbuffered"
-        && kind != "spi-grouped"
-        && kind != "spi-packed"
-        && (kind != "sqlite" || !cfg!(feature = "rusqlite"))
-    {
-        return Err("unknown engine or SQLite feature not enabled".into());
+    if !compiled_engines().contains(&kind.as_str()) {
+        return Err("unknown or uncompiled engine".into());
     }
     fs::create_dir(&dir)?;
     let mut engine: Box<dyn Engine> = match kind.as_str() {
@@ -827,6 +855,16 @@ fn main() -> Result<()> {
         "spi-packed" => Box::new(Spi::new(dir.join("db"), cache, true, false, false, true)?),
         #[cfg(feature = "rusqlite")]
         "sqlite" => Box::new(Sqlite::new(dir.join("db"), cache)?),
+        #[cfg(feature = "redb")]
+        "redb" => Box::new(engines::Redb::new(dir.join("db"), cache)?),
+        #[cfg(feature = "lmdb")]
+        "lmdb" => Box::new(engines::Lmdb::new(dir.join("db"))?),
+        #[cfg(feature = "rocksdb")]
+        "rocksdb" => Box::new(engines::Rocks::new(dir.join("db"), cache)?),
+        #[cfg(feature = "libloading")]
+        "duckdb" => Box::new(duck::Duck::new(dir.join("db"), cache)?),
+        #[cfg(feature = "postgres")]
+        "postgres" => Box::new(pg::Pg::new(dir.join("db"))?),
         _ => return Err("unknown engine or SQLite feature not enabled".into()),
     };
     let mut report = run(engine.as_mut(), rows, seed, size)?;
@@ -857,4 +895,139 @@ fn main() -> Result<()> {
         json!({"engine":kind,"rows":rows,"validation":"PASS","load_ms":report["load_batches_256"]["total_ns"].as_u64().unwrap()as f64/1e6,"warm_read_ms":report["warm_hits"]["total_ns"].as_u64().unwrap()as f64/1e6,"single_commit_p50_us":report["single_row_commits"]["p50_ns"].as_u64().unwrap()as f64/1e3,"result":dir.join("result.json")})
     );
     Ok(())
+}
+#[cfg(test)]
+mod adapter_tests {
+    use super::*;
+    fn path() -> PathBuf {
+        use std::sync::atomic::{AtomicU64, Ordering};
+        use std::time::{SystemTime, UNIX_EPOCH};
+        static N: AtomicU64 = AtomicU64::new(0);
+        let root =
+            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(".working/tmp/external-adapter-tests");
+        fs::create_dir_all(&root).unwrap();
+        root.join(format!(
+            "{}-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos(),
+            N.fetch_add(1, Ordering::Relaxed)
+        ))
+    }
+    fn check(engine: &mut dyn Engine) {
+        assert!(engine.range(&[], None).unwrap().is_empty());
+        assert_eq!(engine.get(&[1]).unwrap(), None);
+        let mut expected = BTreeMap::new();
+        let keys = [
+            vec![0],
+            vec![0, 0],
+            vec![0, 255],
+            vec![1],
+            vec![127, 0, 255],
+            vec![255],
+            vec![255; 511],
+        ];
+        for round in 0..3u8 {
+            let mut batch = Vec::new();
+            for (i, key) in keys.iter().enumerate() {
+                let value = if i == 0 {
+                    vec![]
+                } else {
+                    vec![round; (i * 733) % 5000]
+                };
+                batch.push(Entry {
+                    key: key.clone(),
+                    value: value.clone(),
+                });
+                expected.insert(key.clone(), value);
+            }
+            batch.push(Entry {
+                key: vec![1],
+                value: vec![9, round, 0, 255],
+            });
+            expected.insert(vec![1], vec![9, round, 0, 255]);
+            engine.batch(&batch).unwrap();
+            for (k, v) in &expected {
+                assert_eq!(engine.get(k).unwrap().as_ref(), Some(v));
+            }
+            let want: Vec<_> = expected
+                .iter()
+                .map(|(k, v)| Entry {
+                    key: k.clone(),
+                    value: v.clone(),
+                })
+                .collect();
+            assert_eq!(engine.range(&[], None).unwrap(), want);
+            for start in [
+                vec![],
+                vec![0],
+                vec![0, 255],
+                vec![1],
+                vec![2],
+                vec![255; 511],
+                vec![255; 512],
+            ] {
+                for end in [None, Some(start.clone()), Some(vec![255; 512])] {
+                    let expected: Vec<_> = expected
+                        .iter()
+                        .filter(|(k, _)| {
+                            k.as_slice() >= start.as_slice()
+                                && end.as_ref().is_none_or(|e| k.as_slice() < e.as_slice())
+                        })
+                        .map(|(k, v)| Entry {
+                            key: k.clone(),
+                            value: v.clone(),
+                        })
+                        .collect();
+                    assert_eq!(engine.range(&start, end.as_deref()).unwrap(), expected);
+                }
+            }
+            assert_eq!(engine.get(&[3]).unwrap(), None);
+            engine.reopen().unwrap();
+            assert_eq!(engine.range(&[], None).unwrap(), want);
+            let mut independent = engine.get(&[1]).unwrap().unwrap();
+            independent[0] ^= 1;
+            assert_eq!(engine.get(&[1]).unwrap(), Some(vec![9, round, 0, 255]));
+            engine.clear().unwrap();
+            assert_eq!(engine.range(&[], None).unwrap(), want);
+        }
+        engine.maintain().unwrap();
+        engine.reopen().unwrap();
+        assert_eq!(
+            engine.range(&[], None).unwrap(),
+            expected
+                .into_iter()
+                .map(|(key, value)| Entry { key, value })
+                .collect::<Vec<_>>()
+        );
+    }
+    #[test]
+    #[cfg(feature = "redb")]
+    fn redb_complete_outputs_and_reopen() {
+        check(&mut engines::Redb::new(path(), 8 * 1024 * 1024).unwrap());
+    }
+    #[test]
+    #[cfg(feature = "lmdb")]
+    fn lmdb_complete_outputs_and_reopen() {
+        check(&mut engines::Lmdb::new(path()).unwrap());
+    }
+    #[test]
+    #[cfg(feature = "rocksdb")]
+    fn rocksdb_complete_outputs_and_reopen() {
+        check(&mut engines::Rocks::new(path(), 8 * 1024 * 1024).unwrap());
+    }
+    #[test]
+    #[ignore = "requires explicitly supplied official DuckDB library"]
+    #[cfg(feature = "libloading")]
+    fn duckdb_complete_outputs_and_reopen() {
+        check(&mut duck::Duck::new(path(), 64 * 1024 * 1024).unwrap());
+    }
+    #[test]
+    #[ignore = "requires owned authenticated PostgreSQL cluster"]
+    #[cfg(feature = "postgres")]
+    fn postgres_complete_outputs_and_reopen() {
+        check(&mut pg::Pg::new(path()).unwrap());
+    }
 }
